@@ -1,28 +1,24 @@
-# 🍱 AI20K-041 — School Nutrition Optimizer
+# 🤰 AI20K-041 — Optimizing Nutrition for Pregnancy and Lactation
 
 ## 📌 Overview
 
-AI20K-041 — School Nutrition Optimizer là hệ thống tối ưu hóa thực đơn bán trú cho trường học, sử dụng dữ liệu và AI để giải quyết bài toán:
-
-- Cân bằng Dinh dưỡng
-- Tối ưu Ngân sách
-- Cá nhân hóa theo dị ứng & khẩu vị
-- Giảm thiểu lãng phí thực phẩm
-
-Hệ thống được thiết kế cho quy mô ~800 học sinh (K-12), hướng tới thay thế phương pháp lập thực đơn thủ công bằng nền tảng tự động, thông minh.
+AI20K-041 — Optimizing Nutrition for Pregnancy and Lactation là một AI Agent dinh dưỡng hỗ trợ phụ nữ mang thai và cho con bú tạo thực đơn cá nhân hóa theo từng giai đoạn cụ thể của thai kỳ và thời kỳ nuôi con.
+Hệ thống cho phép nhập thông tin sức khỏe, tuổi thai, dị ứng thực phẩm, sở thích ăn uống và mục tiêu dinh dưỡng để tự động sinh thực đơn phù hợp.
+AI đồng thời kiểm tra mức năng lượng, các nhóm chất và vi chất cần thiết nhằm giảm nguy cơ thiếu hoặc thừa dinh dưỡng.
+Người dùng có thể chụp ảnh bữa ăn để hệ thống ước tính calo và gợi ý điều chỉnh trong ngày.
 
 ---
 
 ## 🎯 Vision & Mission
 
 ### Sứ mệnh
-Tự động hóa quy trình lập thực đơn học đường bằng AI, đảm bảo:
-- Đủ dinh dưỡng theo chuẩn
-- Tối ưu chi phí
-- Phù hợp với từng học sinh
+Tự động hóa quy trình lập thực đơn cho phụ nữ mang thai và cho con bú bằng AI, đảm bảo:
+- Đủ dinh dưỡng theo chuẩn Bộ Y tế
+- Cá nhân hóa theo từng giai đoạn thai kỳ và thể trạng
+- Phù hợp sở thích, bệnh lý và điều kiện của từng người
 
 ### Tầm nhìn
-Xây dựng nền tảng có thể mở rộng cho nhiều trường học, tạo hệ sinh thái dữ liệu dinh dưỡng.
+Xây dựng nền tảng dinh dưỡng toàn diện có thể mở rộng cho các đối tượng đặc biệt khác (trẻ em, người cao tuổi, người mắc bệnh mãn tính), tạo hệ sinh thái dữ liệu dinh dưỡng cá nhân hóa tại Việt Nam.
 
 ---
 
@@ -31,7 +27,7 @@ Xây dựng nền tảng có thể mở rộng cho nhiều trường học, tạ
 Hệ thống sử dụng mô hình 3-Tier Architecture:
 
 ### 1. Frontend — Next.js 14
-- Dashboard quản trị hiện đại
+- Giao diện người dùng thân thiện, hiện đại
 - Responsive (Desktop + Mobile)
 - Hỗ trợ PWA (offline)
 
@@ -40,17 +36,18 @@ Hệ thống sử dụng mô hình 3-Tier Architecture:
 - Xử lý logic nghiệp vụ
 - Kết nối AI & Database
 
-### 3. AI Core (Optimizer-Agent)
+### 3. AI Core (Nutrition-Agent)
 
 #### Google OR-Tools
-- Giải bài toán tối ưu:
-  - Dinh dưỡng
-  - Chi phí
+- Giải bài toán tối ưu dinh dưỡng:
+  - Cân bằng vi chất theo từng tam cá nguyệt
+  - Kiểm soát kcal phù hợp mục tiêu cân nặng
 
 #### LLM (OpenAI / Anthropic)
-- Sinh thực đơn
-- Gợi ý món thay thế
-- Tạo công thức nấu ăn
+- Sinh thực đơn cá nhân hóa
+- Gợi ý món thay thế khi có dị ứng hoặc không thích
+- Tạo công thức nấu ăn đơn giản, dễ thực hiện
+- Phân tích ảnh bữa ăn để ước tính calo
 
 ### 4. Database — Supabase (PostgreSQL)
 - Lưu trữ tập trung
@@ -61,160 +58,164 @@ Hệ thống sử dụng mô hình 3-Tier Architecture:
 
 ## 🚀 Key Features
 
-### A. Nutrition & Budget Optimization
+### A. Personalized Nutrition Planning
 
 #### AI Menu Generator
-- Input: ngân sách/ngày
-- Output: thực đơn tự động
-- Đảm bảo:
-  - Calories
-  - Protein
-  - Chất xơ
+- Input: giai đoạn thai kỳ / tuần tuổi thai, cân nặng, chiều cao, bệnh lý (tiểu đường thai kỳ, thiếu máu...), dị ứng thực phẩm, sở thích
+- Output: thực đơn ngày/tuần cá nhân hóa
+- Đảm bảo đủ:
+  - Calories theo giai đoạn (tam cá nguyệt 1, 2, 3 / cho con bú)
+  - Protein, sắt, canxi, axit folic, DHA
+  - Chất xơ, vitamin nhóm B
 
-#### Smart Inventory
-- Theo dõi kho nguyên liệu
-- Cảnh báo thiếu hụt
-- Hỗ trợ lập kế hoạch tuần
+#### Stage-Aware Adjustment
+- Tự động điều chỉnh thực đơn khi người dùng chuyển giai đoạn thai kỳ
+- Gợi ý thực phẩm ưu tiên và thực phẩm cần tránh theo từng giai đoạn
 
 ---
 
-### B. Personalization & Food Safety
+### B. Food Safety & Allergy Management
 
 #### Allergy Tagging
-- Gắn tag dị ứng cho:
-  - Học sinh
-  - Nguyên liệu
+- Đánh dấu dị ứng / không dung nạp thực phẩm:
+  - Hải sản, gluten, sữa, đậu phộng...
+- Lọc tự động khỏi thực đơn gợi ý
 
-#### Sub-Menu Logic
-- Tạo thực đơn phụ:
-  - Ví dụ: không hải sản
-- Áp dụng cho ~15% học sinh
-- Vẫn đảm bảo ngân sách
-
----
-
-### C. Waste Tracking & Feedback Loop (NEW)
-
-#### Waste Logging
-Nhân viên bếp ghi nhận sau mỗi bữa ăn:
-
-- Mức độ thức ăn thừa (% hoặc kg)
-- Lý do:
-  - Không hợp khẩu vị
-  - Nấu quá nhiều
-  - Món khó ăn
-- Ảnh minh chứng (optional)
-
-Giao diện tối ưu cho mobile, thao tác nhanh.
+#### Condition-Based Filtering
+- Chế độ ăn riêng cho từng tình trạng:
+  - Tiểu đường thai kỳ: kiểm soát đường huyết, chỉ số GI thấp
+  - Thiếu máu: ưu tiên thực phẩm giàu sắt và vitamin C
+  - Tăng cân quá mức: kiểm soát calo, tăng chất xơ
 
 ---
 
-### D. User-Centric Features (NEW)
-#### A. Cho Nhân viên bếp (Efficiency)
-- Smart Inventory Auto-Sync
-    - Tự động trừ kho khi thực đơn được duyệt
-    - Cảnh báo thiếu nguyên liệu ngay lập tức
-- Cooking Guide Generation
-    - AI sinh công thức nấu ăn quy mô lớn
-    - Ví dụ: 800 suất với định lượng chuẩn
-- Offline Mode (PWA)
-    - Xem thực đơn khi mất mạng
-    - Phù hợp môi trường bếp
-#### B. Cho Nhà quản lý / Hiệu trưởng (Transparency & Cost)
-- Budget Heatmap
-    - Biểu đồ biến động giá thực phẩm theo thời gian
-    - Hỗ trợ điều chỉnh ngân sách
-- One-Touch Approval
-    - Gửi thông báo qua Telegram/Zalo
-    - Duyệt thực đơn ngay trên điện thoại
-#### C. Cho Phụ huynh (Trust)
-- Public Nutrition Portal
-    - Xem thực đơn không cần đăng nhập
-    - Có thể kèm ảnh thực tế từ bếp
-- Feedback Loop
-    - Đánh giá món ăn (rating/comment)
-    - AI học khẩu vị học sinh
-### E. Role-Based Operations
-#### Multi-Agent System (Advanced)
-- Analyst Agent
-    - Phân tích dữ liệu lịch sử & waste
-    - Giảm tần suất món bị bỏ thừa
-- Market Intelligence Agent
-    - Cập nhật giá thực phẩm thị trường
-    - Dự báo ngân sách chính xác hơn
-- Regulatory Compliance Agent
-    -Kiểm tra tuân thủ quy định:
-        -Đường
-        - Muối
-        - Chất béo
-- Recipe Agent
-    - Sinh công thức nấu ăn quy mô lớn
-#### Parent & Community Experience
-- Public Portal
-    - Quét QR để xem:
-        - Thực đơn
-        - Dinh dưỡng
-        - Nguồn gốc thực phẩm
-- Feedback System
-    - Phụ huynh đánh giá món ăn
-    - AI học khẩu vị → giảm waste
+### C. Meal Photo Analysis
 
-#### Database Schema
+#### Image-Based Calorie Estimator
+- Người dùng chụp ảnh bữa ăn thực tế
+- AI nhận diện món ăn và ước tính:
+  - Tổng kcal
+  - Thành phần dinh dưỡng chính (protein, carbs, chất béo)
+- So sánh với mục tiêu trong ngày và gợi ý điều chỉnh bữa kế tiếp
+
+---
+
+### D. User-Centric Features
+
+#### Cho người dùng cá nhân (Bà bầu / Mẹ cho con bú)
+- Daily Nutrition Dashboard
+  - Theo dõi lượng kcal và vi chất đã nạp trong ngày
+  - Cảnh báo thiếu hụt vi chất quan trọng (sắt, canxi, DHA...)
+- Weekly Meal Plan
+  - Thực đơn đa dạng, không lặp lại trong tuần
+  - Có thể tùy chỉnh, hoán đổi món
+- Reminder & Check-in
+  - Nhắc uống nước, bổ sung vitamin
+  - Check-in bữa ăn hàng ngày để hệ thống học và cải thiện gợi ý
+
+---
+
+### E. Multi-Agent System (Advanced)
+
+- **Nutrition Analyst Agent**
+  - Phân tích lịch sử ăn uống
+  - Phát hiện thiếu hụt vi chất kéo dài và cảnh báo
+
+- **Menu Generator Agent**
+  - Sinh thực đơn đa dạng, không lặp lại
+  - Cân bằng dinh dưỡng theo chuẩn WHO / Bộ Y tế Việt Nam
+
+- **Food Vision Agent**
+  - Nhận diện món ăn từ ảnh
+  - Ước tính khẩu phần và dinh dưỡng
+
+- **Regulatory Compliance Agent**
+  - Kiểm tra thực đơn theo khuyến nghị dinh dưỡng cho bà bầu
+  - Cảnh báo thực phẩm không an toàn trong thai kỳ (thủy ngân cao, thực phẩm sống...)
+
+---
+
+## 💰 Business Model
+
+| Thành phần | Chi tiết |
+|---|---|
+| Khách hàng mục tiêu | Phụ nữ mang thai và cho con bú |
+| Vấn đề | Thiếu vi chất, tiểu đường thai kỳ, mất kiểm soát cân nặng do chế độ ăn thiếu cân bằng |
+| Giải pháp | AI Agent tự động sinh thực đơn cá nhân hóa, tính kcal từ ảnh, theo dõi dinh dưỡng hàng ngày |
+| Giá | $5/tháng (~120.000 VND) |
+| Chi phí nếu không dùng | Rủi ro sức khỏe cho cả mẹ và bé |
+
+---
+
+## 🗄️ Database Schema
 
 ```sql
--- User role
-CREATE TYPE user_role AS ENUM ('admin', 'staff');
+-- Pregnancy stage
+CREATE TYPE pregnancy_stage AS ENUM (
+  'trimester_1', 'trimester_2', 'trimester_3', 'breastfeeding'
+);
 
 -- Meal type
-CREATE TYPE meal_type AS ENUM ('breakfast', 'lunch', 'snack');
+CREATE TYPE meal_type AS ENUM ('breakfast', 'lunch', 'dinner', 'snack');
 
 -- Menu status
-CREATE TYPE menu_status AS ENUM ('draft', 'approved');
+CREATE TYPE menu_status AS ENUM ('draft', 'active');
 
 CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT UNIQUE,
   full_name TEXT,
-  role user_role DEFAULT 'staff',
+  date_of_birth DATE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE health_profiles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  pregnancy_stage pregnancy_stage NOT NULL,
+  gestational_week INT,           -- tuần tuổi thai
+  weight_kg NUMERIC,
+  height_cm NUMERIC,
+  conditions TEXT[] DEFAULT '{}', -- tiểu đường thai kỳ, thiếu máu...
+  allergies TEXT[] DEFAULT '{}',
+  food_preferences TEXT[] DEFAULT '{}',
+  calorie_goal NUMERIC,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE TABLE ingredients (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
-  unit TEXT NOT NULL, -- kg, gram, ml
-  price_per_unit NUMERIC NOT NULL,
-  
-  -- Nutrition (per 100g)
+  unit TEXT NOT NULL,             -- gram, ml
+  -- Nutrition per 100g
   calories NUMERIC,
   protein NUMERIC,
   fat NUMERIC,
   carbs NUMERIC,
   fiber NUMERIC,
-
-  allergens TEXT[] DEFAULT '{}'
+  iron NUMERIC,
+  calcium NUMERIC,
+  folate NUMERIC,
+  dha NUMERIC,
+  glycemic_index NUMERIC,
+  allergens TEXT[] DEFAULT '{}',
+  is_unsafe_pregnancy BOOLEAN DEFAULT FALSE  -- thực phẩm cần tránh khi mang thai
 );
 
 CREATE TABLE dishes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
-  recipe_metadata JSONB NOT NULL, -- định mức nguyên liệu
-  category meal_type
-);
-
-CREATE TABLE students (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  grade_level TEXT,
-  allergies TEXT[] DEFAULT '{}',
-  is_special_diet BOOLEAN DEFAULT FALSE
+  recipe_metadata JSONB NOT NULL, -- nguyên liệu và định lượng
+  meal_type meal_type,
+  suitable_stages pregnancy_stage[] DEFAULT '{}'
 );
 
 CREATE TABLE weekly_menus (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   start_date DATE NOT NULL,
+  pregnancy_stage pregnancy_stage,
   status menu_status DEFAULT 'draft',
-  created_by UUID REFERENCES profiles(id),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -224,50 +225,45 @@ CREATE TABLE daily_menu_details (
   date DATE NOT NULL,
   meal_type meal_type,
   dish_id UUID REFERENCES dishes(id),
-
-  total_calculated_calories NUMERIC,
-  total_cost NUMERIC,
-
-  allergy_notes TEXT
+  total_calories NUMERIC,
+  total_protein NUMERIC,
+  total_iron NUMERIC,
+  total_calcium NUMERIC,
+  notes TEXT
 );
 
-CREATE INDEX idx_ingredients_allergens ON ingredients USING GIN (allergens);
-CREATE INDEX idx_students_allergies ON students USING GIN (allergies);
+CREATE TABLE meal_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  logged_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  meal_type meal_type,
+  photo_url TEXT,                 -- ảnh bữa ăn
+  estimated_calories NUMERIC,     -- ước tính từ AI
+  estimated_nutrition JSONB,      -- chi tiết dinh dưỡng ước tính
+  ai_suggestion TEXT              -- gợi ý điều chỉnh bữa kế tiếp
+);
 
-CREATE INDEX idx_menu_date ON daily_menu_details(date);
-CREATE INDEX idx_weekly_menu_start_date ON weekly_menus(start_date);
+CREATE INDEX idx_health_profiles_user ON health_profiles(user_id);
+CREATE INDEX idx_weekly_menus_user ON weekly_menus(user_id);
+CREATE INDEX idx_meal_logs_user_date ON meal_logs(user_id, logged_at);
+CREATE INDEX idx_ingredients_allergens ON ingredients USING GIN (allergens);
 
 -- Enable RLS
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE daily_menu_details ENABLE ROW LEVEL SECURITY;
+ALTER TABLE health_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE weekly_menus ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_menu_details ENABLE ROW LEVEL SECURITY;
+ALTER TABLE meal_logs ENABLE ROW LEVEL SECURITY;
 
--- Staff chỉ đọc profile
-CREATE POLICY "Staff can view profiles"
-ON profiles
-FOR SELECT
-USING (auth.role() = 'authenticated');
+-- Users chỉ truy cập dữ liệu của chính mình
+CREATE POLICY "Users access own health profile"
+ON health_profiles FOR ALL
+USING (user_id = auth.uid());
 
--- Staff update menu detail
-CREATE POLICY "Staff update menu"
-ON daily_menu_details
-FOR UPDATE
-USING (auth.role() = 'authenticated');
+CREATE POLICY "Users access own menus"
+ON weekly_menus FOR ALL
+USING (user_id = auth.uid());
 
-CREATE POLICY "Admin full access"
-ON weekly_menus
-FOR ALL
-USING (
-  EXISTS (
-    SELECT 1 FROM profiles
-    WHERE id = auth.uid() AND role = 'admin'
-  )
-);
-
-Table: waste_logs
-- id (uuid, PK)
-- daily_menu_detail_id (uuid, FK)
-- leftover_quantity (numeric)
-- waste_reason (text)
-- recorded_by (uuid, FK profiles)
-- recorded_at (timestamp)
+CREATE POLICY "Users access own meal logs"
+ON meal_logs FOR ALL
+USING (user_id = auth.uid());
+```
