@@ -3,4 +3,5 @@ uvicorn[standard]
 python-multipart
 passlib[bcrypt]
 python-dotenv
+firebase-admin
 
