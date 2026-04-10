@@ -1,16 +1,27 @@
-import { User, Meal, MealPlan, NutritionGoal, HealthMetric, DailyLog } from './types';
+import { User, Meal, MealPlan, NutritionGoal, HealthMetric, DailyLog, AllergyInfo, PregnancyStage } from './types';
 
 export const mockUser: User = {
   id: '1',
-  name: 'Trần Minh Khoa',
-  email: 'khoa@example.com',
+  name: 'Lê Thị Hương',
+  email: 'huong@example.com',
   avatar: '/avatars/user.jpg',
   age: 28,
-  weight: 72,
-  height: 175,
-  gender: 'male',
-  dietaryPreferences: ['Vietnamese', 'Low-Calorie'],
-  allergies: ['Shellfish'],
+  weight: 68,
+  height: 162,
+  gender: 'female',
+  dietaryPreferences: ['Vietnamese', 'Healthy'],
+  allergies: [
+    { name: 'Shellfish', severity: 'moderate', avoidFoods: ['tôm', 'cua', 'sò'] },
+  ],
+  pregnancy: {
+    stage: 'trimester2',
+    weekNumber: 18,
+    dueDate: new Date('2026-10-10'),
+    conditions: [],
+    prePregnancyWeight: 62,
+    currentWeight: 68,
+  },
+  isProfileComplete: true,
 };
 
 export const mockMeals: Meal[] = [

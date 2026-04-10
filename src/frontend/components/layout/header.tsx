@@ -42,9 +42,20 @@ export function Header({ user, onMenuClick }: HeaderProps) {
           </Link>
           <div className="flex items-center gap-2 pl-2 border-l border-border">
             <div className="hidden sm:flex flex-col items-end">
-              <p className="text-sm font-medium text-foreground">{user?.name || 'User'}</p>
+            <p className="text-sm font-medium text-foreground">{user?.name || 'User'}</p>
+            {user?.pregnancy?.stage !== 'none' && user?.pregnancy?.stage ? (
+              <p className="text-xs text-pink-600 font-semibold">
+                Tuần {user.pregnancy.weekNumber} - {
+                  user.pregnancy.stage === 'trimester1' ? 'Quý 1' :
+                  user.pregnancy.stage === 'trimester2' ? 'Quý 2' :
+                  user.pregnancy.stage === 'trimester3' ? 'Quý 3' :
+                  'Cho con bú'
+                }
+              </p>
+            ) : (
               <p className="text-xs text-muted-foreground">{user?.email || 'user@example.com'}</p>
-            </div>
+            )}
+          </div>
             <Avatar className="h-8 w-8">
               <AvatarImage src={user?.avatar} alt={user?.name} />
               <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>

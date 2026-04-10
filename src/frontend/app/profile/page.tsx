@@ -288,8 +288,11 @@ export default function Profile() {
                 <h4 className="text-sm font-medium text-foreground mb-2">Dị ứng thực phẩm</h4>
                 <div className="flex flex-wrap gap-2">
                   {mockUser.allergies?.map((allergy) => (
-                    <span key={allergy} className="px-3 py-1 rounded-full bg-red-500/10 text-red-600 text-sm font-medium">
-                      {allergy}
+                    <span 
+                      key={allergy.name}
+                      className="px-3 py-1 rounded-full bg-red-500/10 text-red-600 text-sm font-medium"
+                    >
+                      {allergy.name}
                     </span>
                   ))}
                 </div>

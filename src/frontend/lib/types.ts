@@ -1,3 +1,22 @@
+// Pregnancy Info
+export type PregnancyStage = 'trimester1' | 'trimester2' | 'trimester3' | 'lactating' | 'none';
+export type PregnancyCondition = 'gestational-diabetes' | 'anemia' | 'hypertension' | 'none';
+
+export interface PregnancyInfo {
+  stage: PregnancyStage;
+  weekNumber?: number; // 1-40 for pregnancy, 0+ for lactating
+  dueDate?: Date;
+  conditions: PregnancyCondition[];
+  prePregnancyWeight?: number;
+  currentWeight?: number;
+}
+
+export interface AllergyInfo {
+  name: string;
+  severity: 'mild' | 'moderate' | 'severe';
+  avoidFoods: string[];
+}
+
 // User & Auth
 export interface User {
   id: string;
@@ -9,7 +28,9 @@ export interface User {
   height?: number;
   gender?: 'male' | 'female' | 'other';
   dietaryPreferences?: string[];
-  allergies?: string[];
+  allergies?: AllergyInfo[];
+  pregnancy?: PregnancyInfo;
+  isProfileComplete?: boolean;
 }
 
 // Meal & Nutrition

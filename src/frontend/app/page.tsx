@@ -10,39 +10,39 @@ import Link from 'next/link';
 const features = [
   {
     icon: Camera,
-    title: 'Phân tích ảnh',
-    description: 'Chụp ảnh món ăn để nhận dữ liệu dinh dưỡng tức thì',
+    title: 'Phân tích ảnh bữa ăn',
+    description: 'Chụp ảnh để kiểm tra calo và vi chất - đảm bảo bạn và em bé được nuôi dưỡng đúng cách',
     href: '/photo-analysis',
   },
   {
     icon: ClipboardList,
-    title: 'Lập menu tuần',
-    description: 'Lên kế hoạch bữa ăn theo mục tiêu dinh dưỡng của bạn',
-    href: '/menu-planner',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Theo dõi tiến độ',
-    description: 'Xem biểu đồ sức khỏe và tiến độ cân nặng',
-    href: '/dashboard',
-  },
-  {
-    icon: Zap,
-    title: 'Công thức nhanh',
-    description: 'Các công thức nấu ăn dễ và nhanh chóng',
+    title: 'Lập thực đơn cá nhân',
+    description: 'Nhận thực đơn tuần được tối ưu hóa theo giai đoạn thai kỳ và nhu cầu của bạn',
     href: '/menu-planner',
   },
   {
     icon: Heart,
-    title: 'Quản lý sức khỏe',
-    description: 'Theo dõi chỉ số sức khỏe và mục tiêu cá nhân',
-    href: '/profile',
+    title: 'Theo dõi vi chất thiết yếu',
+    description: 'Kiểm soát sắt, canxi, axit folic, DHA và các chất dinh dưỡng quan trọng khác',
+    href: '/nutrition-calc',
+  },
+  {
+    icon: TrendingUp,
+    title: 'Theo dõi cân nặng & sức khỏe',
+    description: 'Xem biểu đồ cân nặng, tình trạng sức khỏe suốt thai kỳ',
+    href: '/dashboard',
+  },
+  {
+    icon: Zap,
+    title: 'Công thức ăn dễ thực hiện',
+    description: 'Các công thức nấu ăn nhanh, an toàn và lành mạnh cho mẹ bầu',
+    href: '/menu-planner',
   },
   {
     icon: Apple,
-    title: 'Khuyến nghị cá nhân',
-    description: 'Gợi ý bữa ăn dựa trên sở thích của bạn',
-    href: '/dashboard',
+    title: 'Quản lý tình trạng sức khỏe',
+    description: 'Cập nhật dị ứng, không dung nạp, và điều chỉnh chế độ ăn theo tình trạng đặc biệt',
+    href: '/profile',
   },
 ];
 
@@ -59,20 +59,37 @@ export default function Home() {
     <MainLayout user={mockUser}>
       <div className="space-y-8">
         {/* Welcome Section */}
-        <section className="space-y-4">
+        <section className="space-y-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg p-6 border border-pink-100">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-              Xin chào, {mockUser.name.split(' ').pop()}! 👋
+              Xin chào, {mockUser.name.split(' ').pop()}! 💕
             </h1>
-            <p className="text-muted-foreground text-lg">
-              Hôm nay là ngày tuyệt vời để chăm sóc sức khỏe của bạn
-            </p>
+            {mockUser.pregnancy?.stage !== 'none' && (
+              <div className="space-y-2">
+                <p className="text-lg font-semibold text-pink-700">
+                  Tuần {mockUser.pregnancy?.weekNumber} - {
+                    mockUser.pregnancy?.stage === 'trimester1' ? 'Quý 1' :
+                    mockUser.pregnancy?.stage === 'trimester2' ? 'Quý 2' :
+                    mockUser.pregnancy?.stage === 'trimester3' ? 'Quý 3' :
+                    'Cho con bú'
+                  }
+                </p>
+                <p className="text-muted-foreground text-base">
+                  Hãy kiên trì chăm sóc dinh dưỡng tốt - đó là cách tuyệt nhất để yêu thương em bé của bạn
+                </p>
+              </div>
+            )}
           </div>
         </section>
 
         {/* Today's Nutrition Overview */}
         <section className="space-y-4">
-          <h2 className="text-2xl font-bold text-foreground">Dinh dưỡng hôm nay</h2>
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Dinh dưỡng hôm nay</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Theo dõi để đảm bảo bạn và em bé nhận đủ chất dinh dưỡng từng ngày
+            </p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Calories Card */}
             <Card className="border-border">
