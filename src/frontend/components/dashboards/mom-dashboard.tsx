@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '@/lib/context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MilkScoreGauge } from '@/components/metrics/milk-score-gauge';
@@ -10,9 +10,15 @@ import { LayoutGrid } from 'lucide-react';
 
 export function MomDashboard() {
   const { user, quests } = useApp();
-  const activeQuests = quests.filter((q) => !q.completed).slice(0, 3);
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  if (!user) {
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const activeQuests = (quests || []).filter((q) => !q.completed).slice(0, 3);
+
+  if (!user || !isHydrated) {
     return null;
   }
 

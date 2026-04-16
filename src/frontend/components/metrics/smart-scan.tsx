@@ -33,21 +33,10 @@ export function SmartScan() {
 
   const analyzeFood = async () => {
     setLoading(true);
-    // Simulate AI analysis delay
-    setTimeout(() => {
-      // Mock food analysis
-      const mockAnalysis: FoodAnalysis = {
-        name: 'Cá hồi nướng với rau xanh',
-        calories: 350,
-        protein: 35,
-        carbs: 15,
-        fat: 18,
-        milkBenefit: 'Rất tốt - Omega-3 giúp sữa chất lượng cao',
-        timestamp: new Date(),
-      };
-      setAnalysis(mockAnalysis);
-      setLoading(false);
-    }, 1500);
+    // TODO: Call API to analyze food
+    // For now, just clear the analysis
+    setAnalysis(null);
+    setLoading(false);
   };
 
   const handleSaveToLog = () => {

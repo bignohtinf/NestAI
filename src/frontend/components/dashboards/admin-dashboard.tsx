@@ -20,55 +20,23 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch statistics from API
-    const fetchStats = async () => {
-      try {
-        // TODO: Create API endpoint for admin stats
-        // For now, using mock data
-        setStats({
-          totalUsers: 156,
-          totalAdmins: 3,
-          totalMothers: 78,
-          totalFathers: 75,
-          activeUsers: 142,
-          totalPartnerships: 72,
-          totalBabies: 89,
-        });
-      } catch (error) {
-        console.error('Failed to fetch stats:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
+    // TODO: Fetch statistics from API
+    setStats({
+      totalUsers: 0,
+      totalAdmins: 0,
+      totalMothers: 0,
+      totalFathers: 0,
+      activeUsers: 0,
+      totalPartnerships: 0,
+      totalBabies: 0,
+    });
+    setLoading(false);
   }, []);
 
-  // Mock data for charts
-  const userGrowthData = [
-    { month: 'Jan', users: 45, active: 40 },
-    { month: 'Feb', users: 62, active: 55 },
-    { month: 'Mar', users: 89, active: 78 },
-    { month: 'Apr', users: 120, active: 105 },
-    { month: 'May', users: 142, active: 128 },
-    { month: 'Jun', users: 156, active: 142 },
-  ];
-
-  const roleDistribution = [
-    { name: 'Mothers', value: stats.totalMothers, color: '#ec4899' },
-    { name: 'Fathers', value: stats.totalFathers, color: '#3b82f6' },
-    { name: 'Admins', value: stats.totalAdmins, color: '#8b5cf6' },
-  ];
-
-  const activityData = [
-    { day: 'Mon', logins: 24, signups: 4 },
-    { day: 'Tue', logins: 28, signups: 6 },
-    { day: 'Wed', logins: 32, signups: 8 },
-    { day: 'Thu', logins: 26, signups: 5 },
-    { day: 'Fri', logins: 35, signups: 10 },
-    { day: 'Sat', logins: 18, signups: 3 },
-    { day: 'Sun', logins: 22, signups: 4 },
-  ];
+  // TODO: Fetch chart data from API
+  const userGrowthData: any[] = [];
+  const roleDistribution: any[] = [];
+  const activityData: any[] = [];
 
   return (
     <div className="space-y-6">

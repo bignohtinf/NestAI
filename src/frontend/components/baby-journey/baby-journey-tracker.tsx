@@ -3,7 +3,6 @@
 import React, { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { useApp } from '@/lib/context';
-import { babyMilestonesDatabase } from '@/lib/mock-data';
 
 export function BabyJourneyTracker() {
   const { user } = useApp();
@@ -24,17 +23,8 @@ export function BabyJourneyTracker() {
     return { days, weeks, months, years };
   }, [user?.babyDob]);
 
-  const upcomingMilestones = useMemo(() => {
-    return babyMilestonesDatabase.filter(
-      (m) => m.ageInDays >= babyAge.days
-    ).slice(0, 3);
-  }, [babyAge.days]);
-
-  const completedMilestones = useMemo(() => {
-    return babyMilestonesDatabase.filter(
-      (m) => m.ageInDays < babyAge.days
-    );
-  }, [babyAge.days]);
+  const upcomingMilestones: any[] = [];
+  const completedMilestones: any[] = [];
 
   const progressPercentage = (babyAge.days / 180) * 100;
 

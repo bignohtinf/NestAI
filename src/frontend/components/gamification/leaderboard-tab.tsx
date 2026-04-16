@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { leaderboardData } from '@/lib/mock-data';
 import { useApp } from '@/lib/context';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -19,8 +18,8 @@ export function LeaderboardTab() {
         <CardContent>
           <div className="flex items-center justify-between">
             <div className="text-center flex-1">
-              <div className="text-5xl font-bold text-primary">4th</div>
-              <p className="text-sm text-muted-foreground">Current Position</p>
+              <div className="text-5xl font-bold text-primary">-</div>
+              <p className="text-sm text-muted-foreground">Loading...</p>
             </div>
             <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center text-2xl">
               🎯
@@ -36,47 +35,7 @@ export function LeaderboardTab() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {leaderboardData.map((entry) => {
-              const isCurrentUser = entry.rank === 4;
-              return (
-                <div
-                  key={entry.rank}
-                  className={cn(
-                    'flex items-center justify-between rounded-lg p-4 transition-colors',
-                    isCurrentUser
-                      ? 'bg-primary/10 ring-1 ring-primary'
-                      : 'hover:bg-muted/50'
-                  )}
-                >
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="flex items-center justify-center">
-                      <span className="text-2xl">{entry.badge}</span>
-                    </div>
-                    <div>
-                      <p
-                        className={cn(
-                          'font-semibold',
-                          isCurrentUser && 'text-primary'
-                        )}
-                      >
-                        {entry.name}
-                        {isCurrentUser && ' (You)'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Rank #{entry.rank}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-primary">
-                      {entry.points}
-                    </p>
-                    <p className="text-xs text-muted-foreground">points</p>
-                  </div>
-                </div>
-              );
-            })}
+            <p className="text-center text-muted-foreground py-8">Leaderboard data will be loaded from API</p>
           </div>
         </CardContent>
       </Card>

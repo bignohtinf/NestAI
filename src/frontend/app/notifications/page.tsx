@@ -1,7 +1,7 @@
 'use client';
 
 import { MainLayout } from '@/components/layouts/main-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
 import { useRouter } from 'next/navigation';
@@ -33,38 +33,8 @@ export default function NotificationsPage() {
   }, [user, router]);
 
   useEffect(() => {
-    // Mock notifications - in real app, fetch from API
-    const mockNotifications: Notification[] = [
-      {
-        id: '1',
-        type: 'partnership_request',
-        title: 'Yêu cầu kết nối từ bố',
-        description: 'Nguyễn Văn A đã gửi yêu cầu kết nối. Hãy chấp nhận để chia sẻ thông tin bé yêu.',
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        read: false,
-        actionUrl: '/partnerships',
-        actionLabel: 'Xem yêu cầu',
-      },
-      {
-        id: '2',
-        type: 'milestone',
-        title: 'Mốc phát triển mới',
-        description: 'Bé của bạn đã đạt được mốc "Cười lần đầu tiên"!',
-        timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-        read: true,
-        actionUrl: '/baby-journey',
-        actionLabel: 'Xem chi tiết',
-      },
-      {
-        id: '3',
-        type: 'system',
-        title: 'Cập nhật hệ thống',
-        description: 'Ứng dụng đã được cập nhật với các tính năng mới. Hãy khám phá!',
-        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        read: true,
-      },
-    ];
-    setNotifications(mockNotifications);
+    // TODO: Fetch notifications from API
+    setNotifications([]);
   }, []);
 
   if (!user || user.role === 'admin') {

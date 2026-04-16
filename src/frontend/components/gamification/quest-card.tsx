@@ -1,11 +1,10 @@
 'use client';
 
 import React from 'react';
-import { useApp } from '@/lib/context';
+import { useApp, Quest } from '@/lib/context';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Quest } from '@/lib/mock-data';
 import { Check } from 'lucide-react';
 
 interface QuestCardProps {

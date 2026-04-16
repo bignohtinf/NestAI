@@ -25,16 +25,8 @@ interface BudgetPlan {
   recommendations: string[];
 }
 
-const mockItems: ShoppingItem[] = [
-  { id: '1', name: 'Cá hồi tươi', category: 'Protein', price: 150, quantity: 1, store: 'BigC', checked: false, priority: 'high' },
-  { id: '2', name: 'Rau xanh', category: 'Rau', price: 50, quantity: 1, store: 'Chợ', checked: false, priority: 'high' },
-  { id: '3', name: 'Sữa tươi', category: 'Sữa', price: 45, quantity: 1, store: 'Coop', checked: false, priority: 'medium' },
-  { id: '4', name: 'Trứng', category: 'Protein', price: 60, quantity: 1, store: 'BigC', checked: false, priority: 'high' },
-  { id: '5', name: 'Hạnh nhân', category: 'Hạt', price: 80, quantity: 1, store: 'Coop', checked: false, priority: 'medium' },
-];
-
 export function SmartShopping() {
-  const [items, setItems] = useState<ShoppingItem[]>(mockItems);
+  const [items, setItems] = useState<ShoppingItem[]>([]);
   const [budget, setBudget] = useState(500);
   const [showOptimization, setShowOptimization] = useState(false);
 

@@ -1,13 +1,32 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import {
-  UserData,
-  initialUserData,
-} from './mock-data';
+import { createContext, useContext, useState, ReactNode } from 'react';
+
+export interface UserData {
+  id: string;
+  name: string;
+  role: 'mother' | 'father' | 'admin';
+  age: number;
+  weeksPostpartum: number;
+  points: number;
+  milkScore: number;
+  totalSpending: number;
+  budget: number;
+  babyDob?: string;
+}
+
+export interface Quest {
+  id: string;
+  title: string;
+  description: string;
+  category: 'nutrition' | 'health' | 'exercise' | 'social';
+  reward: number;
+  completed: boolean;
+}
 
 interface AppContextType {
   user: UserData | null;
+  quests: Quest[];
   setUser: (user: UserData) => void;
   login: (role: 'mother' | 'father' | 'admin', name?: string) => void;
   logout: () => void;
@@ -15,12 +34,27 @@ interface AppContextType {
   updateMilkScore: (score: number) => void;
   updateBudget: (amount: number) => void;
   updateBabyInfo: (babyDob: string) => void;
+  updateQuest: (questId: string, completed: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const initialUserData: UserData = {
+  id: 'user_1',
+  name: 'Mom',
+  role: 'mother',
+  age: 28,
+  weeksPostpartum: 6,
+  points: 1950,
+  milkScore: 82,
+  totalSpending: 450,
+  budget: 600,
+  babyDob: new Date(Date.now() - 42 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+};
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null);
+  const [quests, setQuests] = useState<Quest[]>([]);
 
   const login = (role: 'mother' | 'father' | 'admin', name?: string) => {
     const newUser: UserData = {
@@ -75,10 +109,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const updateQuest = (questId: string, completed: boolean) => {
+    setQuests((prevQuests) =>
+      prevQuests.map((q) =>
+        q.id === questId ? { ...q, completed } : q
+      )
+    );
+  };
+
   return (
     <AppContext.Provider
       value={{
         user,
+        quests,
         setUser,
         login,
         logout,
@@ -86,6 +129,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         updateMilkScore,
         updateBudget,
         updateBabyInfo,
+        updateQuest,
       }}
     >
       {children}

@@ -18,30 +18,6 @@ interface RecipeSuggestion {
   matchPercentage: number;
 }
 
-const mockRecipes: RecipeSuggestion[] = [
-  {
-    name: 'Cá hồi nướng với rau xanh',
-    ingredients: ['Cá hồi', 'Rau xanh', 'Dầu olive', 'Chanh'],
-    time: 30,
-    difficulty: 'easy',
-    matchPercentage: 100,
-  },
-  {
-    name: 'Salad cá hồi',
-    ingredients: ['Cá hồi', 'Rau xanh', 'Cà chua', 'Dầu olive'],
-    time: 15,
-    difficulty: 'easy',
-    matchPercentage: 80,
-  },
-  {
-    name: 'Cơm chiên với rau',
-    ingredients: ['Cơm', 'Rau xanh', 'Trứng', 'Dầu ăn'],
-    time: 20,
-    difficulty: 'easy',
-    matchPercentage: 60,
-  },
-];
-
 export function IngredientScanner() {
   const [image, setImage] = useState<string | null>(null);
   const [detectedIngredients, setDetectedIngredients] = useState<DetectedIngredient[]>([]);
@@ -61,26 +37,11 @@ export function IngredientScanner() {
 
   const analyzeIngredients = async () => {
     setLoading(true);
-    // Simulate AI analysis
-    setTimeout(() => {
-      const mockDetected: DetectedIngredient[] = [
-        { name: 'Cá hồi', confidence: 95 },
-        { name: 'Rau xanh', confidence: 88 },
-        { name: 'Dầu olive', confidence: 75 },
-      ];
-      setDetectedIngredients(mockDetected);
-
-      // Filter recipes based on detected ingredients
-      const filtered = mockRecipes.filter(recipe => {
-        const matchCount = recipe.ingredients.filter(ing =>
-          mockDetected.some(det => det.name.toLowerCase().includes(ing.toLowerCase()))
-        ).length;
-        return matchCount > 0;
-      }).sort((a, b) => b.matchPercentage - a.matchPercentage);
-
-      setSuggestions(filtered);
-      setLoading(false);
-    }, 1500);
+    // TODO: Call API to analyze ingredients
+    // For now, just clear the results
+    setDetectedIngredients([]);
+    setSuggestions([]);
+    setLoading(false);
   };
 
   const resetScan = () => {
