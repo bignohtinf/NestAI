@@ -1,0 +1,166 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.admin_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  admin_id uuid NOT NULL,
+  action character varying NOT NULL,
+  target_type character varying,
+  target_id uuid,
+  details jsonb,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT admin_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT admin_logs_admin_id_fkey FOREIGN KEY (admin_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.babies (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  partnership_id uuid NOT NULL,
+  name character varying NOT NULL,
+  date_of_birth date NOT NULL,
+  gender USER-DEFINED,
+  weight_at_birth numeric,
+  height_at_birth numeric,
+  blood_type character varying,
+  notes text,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT babies_pkey PRIMARY KEY (id),
+  CONSTRAINT babies_partnership_id_fkey FOREIGN KEY (partnership_id) REFERENCES public.partnerships(id)
+);
+CREATE TABLE public.badges (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name character varying NOT NULL,
+  description text,
+  icon_url character varying,
+  criteria jsonb,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT badges_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.daily_entries (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  baby_id uuid NOT NULL,
+  recorded_by uuid NOT NULL,
+  entry_date date NOT NULL,
+  milk_score integer CHECK (milk_score >= 0 AND milk_score <= 100),
+  weight numeric,
+  height numeric,
+  notes text,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT daily_entries_pkey PRIMARY KEY (id),
+  CONSTRAINT daily_entries_baby_id_fkey FOREIGN KEY (baby_id) REFERENCES public.babies(id),
+  CONSTRAINT daily_entries_recorded_by_fkey FOREIGN KEY (recorded_by) REFERENCES public.users(id)
+);
+CREATE TABLE public.nutrition_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  log_date date NOT NULL,
+  calories integer,
+  protein numeric,
+  carbs numeric,
+  fat numeric,
+  notes text,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT nutrition_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT nutrition_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.partnerships (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  father_id uuid NOT NULL,
+  mother_id uuid NOT NULL,
+  status USER-DEFINED NOT NULL DEFAULT 'pending'::partnership_status,
+  requested_by uuid NOT NULL,
+  requested_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  responded_at timestamp with time zone,
+  responded_by uuid,
+  notes text,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT partnerships_pkey PRIMARY KEY (id),
+  CONSTRAINT partnerships_father_id_fkey FOREIGN KEY (father_id) REFERENCES public.users(id),
+  CONSTRAINT partnerships_mother_id_fkey FOREIGN KEY (mother_id) REFERENCES public.users(id),
+  CONSTRAINT partnerships_requested_by_fkey FOREIGN KEY (requested_by) REFERENCES public.users(id),
+  CONSTRAINT partnerships_responded_by_fkey FOREIGN KEY (responded_by) REFERENCES public.users(id)
+);
+CREATE TABLE public.quests (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  title character varying NOT NULL,
+  description text,
+  reward integer DEFAULT 0,
+  category character varying,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT quests_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.shopping_items (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  partnership_id uuid NOT NULL,
+  name character varying NOT NULL,
+  category character varying,
+  price numeric,
+  quantity integer DEFAULT 1,
+  purchased boolean DEFAULT false,
+  purchased_at timestamp with time zone,
+  purchased_by uuid,
+  notes text,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT shopping_items_pkey PRIMARY KEY (id),
+  CONSTRAINT shopping_items_partnership_id_fkey FOREIGN KEY (partnership_id) REFERENCES public.partnerships(id),
+  CONSTRAINT shopping_items_purchased_by_fkey FOREIGN KEY (purchased_by) REFERENCES public.users(id)
+);
+CREATE TABLE public.user_badges (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  badge_id uuid NOT NULL,
+  earned_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT user_badges_pkey PRIMARY KEY (id),
+  CONSTRAINT user_badges_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT user_badges_badge_id_fkey FOREIGN KEY (badge_id) REFERENCES public.badges(id)
+);
+CREATE TABLE public.user_profiles (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL UNIQUE,
+  date_of_birth date,
+  gender USER-DEFINED,
+  address character varying,
+  city character varying,
+  country character varying,
+  bio text,
+  preferences jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT user_profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT user_profiles_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.user_quests (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  quest_id uuid NOT NULL,
+  completed boolean DEFAULT false,
+  completed_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT user_quests_pkey PRIMARY KEY (id),
+  CONSTRAINT user_quests_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT user_quests_quest_id_fkey FOREIGN KEY (quest_id) REFERENCES public.quests(id)
+);
+CREATE TABLE public.users (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  email character varying NOT NULL,
+  phone character varying,
+  full_name character varying NOT NULL,
+  role USER-DEFINED NOT NULL DEFAULT 'mother'::user_role,
+  avatar_url character varying,
+  is_active boolean DEFAULT true,
+  email_verified boolean DEFAULT false,
+  phone_verified boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  last_login timestamp with time zone,
+  CONSTRAINT users_pkey PRIMARY KEY (id)
+);
