@@ -8,7 +8,6 @@ import { BudgetOptimization } from '@/components/metrics/budget-optimization';
 import { useApp } from '@/lib/context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Wallet, Zap } from 'lucide-react';
 
 interface Mission {
   id: string;
@@ -80,12 +79,10 @@ export default function FinancePage() {
 
         <Tabs defaultValue="budget" className="space-y-4">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="budget" className="gap-2">
-              <Wallet className="h-4 w-4" />
+            <TabsTrigger value="budget">
               <span className="hidden sm:inline">Kinh phí</span>
             </TabsTrigger>
-            <TabsTrigger value="missions" className="gap-2">
-              <Zap className="h-4 w-4" />
+            <TabsTrigger value="missions">
               <span className="hidden sm:inline">Nhiệm vụ</span>
             </TabsTrigger>
           </TabsList>

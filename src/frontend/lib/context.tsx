@@ -49,7 +49,7 @@ const initialUserData: UserData = {
   milkScore: 82,
   totalSpending: 450,
   budget: 600,
-  babyDob: new Date(Date.now() - 42 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  babyDob: '2024-10-06', // Fixed date instead of dynamic calculation
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {

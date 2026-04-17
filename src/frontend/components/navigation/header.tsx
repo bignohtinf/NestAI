@@ -106,7 +106,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                     'px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
                     isActive || item.children!.some(child => pathname === child.href)
                       ? 'bg-primary/10 text-primary'
-                      : 'text-foreground hover:bg-accent'
+                      : 'text-foreground hover:text-safe-green'
                   )}
                 >
                   {item.label}
@@ -122,7 +122,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                   'px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
                   isActive
                     ? 'bg-primary/10 text-primary'
-                    : 'text-foreground hover:bg-accent'
+                    : 'text-foreground hover:text-safe-green'
                 )}
               >
                 {item.label}
@@ -146,10 +146,10 @@ export function Header({ onMenuClick }: HeaderProps) {
           ) : (
             <Button
               variant="ghost"
-              size="icon"
+              size="sm"
               onClick={logout}
               title="Đăng xuất"
-              className="h-8 w-8 sm:h-10 sm:w-10"
+              className="h-8 w-8 sm:h-10 sm:w-10 p-0"
             >
               <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
