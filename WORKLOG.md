@@ -11,7 +11,7 @@ Ghi lại các quyết định kỹ thuật, phân công, và brainstorming củ
 ### Quyết định kỹ thuật
 
 ```markdown
-### [ADR-N] Tiêu đề quyết định — DD/MM/YYYY
+### [ADR-1] Thay đổi đối tượng sử dụng từ nhân viên bếp ăn sang bà bầu — DD/MM/YYYY
 
 **Bối cảnh:** Vấn đề cần giải quyết là gì?
 
