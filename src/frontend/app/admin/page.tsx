@@ -6,7 +6,6 @@ import { RecipeManagementTab } from '@/components/admin/recipe-management-tab';
 import { NutritionDbTab } from '@/components/admin/nutrition-db-tab';
 import { VoiceAITab } from '@/components/admin/voice-ai-tab';
 import { PartnersTab } from '@/components/admin/partners-tab';
-import { BookOpen, Apple, Mic, Users } from 'lucide-react';
 import { useApp } from '@/lib/context';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -43,20 +42,16 @@ export default function AdminPage() {
 
         <Tabs defaultValue="recipes" className="space-y-4">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="recipes" className="gap-2">
-              <BookOpen className="h-4 w-4" />
+            <TabsTrigger value="recipes">
               <span className="hidden sm:inline">Recipes</span>
             </TabsTrigger>
-            <TabsTrigger value="nutrition" className="gap-2">
-              <Apple className="h-4 w-4" />
+            <TabsTrigger value="nutrition">
               <span className="hidden sm:inline">Nutrition DB</span>
             </TabsTrigger>
-            <TabsTrigger value="voice" className="gap-2">
-              <Mic className="h-4 w-4" />
+            <TabsTrigger value="voice">
               <span className="hidden sm:inline">Voice AI</span>
             </TabsTrigger>
-            <TabsTrigger value="partners" className="gap-2">
-              <Users className="h-4 w-4" />
+            <TabsTrigger value="partners">
               <span className="hidden sm:inline">Partners</span>
             </TabsTrigger>
           </TabsList>

@@ -1,6 +1,7 @@
 'use client';
 
 import { MainLayout } from '@/components/layouts/main-layout';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MilkBabyImpact } from '@/components/metrics/milk-baby-impact';
 import { useApp } from '@/lib/context';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -38,15 +39,38 @@ export default function WellnessPage() {
   return (
     <MainLayout>
       <div className="space-y-6">
-        {(activeTab === 'trend' || activeTab === 'impact') && (
-          <MilkBabyImpact activeTab={activeTab} />
-        )}
+        <div>
+          <h1 className="text-3xl font-bold">Theo Dõi Sức Khỏe</h1>
+          <p className="text-muted-foreground">Theo dõi xu hướng sữa, ảnh hưởng thực phẩm và khám định kì</p>
+        </div>
 
-        {activeTab === 'checkup' && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Cập nhật kết quả khám định kì</p>
-          </div>
-        )}
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'trend' | 'impact' | 'checkup')} className="space-y-4">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="trend">
+              <span className="hidden sm:inline">Xu hướng</span>
+            </TabsTrigger>
+            <TabsTrigger value="impact">
+              <span className="hidden sm:inline">Ảnh hưởng</span>
+            </TabsTrigger>
+            <TabsTrigger value="checkup">
+              <span className="hidden sm:inline">Khám định kì</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="trend">
+            <MilkBabyImpact activeTab="trend" />
+          </TabsContent>
+
+          <TabsContent value="impact">
+            <MilkBabyImpact activeTab="impact" />
+          </TabsContent>
+
+          <TabsContent value="checkup">
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Cập nhật kết quả khám định kì</p>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </MainLayout>
   );

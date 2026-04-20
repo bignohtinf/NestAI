@@ -3,86 +3,113 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Notion-inspired Design System */
 :root {
-  --background: oklch(0.98 0.008 70);
-  --foreground: oklch(0.2 0.02 250);
-  --card: oklch(0.99 0.005 70);
-  --card-foreground: oklch(0.2 0.02 250);
-  --popover: oklch(0.99 0.005 70);
-  --popover-foreground: oklch(0.2 0.02 250);
-  --primary: oklch(0.62 0.15 180);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.25 0.08 250);
-  --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.92 0.01 70);
-  --muted-foreground: oklch(0.55 0.02 250);
-  --accent: oklch(0.75 0.12 10);
-  --accent-foreground: oklch(1 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.93 0.008 70);
-  --input: oklch(0.98 0.008 70);
-  --ring: oklch(0.62 0.15 180);
-  --chart-1: oklch(0.62 0.15 180);
-  --chart-2: oklch(0.75 0.12 10);
-  --chart-3: oklch(0.65 0.12 140);
-  --chart-4: oklch(0.7 0.15 55);
-  --chart-5: oklch(0.65 0.15 280);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.98 0.008 70);
-  --sidebar-foreground: oklch(0.2 0.02 250);
-  --sidebar-primary: oklch(0.62 0.15 180);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.75 0.12 10);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.93 0.008 70);
-  --sidebar-ring: oklch(0.62 0.15 180);
-  --safe-green: oklch(0.65 0.12 140);
-  --caution-orange: oklch(0.75 0.12 37);
-  --unsafe-red: oklch(0.62 0.22 27);
-}
+  /* Primary Colors */
+  --color-notion-black: rgba(0, 0, 0, 0.95);
+  --color-notion-blue: #0075de;
+  --color-notion-blue-active: #005bab;
+  --color-notion-blue-focus: #097fe8;
+  --color-white: #ffffff;
 
-.dark {
-  --background: oklch(0.15 0.01 250);
-  --foreground: oklch(0.95 0.01 70);
-  --card: oklch(0.2 0.01 250);
-  --card-foreground: oklch(0.95 0.01 70);
-  --popover: oklch(0.2 0.01 250);
-  --popover-foreground: oklch(0.95 0.01 70);
-  --primary: oklch(0.62 0.15 180);
-  --primary-foreground: oklch(0.15 0.015 250);
-  --secondary: oklch(0.8 0.08 250);
-  --secondary-foreground: oklch(0.15 0.015 250);
-  --muted: oklch(0.35 0.01 250);
-  --muted-foreground: oklch(0.7 0.01 70);
-  --accent: oklch(0.75 0.12 10);
-  --accent-foreground: oklch(0.15 0.015 250);
-  --destructive: oklch(0.62 0.22 27);
-  --destructive-foreground: oklch(0.95 0.01 70);
-  --border: oklch(0.3 0.01 250);
-  --input: oklch(0.25 0.01 250);
-  --ring: oklch(0.62 0.15 180);
-  --chart-1: oklch(0.62 0.15 180);
-  --chart-2: oklch(0.75 0.12 10);
-  --chart-3: oklch(0.65 0.12 140);
-  --chart-4: oklch(0.7 0.15 55);
-  --chart-5: oklch(0.65 0.15 280);
-  --sidebar: oklch(0.15 0.01 250);
-  --sidebar-foreground: oklch(0.95 0.01 70);
-  --sidebar-primary: oklch(0.62 0.15 180);
-  --sidebar-primary-foreground: oklch(0.15 0.015 250);
-  --sidebar-accent: oklch(0.75 0.12 10);
-  --sidebar-accent-foreground: oklch(0.15 0.015 250);
-  --sidebar-border: oklch(0.3 0.01 250);
-  --sidebar-ring: oklch(0.62 0.15 180);
-  --safe-green: oklch(0.65 0.12 140);
-  --caution-orange: oklch(0.75 0.12 37);
-  --unsafe-red: oklch(0.62 0.22 27);
+  /* Warm Neutral Scale */
+  --color-warm-white: #f6f5f4;
+  --color-warm-dark: #31302e;
+  --color-warm-gray-500: #615d59;
+  --color-warm-gray-300: #a39e98;
+
+  /* Semantic Colors */
+  --color-teal: #2a9d99;
+  --color-green: #1aae39;
+  --color-orange: #dd5b00;
+  --color-pink: #ff64c8;
+  --color-purple: #391c57;
+  --color-brown: #523410;
+
+  /* Badge Colors */
+  --color-badge-blue-bg: #f2f9ff;
+  --color-badge-blue-text: #097fe8;
+
+  /* Shadows */
+  --shadow-card: rgba(0, 0, 0, 0.04) 0px 4px 18px, rgba(0, 0, 0, 0.027) 0px 2.025px 7.84688px, rgba(0, 0, 0, 0.02) 0px 0.8px 2.925px, rgba(0, 0, 0, 0.01) 0px 0.175px 1.04062px;
+  --shadow-deep: rgba(0, 0, 0, 0.01) 0px 1px 3px, rgba(0, 0, 0, 0.02) 0px 3px 7px, rgba(0, 0, 0, 0.02) 0px 7px 15px, rgba(0, 0, 0, 0.04) 0px 14px 28px, rgba(0, 0, 0, 0.05) 0px 23px 52px;
+
+  /* Borders */
+  --border-whisper: 1px solid rgba(0, 0, 0, 0.1);
+
+  /* Spacing */
+  --spacing-base: 8px;
+
+  /* Radius */
+  --radius-micro: 4px;
+  --radius-subtle: 5px;
+  --radius-standard: 8px;
+  --radius-comfortable: 12px;
+  --radius-large: 16px;
+  --radius-pill: 9999px;
+
+  /* Legacy variables for compatibility */
+  --background: var(--color-white);
+  --foreground: var(--color-notion-black);
+  --card: var(--color-white);
+  --card-foreground: var(--color-notion-black);
+  --popover: var(--color-white);
+  --popover-foreground: var(--color-notion-black);
+  --primary: var(--color-notion-blue);
+  --primary-foreground: var(--color-white);
+  --secondary: var(--color-warm-dark);
+  --secondary-foreground: var(--color-white);
+  --muted: var(--color-warm-white);
+  --muted-foreground: var(--color-warm-gray-500);
+  --accent: var(--color-orange);
+  --accent-foreground: var(--color-white);
+  --destructive: var(--color-orange);
+  --destructive-foreground: var(--color-white);
+  --border: rgba(0, 0, 0, 0.1);
+  --input: var(--color-white);
+  --ring: var(--color-notion-blue-focus);
+  --chart-1: var(--color-notion-blue);
+  --chart-2: var(--color-orange);
+  --chart-3: var(--color-teal);
+  --chart-4: var(--color-green);
+  --chart-5: var(--color-purple);
+  --radius: var(--radius-comfortable);
+  --sidebar: var(--color-white);
+  --sidebar-foreground: var(--color-notion-black);
+  --sidebar-primary: var(--color-notion-blue);
+  --sidebar-primary-foreground: var(--color-white);
+  --sidebar-accent: var(--color-orange);
+  --sidebar-accent-foreground: var(--color-white);
+  --sidebar-border: rgba(0, 0, 0, 0.1);
+  --sidebar-ring: var(--color-notion-blue-focus);
+  --safe-green: var(--color-teal);
+  --caution-orange: var(--color-orange);
+  --unsafe-red: #e74c3c;
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
+  --font-sans: 'Inter', -apple-system, system-ui, 'Segoe UI', Helvetica, 'Apple Color Emoji', Arial, 'Segoe UI Emoji', 'Segoe UI Symbol';
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  
+  /* Notion Typography Scale */
+  --font-size-display-hero: 4rem;
+  --font-size-display-secondary: 3.375rem;
+  --font-size-section-heading: 3rem;
+  --font-size-subheading-large: 2.5rem;
+  --font-size-subheading: 1.625rem;
+  --font-size-card-title: 1.375rem;
+  --font-size-body-large: 1.25rem;
+  --font-size-body: 1rem;
+  --font-size-nav-button: 0.9375rem;
+  --font-size-caption: 0.875rem;
+  --font-size-badge: 0.75rem;
+  
+  /* Font Weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -130,5 +157,54 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Notion Typography Styles */
+  h1 {
+    @apply text-[4rem] font-bold leading-tight tracking-[-2.125px];
+  }
+
+  h2 {
+    @apply text-[3rem] font-bold leading-tight tracking-[-1.5px];
+  }
+
+  h3 {
+    @apply text-[1.625rem] font-bold leading-tight tracking-[-0.625px];
+  }
+
+  h4 {
+    @apply text-[1.375rem] font-bold leading-snug tracking-[-0.25px];
+  }
+
+  p {
+    @apply text-base font-normal leading-relaxed;
+  }
+
+  /* Notion Card Styles */
+  .notion-card {
+    @apply bg-white border border-black/10 rounded-[12px] shadow-[rgba(0,0,0,0.04)_0px_4px_18px,rgba(0,0,0,0.027)_0px_2.025px_7.85px,rgba(0,0,0,0.02)_0px_0.8px_2.93px,rgba(0,0,0,0.01)_0px_0.175px_1.04px];
+  }
+
+  /* Notion Button Styles */
+  .notion-btn-primary {
+    @apply bg-[#0075de] text-white px-4 py-2 rounded-[4px] font-semibold text-[0.9375rem] border border-transparent hover:bg-[#005bab] active:scale-90 transition-all;
+  }
+
+  .notion-btn-secondary {
+    @apply bg-black/5 text-black px-4 py-2 rounded-[4px] font-semibold text-[0.9375rem] hover:scale-105 active:scale-90 transition-all;
+  }
+
+  .notion-btn-ghost {
+    @apply bg-transparent text-black px-4 py-2 rounded-[4px] font-semibold text-[0.9375rem] hover:underline transition-all;
+  }
+
+  /* Notion Badge Styles */
+  .notion-badge {
+    @apply bg-[#f2f9ff] text-[#097fe8] px-2 py-1 rounded-full text-[0.75rem] font-semibold tracking-[0.125px] inline-block;
+  }
+
+  /* Notion Section Background */
+  .notion-section-alt {
+    @apply bg-[#f6f5f4];
   }
 }
