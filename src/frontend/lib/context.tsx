@@ -44,12 +44,13 @@ const initialUserData: UserData = {
   name: 'Mom',
   role: 'mother',
   age: 28,
-  weeksPostpartum: 6,
-  points: 1950,
-  milkScore: 82,
-  totalSpending: 450,
-  budget: 600,
-  babyDob: '2024-10-06', // Fixed date instead of dynamic calculation
+  weeksPostpartum: 0, // Đang mang thai tuần 8 (3 tháng đầu thai kỳ)
+  points: 320,
+  milkScore: 0,
+  totalSpending: 150,
+  budget: 500,
+  // Ngày dự sinh: ~32 tuần nữa (tuần 8 thai kỳ → còn ~32 tuần đến ngày sinh)
+  babyDob: new Date(Date.now() + 224 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {
