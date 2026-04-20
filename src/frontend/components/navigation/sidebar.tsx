@@ -5,15 +5,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import React, { useState } from 'react';
 import {
-  LayoutDashboard,
-  Camera,
-  Heart,
-  Settings,
   X,
-  Bell,
-  MessageCircle,
-  ShoppingCart,
-  Wallet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
@@ -26,85 +18,78 @@ interface SidebarProps {
 interface NavItem {
   href?: string;
   label: string;
-  icon: any;
+  icon?: any;
   roles: string[];
   children?: NavItem[];
 }
 
 const navigationItems: NavItem[] = [
   // Shared
-  { href: '/', label: 'Trang chủ', icon: LayoutDashboard, roles: ['mother', 'father', 'admin'] },
-  { href: '/baby-journey', label: 'Hành Trình Của Bé', icon: Heart, roles: ['mother', 'father'] },
-  { href: '/notifications', label: 'Thông báo', icon: Bell, roles: ['mother', 'father'] },
-  { href: '/nori', label: 'Nori', icon: MessageCircle, roles: ['mother', 'father'] },
+  { href: '/', label: 'Trang chủ', roles: ['mother', 'father', 'admin'] },
+  { href: '/baby-journey', label: 'Hành Trình Của Bé', roles: ['mother', 'father'] },
+  { href: '/notifications', label: 'Thông báo', roles: ['mother', 'father'] },
+  { href: '/nori', label: 'Nori', roles: ['mother', 'father'] },
   
   // Mother only
   {
     label: 'Dinh dưỡng',
-    icon: Camera,
     roles: ['mother'],
     children: [
       { 
         label: 'Quét Dinh Dưỡng', 
-        icon: Camera, 
         roles: ['mother'],
         children: [
-          { href: '/nutrition-scan?tab=scan', label: 'Smart Scan', icon: Camera, roles: ['mother'] },
-          { href: '/nutrition-scan?tab=recommendations', label: 'Gợi ý', icon: Camera, roles: ['mother'] },
+          { href: '/nutrition-scan?tab=scan', label: 'Smart Scan', roles: ['mother'] },
+          { href: '/nutrition-scan?tab=recommendations', label: 'Gợi ý', roles: ['mother'] },
         ]
       },
-      { href: '/nutrition', label: 'Khuyến Nghị', icon: Camera, roles: ['mother'] },
+      { href: '/nutrition', label: 'Khuyến Nghị', roles: ['mother'] },
     ],
   },
   {
     label: 'Sức khỏe',
-    icon: Heart,
     roles: ['mother'],
     children: [
       { 
         label: 'Theo Dõi Sức Khỏe', 
-        icon: Heart, 
         roles: ['mother'],
         children: [
-          { href: '/wellness?tab=trend', label: 'Xu hướng', icon: Heart, roles: ['mother'] },
-          { href: '/wellness?tab=impact', label: 'Ảnh hưởng', icon: Heart, roles: ['mother'] },
+          { href: '/wellness?tab=trend', label: 'Xu hướng', roles: ['mother'] },
+          { href: '/wellness?tab=impact', label: 'Ảnh hưởng', roles: ['mother'] },
         ]
       },
-      { href: '/wellness?tab=checkup', label: 'Cập nhật Khám định kì', icon: Heart, roles: ['mother'] },
+      { href: '/wellness?tab=checkup', label: 'Cập nhật Khám định kì', roles: ['mother'] },
     ],
   },
   
   // Father only - Grouped
   {
     label: 'NutriMart',
-    icon: ShoppingCart,
     roles: ['father'],
     children: [
-      { href: '/nutrimart?tab=shopping', label: 'Mua Sắm', icon: ShoppingCart, roles: ['father'] },
-      { href: '/nutrimart?tab=cooking', label: 'Nấu Ăn', icon: ShoppingCart, roles: ['father'] },
+      { href: '/nutrimart?tab=shopping', label: 'Mua Sắm', roles: ['father'] },
+      { href: '/nutrimart?tab=cooking', label: 'Nấu Ăn', roles: ['father'] },
     ],
   },
   {
     label: 'Hỗ trợ',
-    icon: Heart,
     roles: ['father'],
     children: [
-      { href: '/?tab=checklist', label: 'Checklist', icon: Heart, roles: ['father'] },
-      { href: '/?tab=family', label: 'Gia đình', icon: Heart, roles: ['father'] },
+      { href: '/?tab=checklist', label: 'Checklist', roles: ['father'] },
+      { href: '/?tab=family', label: 'Gia đình', roles: ['father'] },
     ],
   },
   {
     label: 'Planner',
-    icon: Wallet,
     roles: ['father'],
     children: [
-      { href: '/planner?tab=budget', label: 'Kế Hoạch', icon: Wallet, roles: ['father'] },
-      { href: '/planner?tab=missions', label: 'Nhiệm Vụ', icon: Wallet, roles: ['father'] },
+      { href: '/planner?tab=budget', label: 'Kế Hoạch', roles: ['father'] },
+      { href: '/planner?tab=missions', label: 'Nhiệm Vụ', roles: ['father'] },
     ],
   },
   
   // Admin only
-  { href: '/admin', label: 'Quản trị', icon: Settings, roles: ['admin'] },
+  { href: '/admin', label: 'Quản trị', roles: ['admin'] },
 ];
 
 export function Sidebar({ open, onOpenChange }: SidebarProps) {
@@ -114,7 +99,8 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
 
   // Find the parent item based on current pathname
   const getActiveParent = () => {
-    for (const item of navigationItems) {
+    const filteredNavItems = navigationItems.filter(item => item.roles.includes(user?.role || ''));
+    for (const item of filteredNavItems) {
       if (item.children) {
         // Check level 1 children
         if (item.children.some(child => {
@@ -144,7 +130,8 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
   };
 
   const activeParent = getActiveParent();
-  const childrenToShow = activeParent?.children || [];
+  const filteredItems = navigationItems.filter(item => item.roles.includes(user?.role || ''));
+  const childrenToShow = activeParent?.children?.filter(child => child.roles.includes(user?.role || '')) || [];
 
   return (
     <>
@@ -177,7 +164,7 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
                   const Icon = child.icon;
                   const childPath = child.href?.split('?')[0];
                   const currentPath = pathname.split('?')[0];
-                  const isActive = currentPath === childPath;
+                  const isActive = child.href ? currentPath === childPath : false;
                   const hasSubChildren = child.children && child.children.length > 0;
                   const isHovered = hoveredItem === child.label;
 
@@ -188,16 +175,15 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
                         onMouseEnter={() => setHoveredItem(child.label)}
                         onMouseLeave={() => setHoveredItem(null)}
                       >
-                        <div className="px-3 py-2 text-sm font-medium text-sidebar-foreground cursor-pointer hover:bg-sidebar-accent rounded-lg transition-colors">
-                          <Icon className="h-4 w-4 inline mr-2" />
+                        <div className="px-3 py-2 text-sm font-medium text-sidebar-foreground cursor-pointer hover:text-safe-green rounded-lg transition-colors">
                           {child.label}
                         </div>
                         {isHovered && (
                           <div className="ml-4 space-y-1">
                             {child.children!.map((subChild) => {
                               const SubIcon = subChild.icon;
-                              const subChildPath = subChild.href?.split('?')[0];
-                              const isSubActive = currentPath === subChildPath;
+                              const subChildPath = subChild.href;
+                              const isSubActive = pathname === subChildPath;
 
                               return (
                                 <Link
@@ -206,12 +192,11 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
                                   className={cn(
                                     'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                                     isSubActive
-                                      ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                                      : 'text-sidebar-foreground hover:bg-sidebar-accent'
+                                      ? 'bg-[#f2f9ff] text-[#0075de]'
+                                      : 'text-sidebar-foreground hover:text-safe-green'
                                   )}
                                   onClick={() => onOpenChange(false)}
                                 >
-                                  <SubIcon className="h-4 w-4 shrink-0" />
                                   <span>{subChild.label}</span>
                                 </Link>
                               );
@@ -229,12 +214,11 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
                       className={cn(
                         'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                         isActive
-                          ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                          : 'text-sidebar-foreground hover:bg-sidebar-accent'
+                          ? 'bg-[#f2f9ff] text-[#0075de]'
+                          : 'text-sidebar-foreground hover:text-safe-green'
                       )}
                       onClick={() => onOpenChange(false)}
                     >
-                      <Icon className="h-5 w-5 shrink-0" />
                       <span>{child.label}</span>
                     </Link>
                   );
@@ -246,7 +230,7 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
           {/* Close button for mobile */}
           <div className="border-t border-sidebar-border p-3 md:hidden">
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => onOpenChange(false)}
               className="w-full"

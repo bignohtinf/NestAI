@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Users, TrendingUp, Activity, AlertCircle, BarChart3, PieChart as PieChartIcon } from 'lucide-react';
+import { Users, TrendingUp, Activity, AlertCircle } from 'lucide-react';
 
 export function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -104,16 +104,13 @@ export function AdminDashboard() {
       {/* Charts */}
       <Tabs defaultValue="growth" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="growth" className="gap-2">
-            <BarChart3 className="h-4 w-4" />
+          <TabsTrigger value="growth">
             <span className="hidden sm:inline">Tăng trưởng</span>
           </TabsTrigger>
-          <TabsTrigger value="distribution" className="gap-2">
-            <PieChartIcon className="h-4 w-4" />
+          <TabsTrigger value="distribution">
             <span className="hidden sm:inline">Phân bố</span>
           </TabsTrigger>
-          <TabsTrigger value="activity" className="gap-2">
-            <Activity className="h-4 w-4" />
+          <TabsTrigger value="activity">
             <span className="hidden sm:inline">Hoạt động</span>
           </TabsTrigger>
         </TabsList>

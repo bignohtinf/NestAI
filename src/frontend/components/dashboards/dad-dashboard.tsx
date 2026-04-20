@@ -2,6 +2,7 @@
 
 import { useApp } from '@/lib/context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MilkScoreGauge } from '@/components/metrics/milk-score-gauge';
 import { BudgetTracker } from '@/components/metrics/budget-tracker';
 import { ActionChecklist } from '@/components/metrics/action-checklist';
@@ -45,17 +46,24 @@ export function DadDashboard() {
           <CardDescription>Checklist hôm nay và radar gia đình</CardDescription>
         </CardHeader>
         <CardContent>
-          {activeTab === 'checklist' && (
-            <div className="space-y-4">
-              <ActionChecklist />
-            </div>
-          )}
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'checklist' | 'family')} className="space-y-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="checklist">
+                <span className="hidden sm:inline">Checklist</span>
+              </TabsTrigger>
+              <TabsTrigger value="family">
+                <span className="hidden sm:inline">Gia đình</span>
+              </TabsTrigger>
+            </TabsList>
 
-          {activeTab === 'family' && (
-            <div className="space-y-4">
+            <TabsContent value="checklist">
+              <ActionChecklist />
+            </TabsContent>
+
+            <TabsContent value="family">
               <FamilyStatus />
-            </div>
-          )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
@@ -83,7 +91,7 @@ export function DadDashboard() {
           </CardHeader>
           <CardContent>
             <BudgetTracker />
-            <Button className="mt-4 w-full" variant="outline">
+            <Button className="mt-4 w-full" variant="secondary">
               Xem Chi tiết
             </Button>
           </CardContent>

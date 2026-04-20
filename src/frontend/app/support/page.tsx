@@ -8,7 +8,6 @@ import { FamilyStatus } from '@/components/metrics/family-status';
 import { useApp } from '@/lib/context';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { CheckSquare, Users } from 'lucide-react';
 
 export default function SupportPage() {
   const { user } = useApp();
@@ -36,12 +35,10 @@ export default function SupportPage() {
 
         <Tabs defaultValue="checklist" className="space-y-4">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="checklist" className="gap-2">
-              <CheckSquare className="h-4 w-4" />
+            <TabsTrigger value="checklist">
               <span className="hidden sm:inline">Checklist</span>
             </TabsTrigger>
-            <TabsTrigger value="family" className="gap-2">
-              <Users className="h-4 w-4" />
+            <TabsTrigger value="family">
               <span className="hidden sm:inline">Gia đình</span>
             </TabsTrigger>
           </TabsList>
