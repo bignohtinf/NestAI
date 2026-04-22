@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Users, TrendingUp, Activity, AlertCircle } from 'lucide-react';
+import { Users, TrendingUp, Activity, AlertCircle, Apple } from 'lucide-react';
+import { NutritionDbTab } from '@/components/admin/nutrition-db-tab';
 
 export function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -20,17 +21,20 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // TODO: Fetch statistics from API
-    setStats({
-      totalUsers: 0,
-      totalAdmins: 0,
-      totalMothers: 0,
-      totalFathers: 0,
-      activeUsers: 0,
-      totalPartnerships: 0,
-      totalBabies: 0,
-    });
-    setLoading(false);
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/admin/stats');
+        if (!response.ok) throw new Error('Failed to fetch');
+        const data = await response.json();
+        setStats(data);
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+        // Keep default values on error
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
   }, []);
 
   // TODO: Fetch chart data from API
@@ -103,7 +107,7 @@ export function AdminDashboard() {
 
       {/* Charts */}
       <Tabs defaultValue="growth" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="growth">
             <span className="hidden sm:inline">Tăng trưởng</span>
           </TabsTrigger>
@@ -112,6 +116,10 @@ export function AdminDashboard() {
           </TabsTrigger>
           <TabsTrigger value="activity">
             <span className="hidden sm:inline">Hoạt động</span>
+          </TabsTrigger>
+          <TabsTrigger value="nutrition">
+            <Apple className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Dinh dưỡng</span>
           </TabsTrigger>
         </TabsList>
 
@@ -190,6 +198,11 @@ export function AdminDashboard() {
               </ResponsiveContainer>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Nutrition Database */}
+        <TabsContent value="nutrition" className="space-y-4">
+          <NutritionDbTab />
         </TabsContent>
       </Tabs>
 

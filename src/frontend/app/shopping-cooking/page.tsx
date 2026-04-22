@@ -7,11 +7,16 @@ import { SmartShopping } from '@/components/metrics/smart-shopping';
 import { IngredientScanner } from '@/components/metrics/ingredient-scanner';
 import { useApp } from '@/lib/context';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function ShoppingCookingPage() {
   const { user } = useApp();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -21,7 +26,7 @@ export default function ShoppingCookingPage() {
     }
   }, [user, router]);
 
-  if (!user || user.role !== 'father') {
+  if (!mounted || !user || user.role !== 'father') {
     return null;
   }
 
@@ -29,28 +34,32 @@ export default function ShoppingCookingPage() {
     <MainLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Mua sắm & Nấu ăn</h1>
-          <p className="text-muted-foreground">Tối ưu hóa mua sắm và gợi ý món ăn từ nguyên liệu</p>
+          <h1 className="text-3xl font-bold">Mua Sắm & Nấu Ăn</h1>
+          <p className="text-muted-foreground">Quản lý mua sắm và nấu ăn cho gia đình</p>
         </div>
 
         <Tabs defaultValue="shopping" className="space-y-4">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="shopping">
-              <span className="hidden sm:inline">Mua sắm</span>
-            </TabsTrigger>
-            <TabsTrigger value="cooking">
-              <span className="hidden sm:inline">Nấu ăn</span>
-            </TabsTrigger>
+            <TabsTrigger value="shopping">Mua Sắm</TabsTrigger>
+            <TabsTrigger value="cooking">Nấu Ăn</TabsTrigger>
           </TabsList>
 
-          {/* Shopping Tab */}
-          <TabsContent value="shopping" className="space-y-6">
+          <TabsContent value="shopping">
             <SmartShopping />
           </TabsContent>
 
-          {/* Cooking Tab */}
-          <TabsContent value="cooking" className="space-y-6">
-            <IngredientScanner />
+          <TabsContent value="cooking">
+            <Card>
+              <CardHeader>
+                <CardTitle>Công Thức Nấu Ăn</CardTitle>
+                <CardDescription>Công thức nấu ăn được khuyến nghị</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">Công thức nấu ăn sẽ được cập nhật</p>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

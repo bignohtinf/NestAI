@@ -12,6 +12,11 @@ export default function WellnessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<'trend' | 'impact' | 'checkup'>('trend');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -22,6 +27,7 @@ export default function WellnessPage() {
   }, [user, router]);
 
   useEffect(() => {
+    if (!mounted) return;
     const tab = searchParams.get('tab');
     if (tab === 'impact') {
       setActiveTab('impact');
@@ -30,9 +36,9 @@ export default function WellnessPage() {
     } else {
       setActiveTab('trend');
     }
-  }, [searchParams]);
+  }, [searchParams, mounted]);
 
-  if (!user || user.role !== 'mother') {
+  if (!mounted || !user || user.role !== 'mother') {
     return null;
   }
 

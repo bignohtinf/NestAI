@@ -1,20 +1,42 @@
 'use client';
 
 import { MainLayout } from '@/components/layouts/main-layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { BotAnimation } from '@/components/nori/bot-animation';
 import { useApp } from '@/lib/context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, Sparkles, Baby, Apple, ChefHat, HeartPulse } from 'lucide-react';
 
 interface Message {
   id: string;
   type: 'user' | 'bot';
   content: string;
   timestamp: Date;
+}
+
+const quickSuggestions = [
+  { icon: Apple, text: 'Tôi nên ăn gì để tăng sữa?' },
+  { icon: Baby, text: 'Bé 2 tháng tuổi phát triển bình thường không?' },
+  { icon: ChefHat, text: 'Có công thức nấu ăn nào tốt cho mẹ không?' },
+  { icon: HeartPulse, text: 'Tôi cảm thấy mệt mỏi, phải làm sao?' },
+];
+
+const BOT_FRAMES = ['/bot_1.PNG', '/bot_2.PNG', '/bot_3.PNG'];
+
+function BotAvatar({ size = 28 }: { size?: number }) {
+  const [frame, setFrame] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setFrame(f => (f + 1) % 3), 400);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <img
+      src={BOT_FRAMES[frame]}
+      alt="Nori"
+      width={size}
+      height={size}
+      style={{ width: size, height: size, objectFit: 'contain' }}
+    />
+  );
 }
 
 export default function NoriPage() {
@@ -26,201 +48,193 @@ export default function NoriPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-    } else if (user.role === 'admin') {
-      router.push('/');
-    }
+    if (!user) router.push('/auth/login');
+    else if (user.role === 'admin') router.push('/');
   }, [user, router]);
 
   useEffect(() => {
-    // Initialize with welcome message
-    if (messages.length === 0) {
+    if (messages.length === 0 && user) {
       setMessages([
         {
           id: '1',
           type: 'bot',
-          content: `Xin chào ${user?.name}! 👋 Tôi là Nori, trợ lý AI của bạn. Tôi có thể giúp bạn với:\n\n• Lời khuyên về dinh dưỡng cho mẹ sau sinh\n• Thông tin về phát triển của bé\n• Gợi ý công thức nấu ăn\n• Trả lời các câu hỏi về sức khỏe\n\nBạn cần giúp gì hôm nay?`,
+          content: `Xin chào ${user?.name}! 💕\n\nTôi là Nori — trợ lý AI đồng hành cùng mẹ và bé. Tôi có thể giúp bạn:\n\n• Lời khuyên dinh dưỡng cho mẹ sau sinh\n• Thông tin phát triển của bé\n• Gợi ý công thức nấu ăn lành mạnh\n• Trả lời câu hỏi về sức khỏe\n\nHôm nay mẹ cần tôi giúp gì? 🌸`,
           timestamp: new Date(),
         },
       ]);
     }
-  }, [user?.name]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, [user]);
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+  const handleSend = async (text?: string) => {
+    const msg = (text ?? input).trim();
+    if (!msg) return;
+    setInput('');
 
-    // Add user message
-    const userMessage: Message = {
+    const userMsg: Message = {
       id: Date.now().toString(),
       type: 'user',
-      content: input,
+      content: msg,
       timestamp: new Date(),
     };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
+    setMessages(prev => [...prev, userMsg]);
     setLoading(true);
 
-    // Simulate bot response delay
     setTimeout(() => {
-      const botResponse = generateBotResponse(input);
-      const botMessage: Message = {
+      const botMsg: Message = {
         id: (Date.now() + 1).toString(),
         type: 'bot',
-        content: botResponse,
+        content: generateResponse(msg),
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, botMessage]);
+      setMessages(prev => [...prev, botMsg]);
       setLoading(false);
-    }, 800);
+    }, 900);
   };
 
-  const generateBotResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase();
-
-    // Nutrition responses
-    if (input.includes('dinh dưỡng') || input.includes('ăn gì')) {
-      return `Để duy trì sức khỏe và sản xuất sữa tốt, bạn nên:\n\n✓ Ăn đủ protein (cá, trứng, thịt)\n✓ Uống đủ nước (8-10 cốc/ngày)\n✓ Ăn rau xanh và trái cây\n✓ Bổ sung canxi (sữa, phô mai, cá)\n✓ Ăn các loại hạt (hạnh nhân, óc chó)\n\nBạn có muốn xem công thức nấu ăn cụ thể không?`;
+  const generateResponse = (userInput: string): string => {
+    const q = userInput.toLowerCase();
+    if (q.includes('dinh dưỡng') || q.includes('ăn gì') || q.includes('tăng sữa')) {
+      return `Để duy trì sức khỏe và sản xuất sữa tốt, mẹ nên:\n\n✅ Ăn đủ protein (cá hồi, trứng, thịt gà)\n✅ Uống đủ nước 8–10 cốc/ngày\n✅ Rau xanh đậm & trái cây tươi\n✅ Canxi từ sữa, phô mai, cá nhỏ\n✅ Hạnh nhân, óc chó, hạt chia\n\nBạn muốn tôi gợi ý thực đơn cụ thể không? 🍱`;
     }
-
-    if (input.includes('sữa') || input.includes('bú')) {
-      return `Về nuôi con bằng sữa mẹ:\n\n• Bé nên bú 8-12 lần/ngày trong 2 tháng đầu\n• Mỗi lần bú khoảng 15-20 phút\n• Xen kẽ giữa hai ngực\n• Nếu sữa ít, hãy bú thường xuyên hơn\n• Mẹ cần ăn uống đầy đủ và nghỉ ngơi\n\nBạn có vấn đề gì về sữa không?`;
+    if (q.includes('sữa') || q.includes('bú')) {
+      return `Về nuôi con bằng sữa mẹ 🤱\n\n• Bé nên bú 8–12 lần/ngày trong 2 tháng đầu\n• Mỗi lần bú khoảng 15–20 phút\n• Xen kẽ hai bên ngực\n• Nếu sữa ít, hãy cho bú thường xuyên hơn\n• Mẹ cần ngủ đủ giấc và ăn uống đầy đủ\n\nMẹ đang gặp vấn đề gì cụ thể không?`;
     }
-
-    if (input.includes('bé') || input.includes('con')) {
-      return `Về phát triển của bé:\n\n👶 0-2 tháng: Bé chủ yếu ngủ, bú và khóc\n😊 2-4 tháng: Bé bắt đầu cười, theo dõi vật\n🤲 4-6 tháng: Bé nắm chặt tay, lăn người\n🍽️ 6+ tháng: Bé sẵn sàng ăn dặm\n\nBé của bạn bao nhiêu tuổi rồi?`;
+    if (q.includes('bé') || q.includes('con') || q.includes('phát triển')) {
+      return `Về phát triển của bé 👶\n\n🌱 0–2 tháng: Ngủ nhiều, bú và khóc để giao tiếp\n😊 2–4 tháng: Biết cười, theo dõi ánh sáng & khuôn mặt\n🤲 4–6 tháng: Nắm tay, lẫy, bắt đầu tập ngồi\n🍽️ 6+ tháng: Sẵn sàng ăn dặm\n\nBé của mẹ đang được bao nhiêu tuổi rồi?`;
     }
-
-    if (input.includes('công thức') || input.includes('nấu ăn')) {
-      return `Tôi có thể gợi ý một số công thức dinh dưỡng:\n\n🥣 Cháo cá hồi với rau xanh\n🥗 Salad cá ngừ với dầu olive\n🍲 Canh gà với nấm\n🥘 Cơm chiên với trứng và rau\n\nBạn muốn xem chi tiết công thức nào?`;
+    if (q.includes('công thức') || q.includes('nấu ăn') || q.includes('món')) {
+      return `Một số món ngon bổ dưỡng cho mẹ sau sinh 🍲\n\n🥣 Cháo cá hồi + rau chân vịt\n🍵 Canh gà hầm nấm linh chi\n🥗 Salad cá ngừ + dầu olive\n🫕 Súp bí đỏ + hạt bí\n\nMón nào mẹ muốn tôi hướng dẫn chi tiết?`;
     }
-
-    if (input.includes('mệt') || input.includes('stress') || input.includes('lo lắng')) {
-      return `Mẹ sau sinh thường cảm thấy mệt mỏi và lo lắng. Đây là bình thường!\n\n💡 Lời khuyên:\n• Nghỉ ngơi đủ giấc (ít nhất 6-8 giờ/ngày)\n• Yêu cầu gia đình giúp đỡ\n• Ăn uống đầy đủ và thường xuyên\n• Tập thể dục nhẹ\n• Nếu cảm thấy quá lo lắng, hãy trao đổi với bác sĩ\n\nBạn cần hỗ trợ gì?`;
+    if (q.includes('mệt') || q.includes('stress') || q.includes('lo lắng') || q.includes('buồn')) {
+      return `Mẹ ơi, mệt mỏi sau sinh là hoàn toàn bình thường! 💗\n\n💡 Một vài lời khuyên:\n• Tranh thủ ngủ khi bé ngủ\n• Nhờ chồng/gia đình hỗ trợ bế bé\n• Ăn đủ bữa, không bỏ bữa\n• Đi bộ nhẹ 15 phút/ngày\n• Tâm sự với người thân khi cần\n\nNếu cảm thấy quá tải kéo dài, hãy nói chuyện với bác sĩ nhé. Mẹ không đơn độc! 🌸`;
     }
-
-    // Default response
-    return `Cảm ơn câu hỏi của bạn! 😊\n\nTôi có thể giúp bạn về:\n• Dinh dưỡng cho mẹ sau sinh\n• Phát triển của bé\n• Công thức nấu ăn\n• Sức khỏe và sự chăm sóc\n\nHãy hỏi tôi bất cứ điều gì bạn muốn biết!`;
+    return `Cảm ơn câu hỏi của mẹ! 😊\n\nTôi có thể giúp bạn về:\n• 🥗 Dinh dưỡng cho mẹ sau sinh\n• 👶 Phát triển và chăm sóc bé\n• 🍳 Công thức nấu ăn lành mạnh\n• 💊 Sức khỏe & phục hồi sau sinh\n\nHãy hỏi tôi bất cứ điều gì nhé!`;
   };
 
-  if (!user || user.role === 'admin') {
-    return null;
-  }
+  if (!user || user.role === 'admin') return null;
 
   return (
     <MainLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold">Nori - Trợ lý AI</h1>
-          <p className="text-muted-foreground">Hỏi tôi bất cứ điều gì về sức khỏe, dinh dưỡng và phát triển của bé</p>
+      <div className="space-y-4 h-full">
+
+        {/* Chat Header */}
+        <div className="rounded-2xl p-4 flex items-center gap-3 border border-violet-100"
+          style={{ background: 'linear-gradient(135deg, #faf8ff, #f3eeff)' }}>
+          <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center shrink-0 overflow-hidden border border-violet-100">
+            <BotAvatar size={52} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="font-bold text-lg leading-tight text-violet-900">Nori</h1>
+            <p className="text-violet-400 text-xs">Trợ lý AI • Luôn sẵn sàng lắng nghe</p>
+          </div>
+          <div className="flex items-center gap-1.5 bg-violet-100 rounded-full px-3 py-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-xs text-violet-500">Online</span>
+          </div>
         </div>
 
-        {/* Bot Animation */}
-        <div className="flex justify-center">
-          <BotAnimation />
-        </div>
+        {/* Chat Window */}
+        <div className="rounded-2xl border border-border/50 bg-card shadow-card flex flex-col overflow-hidden"
+          style={{ height: 'calc(100vh - 300px)', minHeight: '420px' }}>
 
-        {/* Chat Container */}
-        <Card className="flex flex-col h-[600px]">
           {/* Messages */}
-          <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((message) => (
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {messages.map((msg) => (
               <div
-                key={message.id}
-                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                key={msg.id}
+                className={`flex items-end gap-2 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div
-                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                    message.type === 'user'
-                      ? 'bg-primary text-primary-foreground rounded-br-none'
-                      : 'bg-muted text-muted-foreground rounded-bl-none'
-                  }`}
+                {msg.type === 'bot' && (
+                  <div className="w-8 h-8 rounded-full bg-white border border-green-100 flex items-center justify-center shrink-0 mb-0.5 overflow-hidden">
+                    <BotAvatar size={30} />
+                  </div>
+                )}
+                <div className={`max-w-[78%] rounded-2xl px-4 py-2.5 shadow-sm ${
+                  msg.type === 'user'
+                    ? 'text-rose-900 rounded-br-sm'
+                    : 'text-green-900 rounded-bl-sm'
+                }`}
+                  style={msg.type === 'user'
+                    ? { background: '#fecdd3' }
+                    : { background: '#dcfce7' }}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                  <p className={`text-xs mt-1 ${message.type === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                    {message.timestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                  <p className={`text-xs mt-1 ${msg.type === 'user' ? 'text-rose-400 text-right' : 'text-green-600'}`}>
+                    {msg.timestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
+                {msg.type === 'user' && (
+                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm shrink-0 mb-0.5">
+                    👤
+                  </div>
+                )}
               </div>
             ))}
+
             {loading && (
-              <div className="flex justify-start">
-                <div className="bg-muted text-muted-foreground px-4 py-2 rounded-lg rounded-bl-none">
-                  <Loader2 className="h-4 w-4 animate-spin" />
+              <div className="flex items-end gap-2 justify-start">
+                <div className="w-8 h-8 rounded-full bg-white border border-green-100 flex items-center justify-center shrink-0 overflow-hidden">
+                  <BotAvatar size={30} />
+                </div>
+                <div className="rounded-2xl rounded-bl-sm px-4 py-3" style={{ background: '#dcfce7' }}>
+                  <div className="flex gap-1 items-center">
+                    <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
                 </div>
               </div>
             )}
             <div ref={messagesEndRef} />
-          </CardContent>
+          </div>
 
-          {/* Input */}
-          <div className="border-t border-border p-4">
-            <form onSubmit={handleSendMessage} className="flex gap-2">
-              <Input
+          {/* Input Area */}
+          <div className="border-t border-border/50 bg-background/50 p-3">
+            <form
+              onSubmit={(e) => { e.preventDefault(); handleSend(); }}
+              className="flex gap-2 items-center"
+            >
+              <input
+                className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/15 transition-all placeholder:text-muted-foreground"
                 placeholder="Nhập câu hỏi của bạn..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 disabled={loading}
-                className="flex-1"
               />
-              <Button
+              <button
                 type="submit"
                 disabled={loading || !input.trim()}
-                size="icon"
+                className="h-10 w-10 rounded-xl flex items-center justify-center text-violet-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-violet-200 active:scale-95 shrink-0 border border-violet-200"
+                style={{ background: '#ede9fe' }}
               >
-                <Send className="h-4 w-4" />
-              </Button>
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </button>
             </form>
           </div>
-        </Card>
+        </div>
 
-        {/* Quick suggestions */}
+        {/* Quick Suggestions */}
         <div>
-          <p className="text-sm font-medium text-muted-foreground mb-2">Gợi ý câu hỏi:</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setInput('Tôi nên ăn gì để tăng sữa?')}
-              className="justify-start"
-            >
-              Tôi nên ăn gì để tăng sữa?
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setInput('Bé 2 tháng tuổi phát triển bình thường không?')}
-              className="justify-start"
-            >
-              Bé 2 tháng tuổi phát triển bình thường không?
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setInput('Có công thức nấu ăn nào tốt cho mẹ không?')}
-              className="justify-start"
-            >
-              Có công thức nấu ăn nào tốt cho mẹ không?
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setInput('Tôi cảm thấy mệt mỏi, phải làm sao?')}
-              className="justify-start"
-            >
-              Tôi cảm thấy mệt mỏi, phải làm sao?
-            </Button>
+          <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+            <Sparkles className="h-3 w-3" />
+            Gợi ý câu hỏi
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {quickSuggestions.map((s) => (
+              <button
+                key={s.text}
+                onClick={() => handleSend(s.text)}
+                disabled={loading}
+                className="flex items-center gap-2.5 text-left rounded-xl border border-border/60 bg-card px-3.5 py-2.5 text-sm text-foreground/80 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all disabled:opacity-50"
+              >
+                <s.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="leading-snug">{s.text}</span>
+              </button>
+            ))}
           </div>
         </div>
       </div>

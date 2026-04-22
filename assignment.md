@@ -1,6 +1,6 @@
-# Assignment – NextAI App
+# Assignment – NestAI App
 
-> Dựa trên file thiết kế `src/docs/thietke.md`, DB schema `db_nextai.txt`, và API endpoints `endpoints.md`
+> Dựa trên file thiết kế `src/docs/thietke.md`, DB schema `db_NestAI.txt`, và API endpoints `endpoints.md`
 > Cập nhật: 18/04/2026 – sau khi scan codebase hiện tại
 
 ---
@@ -335,7 +335,7 @@ app.include_router(quests.router, prefix="/api/quests", tags=["quests"])
 
 ```python
 NORI_SYSTEM_PROMPT = """
-Bạn là Nori – trợ lý AI của ứng dụng NextAI dành cho mẹ sau sinh và bố hỗ trợ gia đình.
+Bạn là Nori – trợ lý AI của ứng dụng NestAI dành cho mẹ sau sinh và bố hỗ trợ gia đình.
 [Role, tone, constraints...]
 """
 

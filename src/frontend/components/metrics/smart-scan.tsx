@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Camera, Upload, X, Check, Zap, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, X, Check } from 'lucide-react';
 
 interface FoodAnalysis {
   name: string;
@@ -15,10 +14,18 @@ interface FoodAnalysis {
   timestamp: Date;
 }
 
+const nutritionColors = [
+  { key: 'calories', label: 'Calo', unit: 'kcal', color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-100' },
+  { key: 'protein', label: 'Protein', unit: 'g', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
+  { key: 'carbs', label: 'Carbs', unit: 'g', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
+  { key: 'fat', label: 'Chất béo', unit: 'g', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+];
+
 export function SmartScan() {
   const [image, setImage] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<FoodAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -33,14 +40,18 @@ export function SmartScan() {
 
   const analyzeFood = async () => {
     setLoading(true);
-    // TODO: Call API to analyze food
-    // For now, just clear the analysis
     setAnalysis(null);
     setLoading(false);
   };
 
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) handleImageUpload(file);
+  };
+
   const handleSaveToLog = () => {
-    // TODO: Save to nutrition log
     alert('Đã lưu vào nhật ký dinh dưỡng!');
     resetScan();
   };
@@ -53,141 +64,169 @@ export function SmartScan() {
   return (
     <div className="space-y-4">
       {!image ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Camera Button */}
-          <Card className="border-2 border-dashed hover:border-primary transition-colors cursor-pointer">
-            <CardContent className="p-6">
-              <input
-                ref={cameraInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
-                className="hidden"
-              />
-              <button
-                onClick={() => cameraInputRef.current?.click()}
-                className="w-full h-full flex flex-col items-center justify-center gap-3 py-8"
-              >
-                <Camera className="h-8 w-8 text-primary" />
-                <div className="text-center">
-                  <p className="font-semibold">Chụp ảnh</p>
-                  <p className="text-sm text-muted-foreground">Chụp ảnh món ăn</p>
+        <>
+          {/* Main drop zone */}
+          <div
+            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            className={`relative rounded-2xl border-2 border-dashed transition-all duration-200 ${
+              isDragging
+                ? 'border-primary bg-primary/8 scale-[1.01]'
+                : 'border-border/60 bg-secondary/40 hover:border-primary/50 hover:bg-secondary/70'
+            }`}
+          >
+            <div className="flex flex-col items-center justify-center gap-4 py-12 px-6 text-center">
+              <div className="relative">
+                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center transition-all ${
+                  isDragging ? 'bg-primary text-white scale-110' : 'bg-primary/10 text-primary'
+                }`}>
+                  <Camera className="h-10 w-10" />
                 </div>
-              </button>
-            </CardContent>
-          </Card>
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-amber-400 flex items-center justify-center">
+                  <Zap className="h-3.5 w-3.5 text-white" />
+                </div>
+              </div>
 
-          {/* Upload Button */}
-          <Card className="border-2 border-dashed hover:border-primary transition-colors cursor-pointer">
-            <CardContent className="p-6">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
-                className="hidden"
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full h-full flex flex-col items-center justify-center gap-3 py-8"
-              >
-                <Upload className="h-8 w-8 text-primary" />
-                <div className="text-center">
-                  <p className="font-semibold">Tải ảnh lên</p>
-                  <p className="text-sm text-muted-foreground">Chọn từ thư viện</p>
-                </div>
-              </button>
-            </CardContent>
-          </Card>
-        </div>
+              <div>
+                <p className="text-lg font-semibold text-foreground">Chụp ảnh món ăn</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  AI sẽ tự động phân tích calo & dinh dưỡng
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                  className="hidden"
+                />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-95"
+                  style={{ background: 'linear-gradient(135deg, #c8564a, #d46458)' }}
+                >
+                  <Camera className="h-4 w-4" />
+                  Chụp ảnh
+                </button>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-sm font-medium border border-border bg-card text-foreground hover:bg-secondary transition-all"
+                >
+                  <Upload className="h-4 w-4" />
+                  Tải lên
+                </button>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Hoặc kéo &amp; thả ảnh vào đây
+              </p>
+            </div>
+          </div>
+
+          {/* Tip */}
+          <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-100 px-4 py-3">
+            <Info className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+            <p className="text-sm text-amber-800">
+              <span className="font-medium">Mẹo:</span> Chụp ảnh từ trên xuống, đủ ánh sáng để AI nhận diện chính xác nhất.
+            </p>
+          </div>
+        </>
       ) : (
         <div className="space-y-4">
           {/* Image Preview */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="relative">
-                <img
-                  src={image}
-                  alt="Food preview"
-                  className="w-full h-64 object-cover rounded-lg"
-                />
-                <button
-                  onClick={resetScan}
-                  className="absolute top-2 right-2 bg-destructive text-white p-2 rounded-full hover:bg-destructive/90"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="relative rounded-2xl overflow-hidden shadow-card">
+            <img
+              src={image}
+              alt="Ảnh món ăn"
+              className="w-full h-64 sm:h-72 object-cover"
+            />
+            <button
+              onClick={resetScan}
+              className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-all backdrop-blur-sm"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="absolute bottom-3 left-3 bg-black/50 backdrop-blur-sm text-white text-xs rounded-full px-3 py-1">
+              Đang xem trước ảnh
+            </div>
+          </div>
+
+          {/* Loading */}
+          {loading && (
+            <div className="rounded-2xl border border-border/50 bg-card p-8 text-center">
+              <div className="w-12 h-12 rounded-full border-3 border-primary/30 border-t-primary animate-spin mx-auto mb-3" />
+              <p className="text-sm font-medium text-foreground">Đang phân tích ảnh...</p>
+              <p className="text-xs text-muted-foreground mt-1">AI đang nhận diện thức ăn</p>
+            </div>
+          )}
 
           {/* Analysis Result */}
-          {loading ? (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-3" />
-                <p className="text-muted-foreground">Đang phân tích ảnh...</p>
-              </CardContent>
-            </Card>
-          ) : analysis ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">{analysis.name}</CardTitle>
-                <CardDescription>Phân tích dinh dưỡng</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+          {!loading && analysis && (
+            <div className="rounded-2xl border border-border/50 bg-card overflow-hidden shadow-card">
+              <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-foreground">{analysis.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Phân tích dinh dưỡng</p>
+                </div>
+                <span className="text-xs bg-primary/10 text-primary rounded-full px-2.5 py-1 font-medium">AI</span>
+              </div>
+
+              <div className="p-5 space-y-4">
                 {/* Nutrition Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="bg-primary/10 p-3 rounded-lg">
-                    <p className="text-xs text-muted-foreground">Calo</p>
-                    <p className="text-xl font-bold text-primary">{analysis.calories}</p>
-                    <p className="text-xs text-muted-foreground">kcal</p>
-                  </div>
-                  <div className="bg-blue-100 dark:bg-blue-900/20 p-3 rounded-lg">
-                    <p className="text-xs text-muted-foreground">Protein</p>
-                    <p className="text-xl font-bold text-blue-600">{analysis.protein}g</p>
-                  </div>
-                  <div className="bg-yellow-100 dark:bg-yellow-900/20 p-3 rounded-lg">
-                    <p className="text-xs text-muted-foreground">Carbs</p>
-                    <p className="text-xl font-bold text-yellow-600">{analysis.carbs}g</p>
-                  </div>
-                  <div className="bg-orange-100 dark:bg-orange-900/20 p-3 rounded-lg">
-                    <p className="text-xs text-muted-foreground">Fat</p>
-                    <p className="text-xl font-bold text-orange-600">{analysis.fat}g</p>
-                  </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {nutritionColors.map((n) => (
+                    <div key={n.key} className={`${n.bg} border ${n.border} rounded-xl p-3 text-center`}>
+                      <p className="text-xs text-muted-foreground mb-1">{n.label}</p>
+                      <p className={`text-xl font-bold ${n.color}`}>
+                        {(analysis as any)[n.key]}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{n.unit}</p>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Milk Benefit */}
-                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-4 rounded-lg">
-                  <p className="text-sm font-semibold text-green-900 dark:text-green-200">
-                    💚 Lợi sữa: {analysis.milkBenefit}
-                  </p>
+                <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 rounded-xl p-3.5">
+                  <span className="text-xl">🌿</span>
+                  <div>
+                    <p className="text-xs font-medium text-emerald-700 uppercase tracking-wide">Lợi ích cho sữa mẹ</p>
+                    <p className="text-sm text-emerald-900 mt-0.5">{analysis.milkBenefit}</p>
+                  </div>
                 </div>
 
-                {/* Save Button */}
-                <Button
-                  onClick={handleSaveToLog}
-                  className="w-full"
-                  size="lg"
-                >
+                <Button onClick={handleSaveToLog} className="w-full rounded-xl h-11">
                   <Check className="h-4 w-4 mr-2" />
-                  Lưu vào nhật ký
+                  Lưu vào nhật ký dinh dưỡng
                 </Button>
-              </CardContent>
-            </Card>
-          ) : null}
+              </div>
+            </div>
+          )}
+
+          {/* No result yet (image uploaded but no analysis) */}
+          {!loading && !analysis && (
+            <div className="rounded-2xl border border-border/50 bg-card p-6 text-center">
+              <p className="text-muted-foreground text-sm">Ảnh đã tải lên — tính năng phân tích AI đang được triển khai.</p>
+              <button
+                onClick={resetScan}
+                className="mt-3 text-sm text-primary hover:underline"
+              >
+                Thử ảnh khác
+              </button>
+            </div>
+          )}
         </div>
       )}
-
-      {/* Info */}
-      <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-        <CardContent className="p-4">
-          <p className="text-sm text-blue-900 dark:text-blue-200">
-            💡 Mẹo: Chụp ảnh rõ ràng, từ trên xuống để AI phân tích chính xác nhất
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 }

@@ -1,16 +1,47 @@
 'use client';
 
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '@/lib/context';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 
+interface SpendingBreakdown {
+  food: number;
+  supplements: number;
+  other: number;
+}
+
 export function BudgetTracker() {
   const { user } = useApp();
-  const spent = user.totalSpending;
-  const budget = user.budget;
+  const [breakdown, setBreakdown] = useState<SpendingBreakdown>({
+    food: 0,
+    supplements: 0,
+    other: 0,
+  });
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const fetchBreakdown = async () => {
+      try {
+        const response = await fetch(`http://localhost:8000/api/admin/spending-breakdown?user_id=${user.id}`);
+        if (!response.ok) throw new Error('Failed to fetch');
+        const data = await response.json();
+        setBreakdown(data);
+      } catch (error) {
+        console.error('Failed to fetch spending breakdown:', error);
+        // Keep default values on error
+      }
+    };
+    fetchBreakdown();
+  }, [user?.id]);
+  
+  if (!user) return null;
+
+  const spent = user.totalSpending || 0;
+  const budget = user.budget || 0;
   const remaining = budget - spent;
-  const percentage = (spent / budget) * 100;
+  const percentage = budget > 0 ? (spent / budget) * 100 : 0;
 
   return (
     <div className="space-y-4">
@@ -48,15 +79,15 @@ export function BudgetTracker() {
       <div className="grid grid-cols-3 gap-2 text-center text-xs">
         <div className="rounded bg-muted p-2">
           <p className="text-muted-foreground">Food</p>
-          <p className="font-semibold">$280</p>
+          <p className="font-semibold">${breakdown.food}</p>
         </div>
         <div className="rounded bg-muted p-2">
           <p className="text-muted-foreground">Supplements</p>
-          <p className="font-semibold">$120</p>
+          <p className="font-semibold">${breakdown.supplements}</p>
         </div>
         <div className="rounded bg-muted p-2">
           <p className="text-muted-foreground">Other</p>
-          <p className="font-semibold">$50</p>
+          <p className="font-semibold">${breakdown.other}</p>
         </div>
       </div>
     </div>
