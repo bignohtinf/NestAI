@@ -1,4 +1,4 @@
-# Dashboard Design - NextAI
+# Dashboard Design - NestAI
 
 ## Sidebar Navigation Structure
 

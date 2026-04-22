@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { MicroLabel } from '@/components/ui/typography';
 
@@ -32,6 +33,18 @@ export function Footer({
       )}
     >
       <div className="max-w-6xl mx-auto">
+        {/* Logo and Branding */}
+        <div className="mb-12 flex items-center gap-3">
+          <Image
+            src="/img_0174.png"
+            alt="NestAI Logo"
+            width={40}
+            height={40}
+            className="w-10 h-10 object-contain"
+          />
+          <h3 className="text-lg font-bold text-foreground">NestAI</h3>
+        </div>
+
         {/* Footer Sections */}
         {sections.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">

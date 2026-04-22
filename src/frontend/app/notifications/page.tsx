@@ -6,23 +6,23 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Bell, Check, X, UserPlus, Heart } from 'lucide-react';
+import { Bell, Check, X, UserPlus } from 'lucide-react';
 
-interface Notification {
+interface PartnershipRequest {
   id: string;
-  type: 'partnership_request' | 'partnership_accepted' | 'milestone' | 'system';
-  title: string;
-  description: string;
-  timestamp: Date;
-  read: boolean;
-  actionUrl?: string;
-  actionLabel?: string;
+  status: string;
+  created_at: string;
+  requested_by: string;
+  sender: { full_name: string; email: string } | null;
 }
 
 export default function NotificationsPage() {
   const { user } = useApp();
   const router = useRouter();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [requests, setRequests] = useState<PartnershipRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -33,148 +33,132 @@ export default function NotificationsPage() {
   }, [user, router]);
 
   useEffect(() => {
-    // TODO: Fetch notifications from API
-    setNotifications([]);
-  }, []);
+    if (!user?.id || user.role === 'admin') return;
+    fetchPendingRequests();
+  }, [user?.id]);
 
-  if (!user || user.role === 'admin') {
-    return null;
-  }
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const markAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  };
-
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'partnership_request':
-        return <UserPlus className="h-5 w-5 text-blue-500" />;
-      case 'partnership_accepted':
-        return <Heart className="h-5 w-5 text-pink-500" />;
-      case 'milestone':
-        return <Heart className="h-5 w-5 text-green-500" />;
-      default:
-        return <Bell className="h-5 w-5 text-gray-500" />;
+  const fetchPendingRequests = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/partnerships/pending?user_id=${user!.id}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setRequests(data.partnerships || []);
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleRespond = async (partnershipId: string, action: 'accept' | 'reject') => {
+    setActionLoading(partnershipId + action);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/partnerships/respond', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partnershipId, action, userId: user!.id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage({ type: 'success', text: data.message });
+        setRequests((prev) => prev.filter((r) => r.id !== partnershipId));
+      } else {
+        setMessage({ type: 'error', text: data.message || 'Đã xảy ra lỗi' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Đã xảy ra lỗi khi xử lý yêu cầu' });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  if (!user || user.role === 'admin') return null;
+
   return (
     <MainLayout>
-      <div className="space-y-6">
-        {/* Header */}
+      <div className="space-y-6 max-w-2xl mx-auto py-6">
         <div>
           <h1 className="text-3xl font-bold">Thông báo</h1>
-          <p className="text-muted-foreground">
-            {unreadCount > 0 ? `Bạn có ${unreadCount} thông báo chưa đọc` : 'Không có thông báo mới'}
+          <p className="text-muted-foreground mt-1">
+            {requests.length > 0
+              ? `Bạn có ${requests.length} yêu cầu kết nối đang chờ`
+              : 'Không có thông báo mới'}
           </p>
         </div>
 
-        {/* Notifications List */}
-        <div className="space-y-3">
-          {notifications.length > 0 ? (
-            notifications.map((notification) => (
-              <Card
-                key={notification.id}
-                className={`transition-all ${
-                  !notification.read ? 'border-primary/50 bg-primary/5' : ''
-                }`}
-              >
+        {message && (
+          <div
+            className={`flex items-center gap-2 p-3 rounded-lg text-sm ${
+              message.type === 'success'
+                ? 'bg-green-50 text-green-800 border border-green-200'
+                : 'bg-red-50 text-red-800 border border-red-200'
+            }`}
+          >
+            {message.type === 'success' ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+            {message.text}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          </div>
+        ) : requests.length > 0 ? (
+          <div className="space-y-3">
+            {requests.map((req) => (
+              <Card key={req.id}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
-                    {/* Icon */}
-                    <div className="mt-1">
-                      {getNotificationIcon(notification.type)}
+                    <div className="mt-1 p-2 rounded-full bg-blue-50">
+                      <UserPlus className="h-5 w-5 text-blue-500" />
                     </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className={`font-semibold ${!notification.read ? 'text-foreground' : 'text-muted-foreground'}`}>
-                            {notification.title}
-                          </h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {notification.description}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            {formatTime(notification.timestamp)}
-                          </p>
-                        </div>
-
-                        {/* Status indicator */}
-                        {!notification.read && (
-                          <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-2" />
-                        )}
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-2 mt-3">
-                        {notification.actionUrl && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              markAsRead(notification.id);
-                              router.push(notification.actionUrl!);
-                            }}
-                          >
-                            {notification.actionLabel || 'Xem'}
-                          </Button>
-                        )}
-                        {!notification.read && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => markAsRead(notification.id)}
-                            className="text-xs"
-                          >
-                            <Check className="h-4 w-4 mr-1" />
-                            Đánh dấu đã đọc
-                          </Button>
-                        )}
+                    <div className="flex-1">
+                      <h3 className="font-semibold">Yêu cầu kết nối gia đình</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        <span className="font-medium text-foreground">
+                          {req.sender?.full_name || req.sender?.email || 'Người dùng'}
+                        </span>{' '}
+                        muốn kết nối với bạn
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatTime(new Date(req.created_at))}
+                      </p>
+                      <div className="flex gap-2 mt-3">
                         <Button
                           size="sm"
-                          variant="ghost"
-                          onClick={() => deleteNotification(notification.id)}
-                          className="text-xs text-destructive hover:text-destructive"
+                          onClick={() => handleRespond(req.id, 'accept')}
+                          disabled={actionLoading !== null}
+                          className="gap-1"
                         >
-                          <X className="h-4 w-4 mr-1" />
-                          Xóa
+                          <Check className="h-3.5 w-3.5" />
+                          {actionLoading === req.id + 'accept' ? 'Đang xử lý...' : 'Chấp nhận'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => handleRespond(req.id, 'reject')}
+                          disabled={actionLoading !== null}
+                          className="gap-1 text-destructive hover:text-destructive"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                          {actionLoading === req.id + 'reject' ? 'Đang xử lý...' : 'Từ chối'}
                         </Button>
                       </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            ))
-          ) : (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-                <p className="text-muted-foreground">Không có thông báo nào</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Clear all button */}
-        {notifications.length > 0 && (
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setNotifications([])}
-            >
-              Xóa tất cả
-            </Button>
+            ))}
           </div>
+        ) : (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+              <p className="text-muted-foreground">Không có thông báo nào</p>
+            </CardContent>
+          </Card>
         )}
       </div>
     </MainLayout>
@@ -182,8 +166,7 @@ export default function NotificationsPage() {
 }
 
 function formatTime(date: Date): string {
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
+  const diff = Date.now() - date.getTime();
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
@@ -192,6 +175,5 @@ function formatTime(date: Date): string {
   if (minutes < 60) return `${minutes} phút trước`;
   if (hours < 24) return `${hours} giờ trước`;
   if (days < 7) return `${days} ngày trước`;
-  
   return date.toLocaleDateString('vi-VN');
 }

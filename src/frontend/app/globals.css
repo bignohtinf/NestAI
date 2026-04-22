@@ -208,3 +208,26 @@
     @apply bg-[#f6f5f4];
   }
 }
+
+@layer utilities {
+  /* Warm palette variables */
+  :root {
+    --warm-coral: #c8564a;
+    --warm-coral-light: #f7ebe9;
+    --warm-sage: #4f9678;
+    --warm-sage-light: #e8f5ef;
+  }
+
+  /* Hover and active states */
+  .hover-coral {
+    transition: background-color 150ms, color 150ms;
+  }
+  .hover-coral:hover {
+    background-color: var(--warm-coral-light);
+    color: var(--foreground);
+  }
+  .active-sage {
+    background-color: var(--warm-sage-light);
+    color: var(--warm-sage);
+  }
+}
