@@ -1,14 +1,15 @@
 'use client';
 
 import { MainLayout } from '@/components/layouts/main-layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { BotAnimation } from '@/components/nori/bot-animation';
 import { useApp } from '@/lib/context';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
-import { Send, Loader2 } from 'lucide-react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { Send, Loader2, Sparkles, Baby, Apple, HeartPulse, Scale, Milk } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -17,13 +18,57 @@ interface Message {
   timestamp: Date;
 }
 
+interface ChatHistory {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+const SUGGESTED_QUESTIONS = [
+  { icon: <Apple className="h-3.5 w-3.5" />, text: 'Thai 20 tuần cần bổ sung dinh dưỡng gì?', category: 'nutrition' },
+  { icon: <HeartPulse className="h-3.5 w-3.5" />, text: 'Tiểu đường thai kỳ ăn gì, kiêng gì?', category: 'gdm' },
+  { icon: <Baby className="h-3.5 w-3.5" />, text: 'Canxi cho mẹ bầu: bao nhiêu, ăn gì?', category: 'mineral' },
+  { icon: <Scale className="h-3.5 w-3.5" />, text: 'Tăng cân bao nhiêu là đủ khi mang thai?', category: 'weight' },
+  { icon: <Milk className="h-3.5 w-3.5" />, text: 'Ăn gì để nhiều sữa sau sinh?', category: 'breastfeeding' },
+  { icon: <Sparkles className="h-3.5 w-3.5" />, text: 'Bổ sung sắt và acid folic thế nào?', category: 'supplement' },
+];
+
+function formatBotMessage(content: string): React.ReactNode {
+  // Simple markdown-like formatting for bot messages
+  const lines = content.split('\n');
+  return lines.map((line, i) => {
+    // Bold text
+    let formatted: React.ReactNode = line;
+    if (line.includes('**')) {
+      const parts = line.split('**');
+      formatted = parts.map((part, j) =>
+        j % 2 === 1 ? <strong key={j}>{part}</strong> : part
+      );
+    }
+    // Headers
+    if (line.startsWith('### ')) {
+      return <p key={i} className="font-bold text-base mt-2 mb-1">{line.slice(4)}</p>;
+    }
+    if (line.startsWith('## ')) {
+      return <p key={i} className="font-bold text-base mt-2 mb-1">{line.slice(3)}</p>;
+    }
+    // Empty lines
+    if (line.trim() === '') {
+      return <br key={i} />;
+    }
+    return <p key={i} className="leading-relaxed">{formatted}</p>;
+  });
+}
+
 export default function NoriPage() {
   const { user } = useApp();
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) {
@@ -34,13 +79,12 @@ export default function NoriPage() {
   }, [user, router]);
 
   useEffect(() => {
-    // Initialize with welcome message
     if (messages.length === 0) {
       setMessages([
         {
           id: '1',
           type: 'bot',
-          content: `Xin chào ${user?.name}! 👋 Tôi là Nori, trợ lý AI của bạn. Tôi có thể giúp bạn với:\n\n• Lời khuyên về dinh dưỡng cho mẹ sau sinh\n• Thông tin về phát triển của bé\n• Gợi ý công thức nấu ăn\n• Trả lời các câu hỏi về sức khỏe\n\nBạn cần giúp gì hôm nay?`,
+          content: `Xin chào ${user?.name || 'bạn'}! 👋\n\nTôi là **Nori** - trợ lý dinh dưỡng AI cho mẹ bầu và mẹ cho con bú.\n\nTôi tư vấn dựa trên hướng dẫn chính thức của **Bộ Y tế Việt Nam** (QĐ 776 & QĐ 1470).\n\n🍽️ Dinh dưỡng theo từng giai đoạn thai kỳ\n🩺 Tiểu đường thai kỳ - sàng lọc & chế độ ăn\n💊 Bổ sung vi chất: sắt, canxi, folate, DHA\n🤱 Dinh dưỡng cho mẹ cho con bú\n⚖️ Tăng cân hợp lý khi mang thai\n\nBạn muốn hỏi về vấn đề nào?`,
           timestamp: new Date(),
         },
       ]);
@@ -55,62 +99,73 @@ export default function NoriPage() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+  const sendMessage = useCallback(async (text: string) => {
+    if (!text.trim() || loading) return;
 
-    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
-      content: input,
+      content: text,
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setLoading(true);
+    setShowSuggestions(false);
 
-    // Simulate bot response delay
-    setTimeout(() => {
-      const botResponse = generateBotResponse(input);
+    const newHistory: ChatHistory[] = [
+      ...chatHistory,
+      { role: 'user', content: text },
+    ];
+
+    try {
+      const userContext = user
+        ? `Tuần thai/sau sinh: ${user.weeksPostpartum || 'chưa rõ'}. Vai trò: ${user.role || 'mẹ'}.`
+        : '';
+
+      const res = await fetch('/api/nori', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: newHistory,
+          userContext,
+        }),
+      });
+
+      const data = await res.json();
+      const botContent = data.response || 'Xin lỗi, tôi không thể trả lời lúc này. Vui lòng thử lại.';
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'bot',
-        content: botResponse,
+        content: botContent,
         timestamp: new Date(),
       };
+
       setMessages((prev) => [...prev, botMessage]);
+      setChatHistory([...newHistory, { role: 'assistant', content: botContent }]);
+    } catch {
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'bot',
+        content: 'Xin lỗi, đã xảy ra lỗi kết nối. Vui lòng thử lại. 🙏',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setLoading(false);
-    }, 800);
+      inputRef.current?.focus();
+    }
+  }, [loading, chatHistory, user]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    sendMessage(input);
   };
 
-  const generateBotResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase();
-
-    // Nutrition responses
-    if (input.includes('dinh dưỡng') || input.includes('ăn gì')) {
-      return `Để duy trì sức khỏe và sản xuất sữa tốt, bạn nên:\n\n✓ Ăn đủ protein (cá, trứng, thịt)\n✓ Uống đủ nước (8-10 cốc/ngày)\n✓ Ăn rau xanh và trái cây\n✓ Bổ sung canxi (sữa, phô mai, cá)\n✓ Ăn các loại hạt (hạnh nhân, óc chó)\n\nBạn có muốn xem công thức nấu ăn cụ thể không?`;
-    }
-
-    if (input.includes('sữa') || input.includes('bú')) {
-      return `Về nuôi con bằng sữa mẹ:\n\n• Bé nên bú 8-12 lần/ngày trong 2 tháng đầu\n• Mỗi lần bú khoảng 15-20 phút\n• Xen kẽ giữa hai ngực\n• Nếu sữa ít, hãy bú thường xuyên hơn\n• Mẹ cần ăn uống đầy đủ và nghỉ ngơi\n\nBạn có vấn đề gì về sữa không?`;
-    }
-
-    if (input.includes('bé') || input.includes('con')) {
-      return `Về phát triển của bé:\n\n👶 0-2 tháng: Bé chủ yếu ngủ, bú và khóc\n😊 2-4 tháng: Bé bắt đầu cười, theo dõi vật\n🤲 4-6 tháng: Bé nắm chặt tay, lăn người\n🍽️ 6+ tháng: Bé sẵn sàng ăn dặm\n\nBé của bạn bao nhiêu tuổi rồi?`;
-    }
-
-    if (input.includes('công thức') || input.includes('nấu ăn')) {
-      return `Tôi có thể gợi ý một số công thức dinh dưỡng:\n\n🥣 Cháo cá hồi với rau xanh\n🥗 Salad cá ngừ với dầu olive\n🍲 Canh gà với nấm\n🥘 Cơm chiên với trứng và rau\n\nBạn muốn xem chi tiết công thức nào?`;
-    }
-
-    if (input.includes('mệt') || input.includes('stress') || input.includes('lo lắng')) {
-      return `Mẹ sau sinh thường cảm thấy mệt mỏi và lo lắng. Đây là bình thường!\n\n💡 Lời khuyên:\n• Nghỉ ngơi đủ giấc (ít nhất 6-8 giờ/ngày)\n• Yêu cầu gia đình giúp đỡ\n• Ăn uống đầy đủ và thường xuyên\n• Tập thể dục nhẹ\n• Nếu cảm thấy quá lo lắng, hãy trao đổi với bác sĩ\n\nBạn cần hỗ trợ gì?`;
-    }
-
-    // Default response
-    return `Cảm ơn câu hỏi của bạn! 😊\n\nTôi có thể giúp bạn về:\n• Dinh dưỡng cho mẹ sau sinh\n• Phát triển của bé\n• Công thức nấu ăn\n• Sức khỏe và sự chăm sóc\n\nHãy hỏi tôi bất cứ điều gì bạn muốn biết!`;
+  const handleSuggestionClick = (text: string) => {
+    sendMessage(text);
   };
 
   if (!user || user.role === 'admin') {
@@ -119,20 +174,26 @@ export default function NoriPage() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold">Nori - Trợ lý AI</h1>
-          <p className="text-muted-foreground">Hỏi tôi bất cứ điều gì về sức khỏe, dinh dưỡng và phát triển của bé</p>
-        </div>
-
-        {/* Bot Animation */}
-        <div className="flex justify-center">
-          <BotAnimation />
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 flex-shrink-0">
+            <BotAnimation />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              Nori
+              <Badge variant="secondary" className="text-xs font-normal">
+                <Sparkles className="h-3 w-3 mr-1" />
+                AI Bộ Y tế
+              </Badge>
+            </h1>
+            <p className="text-sm text-muted-foreground">Trợ lý dinh dưỡng thông minh • QĐ 776 & QĐ 1470/BYT</p>
+          </div>
         </div>
 
         {/* Chat Container */}
-        <Card className="flex flex-col h-[600px]">
+        <Card className="flex flex-col" style={{ height: 'calc(100vh - 220px)', minHeight: '500px' }}>
           {/* Messages */}
           <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((message) => (
@@ -140,15 +201,25 @@ export default function NoriPage() {
                 key={message.id}
                 className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
+                {message.type === 'bot' && (
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white text-xs font-bold mr-2 flex-shrink-0 mt-1">
+                    N
+                  </div>
+                )}
                 <div
-                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                  className={`max-w-[80%] lg:max-w-[70%] px-4 py-3 rounded-2xl ${
                     message.type === 'user'
-                      ? 'bg-primary text-primary-foreground rounded-br-none'
-                      : 'bg-muted text-muted-foreground rounded-bl-none'
+                      ? 'bg-primary text-primary-foreground rounded-br-sm'
+                      : 'bg-muted rounded-bl-sm'
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                  <p className={`text-xs mt-1 ${message.type === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                  <div className="text-sm">
+                    {message.type === 'bot'
+                      ? formatBotMessage(message.content)
+                      : <p className="whitespace-pre-wrap">{message.content}</p>
+                    }
+                  </div>
+                  <p className={`text-[10px] mt-1.5 ${message.type === 'user' ? 'text-primary-foreground/60' : 'text-muted-foreground/60'}`}>
                     {message.timestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
@@ -156,73 +227,62 @@ export default function NoriPage() {
             ))}
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-muted text-muted-foreground px-4 py-2 rounded-lg rounded-bl-none">
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white text-xs font-bold mr-2 flex-shrink-0">
+                  N
+                </div>
+                <div className="bg-muted px-4 py-3 rounded-2xl rounded-bl-sm">
+                  <div className="flex items-center gap-1.5">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Nori đang suy nghĩ...</span>
+                  </div>
                 </div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </CardContent>
 
+          {/* Suggestions */}
+          {showSuggestions && messages.length <= 1 && (
+            <div className="px-4 pb-2">
+              <p className="text-xs font-medium text-muted-foreground mb-2">💡 Gợi ý câu hỏi:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {SUGGESTED_QUESTIONS.map((q, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleSuggestionClick(q.text)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-background text-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+                    disabled={loading}
+                  >
+                    {q.icon}
+                    {q.text}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Input */}
-          <div className="border-t border-border p-4">
+          <div className="border-t border-border p-3">
             <form onSubmit={handleSendMessage} className="flex gap-2">
               <Input
-                placeholder="Nhập câu hỏi của bạn..."
+                ref={inputRef}
+                placeholder="Hỏi Nori về dinh dưỡng thai kỳ..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 disabled={loading}
-                className="flex-1"
+                className="flex-1 rounded-full"
               />
               <Button
                 type="submit"
                 disabled={loading || !input.trim()}
                 size="icon"
+                className="rounded-full h-10 w-10"
               >
                 <Send className="h-4 w-4" />
               </Button>
             </form>
           </div>
         </Card>
-
-        {/* Quick suggestions */}
-        <div>
-          <p className="text-sm font-medium text-muted-foreground mb-2">Gợi ý câu hỏi:</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setInput('Tôi nên ăn gì để tăng sữa?')}
-              className="justify-start"
-            >
-              Tôi nên ăn gì để tăng sữa?
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setInput('Bé 2 tháng tuổi phát triển bình thường không?')}
-              className="justify-start"
-            >
-              Bé 2 tháng tuổi phát triển bình thường không?
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setInput('Có công thức nấu ăn nào tốt cho mẹ không?')}
-              className="justify-start"
-            >
-              Có công thức nấu ăn nào tốt cho mẹ không?
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setInput('Tôi cảm thấy mệt mỏi, phải làm sao?')}
-              className="justify-start"
-            >
-              Tôi cảm thấy mệt mỏi, phải làm sao?
-            </Button>
-          </div>
-        </div>
       </div>
     </MainLayout>
   );
