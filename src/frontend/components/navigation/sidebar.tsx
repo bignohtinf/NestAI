@@ -26,26 +26,22 @@ interface NavItem {
 const navigationItems: NavItem[] = [
   // Shared
   { href: '/', label: 'Trang chủ', roles: ['mother', 'father', 'admin'] },
-  { href: '/baby-journey', label: 'Hành Trình Của Bé', roles: ['mother', 'father'] },
-  { href: '/notifications', label: 'Thông báo', roles: ['mother', 'father'] },
-  { href: '/nori', label: 'Nori', roles: ['mother', 'father'] },
   
-  // Mother only
+  // Mother - Nutrition FIRST (core feature)
   {
-    label: 'Dinh dưỡng',
+    label: '🍱 Thực đơn dinh dưỡng',
     roles: ['mother'],
     children: [
-      { 
-        label: 'Quét Dinh Dưỡng', 
-        roles: ['mother'],
-        children: [
-          { href: '/nutrition-scan?tab=scan', label: 'Smart Scan', roles: ['mother'] },
-          { href: '/nutrition-scan?tab=recommendations', label: 'Gợi ý', roles: ['mother'] },
-        ]
-      },
-      { href: '/nutrition', label: 'Khuyến Nghị', roles: ['mother'] },
+      { href: '/nutrition-scan?tab=recommendations', label: 'Sinh thực đơn AI', roles: ['mother'] },
+      { href: '/nutrition-scan?tab=scan', label: 'Quét ảnh bữa ăn', roles: ['mother'] },
+      { href: '/nutrition', label: 'Khuyến nghị thực phẩm', roles: ['mother'] },
     ],
   },
+  
+  { href: '/nori', label: 'Nori', roles: ['mother', 'father'] },
+  { href: '/baby-journey', label: 'Hành Trình Của Bé', roles: ['mother', 'father'] },
+  
+  // Mother - Health
   {
     label: 'Sức khỏe',
     roles: ['mother'],
@@ -61,6 +57,8 @@ const navigationItems: NavItem[] = [
       { href: '/wellness?tab=checkup', label: 'Cập nhật Khám định kì', roles: ['mother'] },
     ],
   },
+  
+  { href: '/notifications', label: 'Thông báo', roles: ['mother', 'father'] },
   
   // Father only - Grouped
   {
@@ -164,7 +162,13 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
                   const Icon = child.icon;
                   const childPath = child.href?.split('?')[0];
                   const currentPath = pathname.split('?')[0];
-                  const isActive = child.href ? currentPath === childPath : false;
+                  const currentSearch = typeof window !== 'undefined' ? window.location.search : '';
+                  const childSearch = child.href?.includes('?') ? '?' + child.href.split('?')[1] : '';
+                  const isActive = child.href
+                    ? childSearch
+                      ? pathname + currentSearch === child.href
+                      : currentPath === childPath
+                    : false;
                   const hasSubChildren = child.children && child.children.length > 0;
                   const isHovered = hoveredItem === child.label;
 

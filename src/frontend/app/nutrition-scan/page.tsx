@@ -13,7 +13,7 @@ export default function NutritionScanPage() {
   const { user } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<'scan' | 'recommendations'>('scan');
+  const [activeTab, setActiveTab] = useState<'scan' | 'recommendations'>('recommendations');
 
   useEffect(() => {
     if (!user) {
@@ -25,10 +25,10 @@ export default function NutritionScanPage() {
 
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab === 'recommendations') {
-      setActiveTab('recommendations');
-    } else {
+    if (tab === 'scan') {
       setActiveTab('scan');
+    } else {
+      setActiveTab('recommendations');
     }
   }, [searchParams]);
 
@@ -40,34 +40,36 @@ export default function NutritionScanPage() {
     <MainLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Quét Dinh Dưỡng</h1>
-          <p className="text-muted-foreground">Chụp ảnh và nhận khuyến nghị dinh dưỡng</p>
+          <h1 className="text-3xl font-bold">Thực đơn & Dinh dưỡng</h1>
+          <p className="text-muted-foreground">AI sinh thực đơn món Việt cá nhân hóa theo tuần thai và bệnh lý</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'scan' | 'recommendations')} className="space-y-4">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="scan">
-              <span className="hidden sm:inline">Chụp ảnh</span>
-            </TabsTrigger>
             <TabsTrigger value="recommendations">
-              <span className="hidden sm:inline">Khuyến nghị</span>
+              <span className="hidden sm:inline">✨ Sinh thực đơn AI</span>
+              <span className="sm:hidden">Thực đơn</span>
+            </TabsTrigger>
+            <TabsTrigger value="scan">
+              <span className="hidden sm:inline">📷 Quét ảnh bữa ăn</span>
+              <span className="sm:hidden">Quét ảnh</span>
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="recommendations">
+            <NutritionRecommendations />
+          </TabsContent>
 
           <TabsContent value="scan">
             <Card>
               <CardHeader>
-                <CardTitle>Chụp ảnh & Tính calo</CardTitle>
-                <CardDescription>Chụp ảnh món ăn để AI phân tích dinh dưỡng</CardDescription>
+                <CardTitle>Quét ảnh & Tính vi chất</CardTitle>
+                <CardDescription>Chụp ảnh món ăn để AI tự động tính kcal và vi chất — không cần nhập tay</CardDescription>
               </CardHeader>
               <CardContent>
                 <SmartScan />
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="recommendations">
-            <NutritionRecommendations />
           </TabsContent>
         </Tabs>
       </div>
