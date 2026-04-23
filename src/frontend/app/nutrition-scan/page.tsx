@@ -1,19 +1,23 @@
 'use client';
 
 import { MainLayout } from '@/components/layouts/main-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SmartScan } from '@/components/metrics/smart-scan';
 import { NutritionRecommendations } from '@/components/metrics/nutrition-recommendations';
 import { useApp } from '@/lib/context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function NutritionScanPage() {
   const { user } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<'scan' | 'recommendations'>('recommendations');
+  const [activeTab, setActiveTab] = useState<'scan' | 'recommendations'>('scan');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -24,15 +28,16 @@ export default function NutritionScanPage() {
   }, [user, router]);
 
   useEffect(() => {
+    if (!mounted) return;
     const tab = searchParams.get('tab');
     if (tab === 'scan') {
       setActiveTab('scan');
     } else {
       setActiveTab('recommendations');
     }
-  }, [searchParams]);
+  }, [searchParams, mounted]);
 
-  if (!user || user.role !== 'mother') {
+  if (!mounted || !user || user.role !== 'mother') {
     return null;
   }
 
@@ -40,20 +45,14 @@ export default function NutritionScanPage() {
     <MainLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Thực đơn & Dinh dưỡng</h1>
-          <p className="text-muted-foreground">AI sinh thực đơn món Việt cá nhân hóa theo tuần thai và bệnh lý</p>
+          <h1 className="text-3xl font-bold">Quét Dinh Dưỡng</h1>
+          <p className="text-muted-foreground">Quét thực phẩm và nhận khuyến nghị dinh dưỡng</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'scan' | 'recommendations')} className="space-y-4">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="recommendations">
-              <span className="hidden sm:inline">✨ Sinh thực đơn AI</span>
-              <span className="sm:hidden">Thực đơn</span>
-            </TabsTrigger>
-            <TabsTrigger value="scan">
-              <span className="hidden sm:inline">📷 Quét ảnh bữa ăn</span>
-              <span className="sm:hidden">Quét ảnh</span>
-            </TabsTrigger>
+            <TabsTrigger value="scan">Quét</TabsTrigger>
+            <TabsTrigger value="recommendations">Khuyến Nghị</TabsTrigger>
           </TabsList>
 
           <TabsContent value="recommendations">
@@ -61,15 +60,7 @@ export default function NutritionScanPage() {
           </TabsContent>
 
           <TabsContent value="scan">
-            <Card>
-              <CardHeader>
-                <CardTitle>Quét ảnh & Tính vi chất</CardTitle>
-                <CardDescription>Chụp ảnh món ăn để AI tự động tính kcal và vi chất — không cần nhập tay</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <SmartScan />
-              </CardContent>
-            </Card>
+            <SmartScan />
           </TabsContent>
         </Tabs>
       </div>

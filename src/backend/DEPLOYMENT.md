@@ -5,7 +5,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    Vercel (Frontend)                        │
-│              https://nestai.vercel.app                      │
+│              https://NestAI.vercel.app                      │
 └────────────────────────┬────────────────────────────────────┘
                          │
                          │ API calls
@@ -130,7 +130,7 @@ SECRET_KEY=your-secret-key
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ENVIRONMENT=production
-CORS_ORIGINS=["https://nestai.vercel.app"]
+CORS_ORIGINS=["https://NestAI.vercel.app"]
 ```
 
 ## Testing

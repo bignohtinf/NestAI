@@ -1,15 +1,10 @@
 'use client';
 
 import { MainLayout } from '@/components/layouts/main-layout';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { BotAnimation } from '@/components/nori/bot-animation';
 import { useApp } from '@/lib/context';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { Send, Loader2, Sparkles, Baby, Apple, HeartPulse, Scale, Milk } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { Send, Loader2, Sparkles, Baby, Apple, ChefHat, HeartPulse } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -18,45 +13,30 @@ interface Message {
   timestamp: Date;
 }
 
-interface ChatHistory {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
-const SUGGESTED_QUESTIONS = [
-  { icon: <Apple className="h-3.5 w-3.5" />, text: 'Thai 20 tuần cần bổ sung dinh dưỡng gì?', category: 'nutrition' },
-  { icon: <HeartPulse className="h-3.5 w-3.5" />, text: 'Tiểu đường thai kỳ ăn gì, kiêng gì?', category: 'gdm' },
-  { icon: <Baby className="h-3.5 w-3.5" />, text: 'Canxi cho mẹ bầu: bao nhiêu, ăn gì?', category: 'mineral' },
-  { icon: <Scale className="h-3.5 w-3.5" />, text: 'Tăng cân bao nhiêu là đủ khi mang thai?', category: 'weight' },
-  { icon: <Milk className="h-3.5 w-3.5" />, text: 'Ăn gì để nhiều sữa sau sinh?', category: 'breastfeeding' },
-  { icon: <Sparkles className="h-3.5 w-3.5" />, text: 'Bổ sung sắt và acid folic thế nào?', category: 'supplement' },
+const quickSuggestions = [
+  { icon: Apple, text: 'Tôi nên ăn gì để tăng sữa?' },
+  { icon: Baby, text: 'Bé 2 tháng tuổi phát triển bình thường không?' },
+  { icon: ChefHat, text: 'Có công thức nấu ăn nào tốt cho mẹ không?' },
+  { icon: HeartPulse, text: 'Tôi cảm thấy mệt mỏi, phải làm sao?' },
 ];
 
-function formatBotMessage(content: string): React.ReactNode {
-  // Simple markdown-like formatting for bot messages
-  const lines = content.split('\n');
-  return lines.map((line, i) => {
-    // Bold text
-    let formatted: React.ReactNode = line;
-    if (line.includes('**')) {
-      const parts = line.split('**');
-      formatted = parts.map((part, j) =>
-        j % 2 === 1 ? <strong key={j}>{part}</strong> : part
-      );
-    }
-    // Headers
-    if (line.startsWith('### ')) {
-      return <p key={i} className="font-bold text-base mt-2 mb-1">{line.slice(4)}</p>;
-    }
-    if (line.startsWith('## ')) {
-      return <p key={i} className="font-bold text-base mt-2 mb-1">{line.slice(3)}</p>;
-    }
-    // Empty lines
-    if (line.trim() === '') {
-      return <br key={i} />;
-    }
-    return <p key={i} className="leading-relaxed">{formatted}</p>;
-  });
+const BOT_FRAMES = ['/bot_1.PNG', '/bot_2.PNG', '/bot_3.PNG'];
+
+function BotAvatar({ size = 28 }: { size?: number }) {
+  const [frame, setFrame] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setFrame(f => (f + 1) % 3), 400);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <img
+      src={BOT_FRAMES[frame]}
+      alt="Nori"
+      width={size}
+      height={size}
+      style={{ width: size, height: size, objectFit: 'contain' }}
+    />
+  );
 }
 
 export default function NoriPage() {
@@ -71,46 +51,39 @@ export default function NoriPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-    } else if (user.role === 'admin') {
-      router.push('/');
-    }
+    if (!user) router.push('/auth/login');
+    else if (user.role === 'admin') router.push('/');
   }, [user, router]);
 
   useEffect(() => {
-    if (messages.length === 0) {
+    if (messages.length === 0 && user) {
       setMessages([
         {
           id: '1',
           type: 'bot',
-          content: `Xin chào ${user?.name || 'bạn'}! 👋\n\nTôi là **Nori** - trợ lý dinh dưỡng AI cho mẹ bầu và mẹ cho con bú.\n\nTôi tư vấn dựa trên hướng dẫn chính thức của **Bộ Y tế Việt Nam** (QĐ 776 & QĐ 1470).\n\n🍽️ Dinh dưỡng theo từng giai đoạn thai kỳ\n🩺 Tiểu đường thai kỳ - sàng lọc & chế độ ăn\n💊 Bổ sung vi chất: sắt, canxi, folate, DHA\n🤱 Dinh dưỡng cho mẹ cho con bú\n⚖️ Tăng cân hợp lý khi mang thai\n\nBạn muốn hỏi về vấn đề nào?`,
+          content: `Xin chào ${user?.name}! 💕\n\nTôi là Nori — trợ lý AI đồng hành cùng mẹ và bé. Tôi có thể giúp bạn:\n\n• Lời khuyên dinh dưỡng cho mẹ sau sinh\n• Thông tin phát triển của bé\n• Gợi ý công thức nấu ăn lành mạnh\n• Trả lời câu hỏi về sức khỏe\n\nHôm nay mẹ cần tôi giúp gì? 🌸`,
           timestamp: new Date(),
         },
       ]);
     }
-  }, [user?.name]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, [user]);
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendMessage = useCallback(async (text: string) => {
-    if (!text.trim() || loading) return;
+  const handleSend = async (text?: string) => {
+    const msg = (text ?? input).trim();
+    if (!msg) return;
+    setInput('');
 
-    const userMessage: Message = {
+    const userMsg: Message = {
       id: Date.now().toString(),
       type: 'user',
-      content: text,
+      content: msg,
       timestamp: new Date(),
     };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
+    setMessages(prev => [...prev, userMsg]);
     setLoading(true);
     setShowSuggestions(false);
 
@@ -136,153 +109,160 @@ export default function NoriPage() {
       const data = await res.json();
       const botContent = data.response || 'Xin lỗi, tôi không thể trả lời lúc này. Vui lòng thử lại.';
 
-      const botMessage: Message = {
+    setTimeout(() => {
+      const botMsg: Message = {
         id: (Date.now() + 1).toString(),
         type: 'bot',
-        content: botContent,
+        content: generateResponse(msg),
         timestamp: new Date(),
       };
-
-      setMessages((prev) => [...prev, botMessage]);
-      setChatHistory([...newHistory, { role: 'assistant', content: botContent }]);
-    } catch {
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'bot',
-        content: 'Xin lỗi, đã xảy ra lỗi kết nối. Vui lòng thử lại. 🙏',
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
+      setMessages(prev => [...prev, botMsg]);
       setLoading(false);
-      inputRef.current?.focus();
+    }, 900);
+  };
+
+  const generateResponse = (userInput: string): string => {
+    const q = userInput.toLowerCase();
+    if (q.includes('dinh dưỡng') || q.includes('ăn gì') || q.includes('tăng sữa')) {
+      return `Để duy trì sức khỏe và sản xuất sữa tốt, mẹ nên:\n\n✅ Ăn đủ protein (cá hồi, trứng, thịt gà)\n✅ Uống đủ nước 8–10 cốc/ngày\n✅ Rau xanh đậm & trái cây tươi\n✅ Canxi từ sữa, phô mai, cá nhỏ\n✅ Hạnh nhân, óc chó, hạt chia\n\nBạn muốn tôi gợi ý thực đơn cụ thể không? 🍱`;
     }
-  }, [loading, chatHistory, user]);
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    sendMessage(input);
+    if (q.includes('sữa') || q.includes('bú')) {
+      return `Về nuôi con bằng sữa mẹ 🤱\n\n• Bé nên bú 8–12 lần/ngày trong 2 tháng đầu\n• Mỗi lần bú khoảng 15–20 phút\n• Xen kẽ hai bên ngực\n• Nếu sữa ít, hãy cho bú thường xuyên hơn\n• Mẹ cần ngủ đủ giấc và ăn uống đầy đủ\n\nMẹ đang gặp vấn đề gì cụ thể không?`;
+    }
+    if (q.includes('bé') || q.includes('con') || q.includes('phát triển')) {
+      return `Về phát triển của bé 👶\n\n🌱 0–2 tháng: Ngủ nhiều, bú và khóc để giao tiếp\n😊 2–4 tháng: Biết cười, theo dõi ánh sáng & khuôn mặt\n🤲 4–6 tháng: Nắm tay, lẫy, bắt đầu tập ngồi\n🍽️ 6+ tháng: Sẵn sàng ăn dặm\n\nBé của mẹ đang được bao nhiêu tuổi rồi?`;
+    }
+    if (q.includes('công thức') || q.includes('nấu ăn') || q.includes('món')) {
+      return `Một số món ngon bổ dưỡng cho mẹ sau sinh 🍲\n\n🥣 Cháo cá hồi + rau chân vịt\n🍵 Canh gà hầm nấm linh chi\n🥗 Salad cá ngừ + dầu olive\n🫕 Súp bí đỏ + hạt bí\n\nMón nào mẹ muốn tôi hướng dẫn chi tiết?`;
+    }
+    if (q.includes('mệt') || q.includes('stress') || q.includes('lo lắng') || q.includes('buồn')) {
+      return `Mẹ ơi, mệt mỏi sau sinh là hoàn toàn bình thường! 💗\n\n💡 Một vài lời khuyên:\n• Tranh thủ ngủ khi bé ngủ\n• Nhờ chồng/gia đình hỗ trợ bế bé\n• Ăn đủ bữa, không bỏ bữa\n• Đi bộ nhẹ 15 phút/ngày\n• Tâm sự với người thân khi cần\n\nNếu cảm thấy quá tải kéo dài, hãy nói chuyện với bác sĩ nhé. Mẹ không đơn độc! 🌸`;
+    }
+    return `Cảm ơn câu hỏi của mẹ! 😊\n\nTôi có thể giúp bạn về:\n• 🥗 Dinh dưỡng cho mẹ sau sinh\n• 👶 Phát triển và chăm sóc bé\n• 🍳 Công thức nấu ăn lành mạnh\n• 💊 Sức khỏe & phục hồi sau sinh\n\nHãy hỏi tôi bất cứ điều gì nhé!`;
   };
 
-  const handleSuggestionClick = (text: string) => {
-    sendMessage(text);
-  };
-
-  if (!user || user.role === 'admin') {
-    return null;
-  }
+  if (!user || user.role === 'admin') return null;
 
   return (
     <MainLayout>
-      <div className="space-y-4">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 flex-shrink-0">
-            <BotAnimation />
+      <div className="space-y-4 h-full">
+
+        {/* Chat Header */}
+        <div className="rounded-2xl p-4 flex items-center gap-3 border border-violet-100"
+          style={{ background: 'linear-gradient(135deg, #faf8ff, #f3eeff)' }}>
+          <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center shrink-0 overflow-hidden border border-violet-100">
+            <BotAvatar size={52} />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              Nori
-              <Badge variant="secondary" className="text-xs font-normal">
-                <Sparkles className="h-3 w-3 mr-1" />
-                AI Bộ Y tế
-              </Badge>
-            </h1>
-            <p className="text-sm text-muted-foreground">Trợ lý dinh dưỡng thông minh • QĐ 776 & QĐ 1470/BYT</p>
+          <div className="flex-1 min-w-0">
+            <h1 className="font-bold text-lg leading-tight text-violet-900">Nori</h1>
+            <p className="text-violet-400 text-xs">Trợ lý AI • Luôn sẵn sàng lắng nghe</p>
+          </div>
+          <div className="flex items-center gap-1.5 bg-violet-100 rounded-full px-3 py-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-xs text-violet-500">Online</span>
           </div>
         </div>
 
-        {/* Chat Container */}
-        <Card className="flex flex-col" style={{ height: 'calc(100vh - 220px)', minHeight: '500px' }}>
+        {/* Chat Window */}
+        <div className="rounded-2xl border border-border/50 bg-card shadow-card flex flex-col overflow-hidden"
+          style={{ height: 'calc(100vh - 300px)', minHeight: '420px' }}>
+
           {/* Messages */}
-          <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((message) => (
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {messages.map((msg) => (
               <div
-                key={message.id}
-                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                key={msg.id}
+                className={`flex items-end gap-2 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                {message.type === 'bot' && (
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white text-xs font-bold mr-2 flex-shrink-0 mt-1">
-                    N
+                {msg.type === 'bot' && (
+                  <div className="w-8 h-8 rounded-full bg-white border border-green-100 flex items-center justify-center shrink-0 mb-0.5 overflow-hidden">
+                    <BotAvatar size={30} />
                   </div>
                 )}
-                <div
-                  className={`max-w-[80%] lg:max-w-[70%] px-4 py-3 rounded-2xl ${
-                    message.type === 'user'
-                      ? 'bg-primary text-primary-foreground rounded-br-sm'
-                      : 'bg-muted rounded-bl-sm'
-                  }`}
+                <div className={`max-w-[78%] rounded-2xl px-4 py-2.5 shadow-sm ${
+                  msg.type === 'user'
+                    ? 'text-rose-900 rounded-br-sm'
+                    : 'text-green-900 rounded-bl-sm'
+                }`}
+                  style={msg.type === 'user'
+                    ? { background: '#fecdd3' }
+                    : { background: '#dcfce7' }}
                 >
-                  <div className="text-sm">
-                    {message.type === 'bot'
-                      ? formatBotMessage(message.content)
-                      : <p className="whitespace-pre-wrap">{message.content}</p>
-                    }
-                  </div>
-                  <p className={`text-[10px] mt-1.5 ${message.type === 'user' ? 'text-primary-foreground/60' : 'text-muted-foreground/60'}`}>
-                    {message.timestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                  <p className={`text-xs mt-1 ${msg.type === 'user' ? 'text-rose-400 text-right' : 'text-green-600'}`}>
+                    {msg.timestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
+                {msg.type === 'user' && (
+                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm shrink-0 mb-0.5">
+                    👤
+                  </div>
+                )}
               </div>
             ))}
+
             {loading && (
-              <div className="flex justify-start">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white text-xs font-bold mr-2 flex-shrink-0">
-                  N
+              <div className="flex items-end gap-2 justify-start">
+                <div className="w-8 h-8 rounded-full bg-white border border-green-100 flex items-center justify-center shrink-0 overflow-hidden">
+                  <BotAvatar size={30} />
                 </div>
-                <div className="bg-muted px-4 py-3 rounded-2xl rounded-bl-sm">
-                  <div className="flex items-center gap-1.5">
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Nori đang suy nghĩ...</span>
+                <div className="rounded-2xl rounded-bl-sm px-4 py-3" style={{ background: '#dcfce7' }}>
+                  <div className="flex gap-1 items-center">
+                    <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>
             )}
             <div ref={messagesEndRef} />
-          </CardContent>
+          </div>
 
-          {/* Suggestions */}
-          {showSuggestions && messages.length <= 1 && (
-            <div className="px-4 pb-2">
-              <p className="text-xs font-medium text-muted-foreground mb-2">💡 Gợi ý câu hỏi:</p>
-              <div className="flex flex-wrap gap-1.5">
-                {SUGGESTED_QUESTIONS.map((q, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleSuggestionClick(q.text)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-background text-xs hover:bg-accent hover:text-accent-foreground transition-colors"
-                    disabled={loading}
-                  >
-                    {q.icon}
-                    {q.text}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Input */}
-          <div className="border-t border-border p-3">
-            <form onSubmit={handleSendMessage} className="flex gap-2">
-              <Input
-                ref={inputRef}
-                placeholder="Hỏi Nori về dinh dưỡng thai kỳ..."
+          {/* Input Area */}
+          <div className="border-t border-border/50 bg-background/50 p-3">
+            <form
+              onSubmit={(e) => { e.preventDefault(); handleSend(); }}
+              className="flex gap-2 items-center"
+            >
+              <input
+                className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/15 transition-all placeholder:text-muted-foreground"
+                placeholder="Nhập câu hỏi của bạn..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 disabled={loading}
-                className="flex-1 rounded-full"
               />
-              <Button
+              <button
                 type="submit"
                 disabled={loading || !input.trim()}
-                size="icon"
-                className="rounded-full h-10 w-10"
+                className="h-10 w-10 rounded-xl flex items-center justify-center text-violet-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-violet-200 active:scale-95 shrink-0 border border-violet-200"
+                style={{ background: '#ede9fe' }}
               >
-                <Send className="h-4 w-4" />
-              </Button>
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </button>
             </form>
           </div>
-        </Card>
+        </div>
+
+        {/* Quick Suggestions */}
+        <div>
+          <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+            <Sparkles className="h-3 w-3" />
+            Gợi ý câu hỏi
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {quickSuggestions.map((s) => (
+              <button
+                key={s.text}
+                onClick={() => handleSend(s.text)}
+                disabled={loading}
+                className="flex items-center gap-2.5 text-left rounded-xl border border-border/60 bg-card px-3.5 py-2.5 text-sm text-foreground/80 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all disabled:opacity-50"
+              >
+                <s.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="leading-snug">{s.text}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </MainLayout>
   );

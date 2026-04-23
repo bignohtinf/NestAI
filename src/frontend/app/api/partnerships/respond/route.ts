@@ -1,54 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseService } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
+    if (!supabaseService) {
+      return NextResponse.json({ message: 'Cấu hình máy chủ không hợp lệ' }, { status: 500 });
+    }
+
     const body = await request.json();
-    const { partnershipId, action, motherId } = body;
+    const { partnershipId, action, userId } = body;
 
-    // Validation
-    if (!partnershipId || !['accept', 'reject'].includes(action)) {
-      return NextResponse.json(
-        { message: 'Dữ liệu không hợp lệ' },
-        { status: 400 }
-      );
+    if (!partnershipId || !['accept', 'reject'].includes(action) || !userId) {
+      return NextResponse.json({ message: 'Dữ liệu không hợp lệ' }, { status: 400 });
     }
 
-    if (!motherId) {
-      return NextResponse.json(
-        { message: 'Không tìm thấy thông tin mẹ' },
-        { status: 400 }
-      );
-    }
-
-    // Respond to partnership request
-    const { data, error } = await supabaseAdmin.respondToPartnershipRequest(
-      partnershipId,
-      motherId,
-      action as 'accept' | 'reject'
-    );
+    const { data, error } = await supabaseService
+      .from('partnerships')
+      .update({ status: action === 'accept' ? 'accepted' : 'rejected' })
+      .eq('id', partnershipId)
+      .select()
+      .single();
 
     if (error) {
-      return NextResponse.json(
-        { message: error.message || 'Không thể xử lý yêu cầu' },
-        { status: 400 }
-      );
+      console.error('Partnership respond error:', error);
+      return NextResponse.json({ message: 'Không thể xử lý yêu cầu' }, { status: 500 });
     }
 
-    const newStatus = action === 'accept' ? 'accepted' : 'rejected';
-
-    return NextResponse.json(
-      {
-        message: `Yêu cầu kết nối đã được ${action === 'accept' ? 'chấp nhận' : 'từ chối'}`,
-        partnership: data?.[0],
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({
+      message: action === 'accept' ? 'Đã chấp nhận kết nối' : 'Đã từ chối kết nối',
+      partnership: data,
+    });
   } catch (error) {
     console.error('Partnership response error:', error);
-    return NextResponse.json(
-      { message: 'Đã xảy ra lỗi khi xử lý yêu cầu' },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: 'Đã xảy ra lỗi' }, { status: 500 });
   }
 }

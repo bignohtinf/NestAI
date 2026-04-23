@@ -11,7 +11,7 @@ export function VoiceAITab() {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [voiceModel, setVoiceModel] = useState('openai-tts-1');
   const [voiceGender, setVoiceGender] = useState('female');
-  const [testText, setTestText] = useState('Welcome to NextAI. How can I help you today?');
+  const [testText, setTestText] = useState('Welcome to nestai. How can I help you today?');
 
   return (
     <div className="space-y-6">
@@ -28,14 +28,12 @@ export function VoiceAITab() {
             <div className="mt-2 flex items-center gap-4">
               <button
                 onClick={() => setVoiceEnabled(!voiceEnabled)}
-                className={`relative inline-flex h-8 w-14 items-center rounded-full ${
-                  voiceEnabled ? 'bg-primary' : 'bg-muted'
-                }`}
+                className={`relative inline-flex h-8 w-14 items-center rounded-full ${voiceEnabled ? 'bg-primary' : 'bg-muted'
+                  }`}
               >
                 <span
-                  className={`inline-block h-6 w-6 transform rounded-full bg-background transition ${
-                    voiceEnabled ? 'translate-x-7' : 'translate-x-1'
-                  }`}
+                  className={`inline-block h-6 w-6 transform rounded-full bg-background transition ${voiceEnabled ? 'translate-x-7' : 'translate-x-1'
+                    }`}
                 />
               </button>
               <span className="text-sm">
@@ -68,11 +66,10 @@ export function VoiceAITab() {
                 <button
                   key={gender}
                   onClick={() => setVoiceGender(gender)}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                    voiceGender === gender
+                  className={`rounded-lg px-4 py-2 text-sm font-medium transition ${voiceGender === gender
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
+                    }`}
                 >
                   {gender.charAt(0).toUpperCase() + gender.slice(1)}
                 </button>

@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const response = await fetch(`${BACKEND_URL}/api/babies?user_id=${userId}`, {
+    const response = await fetch(`${BACKEND_URL}/api/babies/?user_id=${userId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    const response = await fetch(`${BACKEND_URL}/api/babies?user_id=${userId}`, {
+    const response = await fetch(`${BACKEND_URL}/api/babies/?user_id=${userId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
