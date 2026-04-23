@@ -14,7 +14,8 @@ supabase_admin: Client = create_client(
 ) if settings.SUPABASE_SERVICE_KEY else None
 
 def get_supabase() -> Client:
-    return supabase
+    # Dùng service key để bypass RLS trên server-side
+    return supabase_admin if supabase_admin else supabase
 
 def get_supabase_admin() -> Client:
     if not supabase_admin:

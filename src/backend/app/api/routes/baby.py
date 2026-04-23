@@ -8,7 +8,9 @@ router = APIRouter()
 
 class BabyCreate(BaseModel):
     name: str
-    date_of_birth: str
+    status: Optional[str] = None          # 'born' | 'pregnant'
+    date_of_birth: Optional[str] = None
+    gestation_weeks: Optional[int] = None
     gender: Optional[str] = None
     weight_at_birth: Optional[float] = None
     height_at_birth: Optional[float] = None
@@ -33,46 +35,63 @@ class DailyEntryCreate(BaseModel):
 @router.get("/")
 async def get_babies(user_id: str, supabase = Depends(get_supabase)):
     """Get all babies for a user's partnership"""
-    # Get partnership
-    partnership_result = supabase.table("partnerships").select("id").or_(f"mother_id.eq.{user_id},father_id.eq.{user_id}").eq("status", "accepted").execute()
-    
-    if not partnership_result.data:
-        return {"babies": []}
-    
-    partnership_id = partnership_result.data[0]["id"]
-    
-    # Get babies
-    result = supabase.table("babies").select("*").eq("partnership_id", partnership_id).execute()
-    return {"babies": result.data or []}
+    try:
+        # Get partnership - user can be either mother or father
+        partnership_result = supabase.table("partnerships").select("id").eq("status", "accepted").or_(f"mother_id.eq.{user_id},father_id.eq.{user_id}").execute()
+        
+        if not partnership_result.data:
+            return {"babies": []}
+        
+        partnership_id = partnership_result.data[0]["id"]
+        
+        # Get babies
+        result = supabase.table("babies").select("*").eq("partnership_id", partnership_id).execute()
+        return {"babies": result.data or []}
+    except Exception as e:
+        print(f"Error in get_babies: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @router.post("/")
 async def create_baby(user_id: str, baby: BabyCreate, supabase = Depends(get_supabase)):
     """Create a new baby record"""
-    # Get partnership
-    partnership_result = supabase.table("partnerships").select("id").or_(f"mother_id.eq.{user_id},father_id.eq.{user_id}").eq("status", "accepted").execute()
-    
-    if not partnership_result.data:
-        raise HTTPException(status_code=404, detail="No active partnership found")
-    
-    partnership_id = partnership_result.data[0]["id"]
-    
-    result = supabase.table("babies").insert({
-        "partnership_id": partnership_id,
-        "name": baby.name,
-        "date_of_birth": baby.date_of_birth,
-        "gender": baby.gender,
-        "weight_at_birth": baby.weight_at_birth,
-        "height_at_birth": baby.height_at_birth,
-        "blood_type": baby.blood_type,
-        "notes": baby.notes,
-        "created_at": datetime.utcnow().isoformat(),
-        "updated_at": datetime.utcnow().isoformat()
-    }).execute()
-    
-    if not result.data:
-        raise HTTPException(status_code=400, detail="Failed to create baby record")
-    
-    return {"status": "created", "data": result.data[0]}
+    try:
+        # Get partnership
+        partnership_result = supabase.table("partnerships").select("id").eq("status", "accepted").or_(f"mother_id.eq.{user_id},father_id.eq.{user_id}").execute()
+        
+        if not partnership_result.data:
+            raise HTTPException(status_code=404, detail="No active partnership found")
+        
+        partnership_id = partnership_result.data[0]["id"]
+        
+        insert_data = {
+            "partnership_id": partnership_id,
+            "name": baby.name,
+            "gender": baby.gender,
+            "weight_at_birth": baby.weight_at_birth,
+            "height_at_birth": baby.height_at_birth,
+            "blood_type": baby.blood_type,
+            "notes": baby.notes,
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat(),
+        }
+        if baby.date_of_birth is not None:
+            insert_data["date_of_birth"] = baby.date_of_birth
+        if baby.status is not None:
+            insert_data["status"] = baby.status
+        if baby.gestation_weeks is not None:
+            insert_data["gestation_weeks"] = baby.gestation_weeks
+
+        result = supabase.table("babies").insert(insert_data).execute()
+        
+        if not result.data:
+            raise HTTPException(status_code=400, detail="Failed to create baby record")
+        
+        return {"status": "created", "data": result.data[0]}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in create_baby: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @router.get("/{baby_id}")
 async def get_baby(baby_id: str, supabase = Depends(get_supabase)):
@@ -151,17 +170,11 @@ async def create_daily_entry(baby_id: str, user_id: str, entry: DailyEntryCreate
 @router.get("/{baby_id}/milestones")
 async def get_milestones(baby_id: str, supabase = Depends(get_supabase)):
     """Get milestones for a baby"""
-    result = supabase.table("baby_milestones").select("*").eq("baby_id", baby_id).order("age_weeks").execute()
-    return {"milestones": result.data or []}
+    # Placeholder - baby_milestones table not yet created
+    return {"milestones": []}
 
 @router.post("/{baby_id}/milestones/{milestone_id}/achieve")
 async def achieve_milestone(baby_id: str, milestone_id: str, supabase = Depends(get_supabase)):
     """Mark a milestone as achieved"""
-    result = supabase.table("baby_milestones").update({
-        "achieved_at": datetime.utcnow().isoformat()
-    }).eq("id", milestone_id).eq("baby_id", baby_id).execute()
-    
-    if not result.data:
-        raise HTTPException(status_code=404, detail="Milestone not found")
-    
-    return {"status": "updated", "data": result.data[0]}
+    # Placeholder - baby_milestones table not yet created
+    raise HTTPException(status_code=501, detail="Milestones feature not yet implemented")

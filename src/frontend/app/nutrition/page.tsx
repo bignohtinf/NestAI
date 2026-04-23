@@ -4,11 +4,16 @@ import { MainLayout } from '@/components/layouts/main-layout';
 import { NutritionRecommendations } from '@/components/metrics/nutrition-recommendations';
 import { useApp } from '@/lib/context';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function NutritionPage() {
   const { user } = useApp();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -18,7 +23,7 @@ export default function NutritionPage() {
     }
   }, [user, router]);
 
-  if (!user || user.role !== 'mother') {
+  if (!mounted || !user || user.role !== 'mother') {
     return null;
   }
 
@@ -26,8 +31,8 @@ export default function NutritionPage() {
     <MainLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Dinh dưỡng</h1>
-          <p className="text-muted-foreground">Gợi ý món ăn và tìm cửa hàng gần đó</p>
+          <h1 className="text-3xl font-bold">Khuyến Nghị Dinh Dưỡng</h1>
+          <p className="text-muted-foreground">Nhận khuyến nghị dinh dưỡng cá nhân hóa</p>
         </div>
 
         <NutritionRecommendations />
