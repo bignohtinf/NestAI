@@ -192,7 +192,7 @@ export function NutritionRecommendations() {
             <h3 className="text-sm font-semibold text-foreground">
               {hasGenerated ? '✅ Thực đơn hôm nay' : '📋 Thực đơn mẫu'}
               {condition !== 'none' && (
-                <Badge variant="secondary" className="ml-2 text-xs">
+                <Badge variant="default" className="ml-2 text-xs">
                   {CONDITIONS.find((c) => c.value === condition)?.label}
                 </Badge>
               )}

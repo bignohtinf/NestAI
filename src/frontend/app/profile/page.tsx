@@ -674,41 +674,60 @@ const FOOD_PREF_OPTIONS = [
 
 function PregnancyProfileTab() {
   const { user, updatePregnancyProfile } = useApp();
-  const [gestationWeeks, setGestationWeeks] = React.useState(
-    user?.gestationWeeks?.toString() ?? ''
-  );
+
+  // Due date is the source of truth — gestationWeeks is derived
+  const [dueDate, setDueDate] = React.useState(user?.dueDate ?? '');
   const [condition, setCondition] = React.useState(user?.condition ?? 'none');
   const [foodPref, setFoodPref] = React.useState(user?.foodPreference ?? 'no_pref');
   const [loading, setLoading] = React.useState(false);
   const [msg, setMsg] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // Compute gestationWeeks live from dueDate for display
+  const computedWeeks = React.useMemo(() => {
+    if (!dueDate) return null;
+    const due = new Date(dueDate);
+    const today = new Date();
+    const daysRemaining = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const weeks = 40 - Math.round(daysRemaining / 7);
+    if (weeks < 1 || weeks > 44) return null;
+    return weeks;
+  }, [dueDate]);
+
+  // Date bounds: due date must be in the future (not yet born) and ≤ 40 weeks away
+  const today = new Date();
+  const minDue = new Date(today); // at minimum today (already overdue edge case)
+  minDue.setDate(minDue.getDate() - 7 * 4); // allow up to 4 weeks overdue
+  const maxDue = new Date(today);
+  maxDue.setDate(maxDue.getDate() + 7 * 40); // max 40 weeks in future
+  const minDueStr = minDue.toISOString().split('T')[0];
+  const maxDueStr = maxDue.toISOString().split('T')[0];
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    const weeks = parseInt(gestationWeeks);
-    if (gestationWeeks && (isNaN(weeks) || weeks < 1 || weeks > 42)) {
-      setMsg({ type: 'error', text: 'Tuần thai phải từ 1 – 42' });
+    if (!dueDate) {
+      setMsg({ type: 'error', text: 'Vui lòng chọn ngày dự sinh' });
+      return;
+    }
+    if (computedWeeks === null) {
+      setMsg({ type: 'error', text: 'Ngày dự sinh không hợp lệ — vui lòng kiểm tra lại' });
       return;
     }
     setLoading(true);
     setMsg(null);
     try {
-      // TODO: Wire to /api/users/me to persist pregnancy profile to backend
+      // TODO: Wire to /api/users/me to persist to backend
       // await fetch(`/api/users/me?user_id=${user?.id}`, {
       //   method: 'PUT',
       //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ gestation_weeks: weeks, condition, food_preference: foodPref }),
+      //   body: JSON.stringify({ due_date: dueDate, condition, food_preference: foodPref }),
       // });
 
-      // Update local context immediately — dashboard banner auto-dismisses
-      updatePregnancyProfile(
-        gestationWeeks ? weeks : null,
-        condition,
-        foodPref,
-      );
+      // Update local context — computes gestationWeeks, auto-dismisses dashboard banner
+      updatePregnancyProfile(dueDate, condition, foodPref);
 
       await new Promise((r) => setTimeout(r, 400));
-      setMsg({ type: 'success', text: 'Cập nhật hồ sơ thai kỳ thành công' });
-      setTimeout(() => setMsg(null), 3000);
+      setMsg({ type: 'success', text: `Đã lưu — bạn đang ở tuần ${computedWeeks} thai kỳ` });
+      setTimeout(() => setMsg(null), 4000);
     } catch {
       setMsg({ type: 'error', text: 'Không thể lưu — vui lòng thử lại' });
     } finally {
@@ -747,30 +766,47 @@ function PregnancyProfileTab() {
             </div>
           )}
 
-          {/* Gestation week */}
+          {/* Due date input — ngày dự sinh */}
           <div className="space-y-2">
-            <Label htmlFor="gestationWeeks">
-              Tuần thai hiện tại
-              <span className="text-muted-foreground text-xs ml-1">(1–42)</span>
+            <Label htmlFor="dueDate">
+              Ngày dự sinh (dự kiến)
             </Label>
             <Input
-              id="gestationWeeks"
-              type="number"
-              min="1"
-              max="42"
-              placeholder="Ví dụ: 28"
-              value={gestationWeeks}
-              onChange={(e) => setGestationWeeks(e.target.value)}
+              id="dueDate"
+              type="date"
+              min={minDueStr}
+              max={maxDueStr}
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
               disabled={loading}
-              className="max-w-[160px]"
+              className="max-w-[200px]"
             />
-            {gestationWeeks && !isNaN(parseInt(gestationWeeks)) && (
+            {/* Live computed week display */}
+            {dueDate && computedWeeks !== null && (
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-primary/5 border border-primary/15 max-w-sm">
+                <span className="text-xl">🤰</span>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Bạn đang ở <span className="text-primary">tuần {computedWeeks}</span> thai kỳ
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {computedWeeks < 13
+                      ? 'Tam cá nguyệt 1 — folate và DHA rất quan trọng'
+                      : computedWeeks < 28
+                      ? 'Tam cá nguyệt 2 — giai đoạn tăng trưởng chính'
+                      : 'Tam cá nguyệt 3 — cần 27mg sắt/ngày, thiếu máu rất phổ biến'}
+                  </p>
+                </div>
+              </div>
+            )}
+            {dueDate && computedWeeks === null && (
+              <p className="text-xs text-destructive">
+                Ngày dự sinh không hợp lệ — vui lòng chọn ngày trong vòng 40 tuần tới
+              </p>
+            )}
+            {!dueDate && (
               <p className="text-xs text-muted-foreground">
-                {parseInt(gestationWeeks) < 13
-                  ? 'Tam cá nguyệt 1 — folate và DHA rất quan trọng'
-                  : parseInt(gestationWeeks) < 28
-                  ? 'Tam cá nguyệt 2 — giai đoạn tăng trưởng chính'
-                  : 'Tam cá nguyệt 3 — cần 27mg sắt/ngày, thiếu máu rất phổ biến'}
+                AI sẽ tự tính tuần thai từ ngày dự sinh để cá nhân hóa thực đơn
               </p>
             )}
           </div>
