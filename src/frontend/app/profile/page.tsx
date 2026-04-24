@@ -750,14 +750,10 @@ function PregnancyProfileTab() {
       updatePregnancyProfile(dueDate, condition, foodPref);
 
       await new Promise((r) => setTimeout(r, 400));
-      setMsg({ type: 'success', text: `Đã lưu — bạn đang ở tuần ${computedWeeks} thai kỳ` });
+      setMsg({ type: 'success', text: `Đã lưu — bạn đang ở tuần ${computedWeeks} thai kỳ ✓` });
 
-      // If onboarding flow, redirect to dashboard after short delay
-      if (isOnboarding) {
-        setTimeout(() => router.replace('/'), 1200);
-      } else {
-        setTimeout(() => setMsg(null), 4000);
-      }
+      // Always redirect to dashboard after saving
+      setTimeout(() => router.replace('/'), 1200);
     } catch {
       setMsg({ type: 'error', text: 'Không thể lưu — vui lòng thử lại' });
     } finally {
