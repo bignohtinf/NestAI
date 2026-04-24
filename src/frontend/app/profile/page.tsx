@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useApp } from '@/lib/context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,12 +8,23 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MainLayout } from '@/components/layouts/main-layout';
-import { useRouter } from 'next/navigation';
-import { AlertCircle, CheckCircle, Plus, Trash2, Heart, Mail, Phone, Stethoscope, Save } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { AlertCircle, CheckCircle, Plus, Trash2, Heart, Mail, Phone, Stethoscope, Sparkles } from 'lucide-react';
 
+// Suspense boundary required by Next.js when using useSearchParams()
 export default function ProfilePage() {
+  return (
+    <Suspense fallback={<MainLayout><div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" /></div></MainLayout>}>
+      <ProfilePageContent />
+    </Suspense>
+  );
+}
+
+function ProfilePageContent() {
   const { user, isLoading, fetchUserData } = useApp();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isOnboarding = searchParams.get('onboarding') === '1';
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [babies, setBabies] = useState<any[]>([]);
@@ -271,36 +282,53 @@ export default function ProfilePage() {
 
   return (
     <MainLayout>
-      <div className="max-w-2xl mx-auto py-6 space-y-6">
+      <div className="max-w-2xl mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Trang cá nhân</h1>
-          <p className="text-muted-foreground mt-2">Quản lý thông tin cá nhân, mối quan hệ và bé</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Trang cá nhân</h1>
+          <p className="text-muted-foreground mt-1 text-sm">Quản lý thông tin cá nhân, mối quan hệ và bé</p>
         </div>
+
+        {/* Onboarding welcome banner */}
+        {isOnboarding && (
+          <div className="flex items-start gap-3 rounded-xl bg-primary/5 border border-primary/20 p-4">
+            <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">Chào mừng bạn đến với NestAI! 🎉</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Hãy điền thông tin thai kỳ để AI cá nhân hóa thực đơn dinh dưỡng phù hợp nhất cho bạn.
+              </p>
+            </div>
+          </div>
+        )}
 
         {message && (
           <div
-            className={`flex items-center gap-2 p-4 rounded-lg ${message.type === 'success'
+            className={`flex items-center gap-2 p-3 rounded-lg text-sm ${
+              message.type === 'success'
                 ? 'bg-green-50 text-green-800 border border-green-200'
                 : 'bg-red-50 text-red-800 border border-red-200'
-              }`}
+            }`}
           >
             {message.type === 'success' ? (
-              <CheckCircle className="h-5 w-5" />
+              <CheckCircle className="h-4 w-4 shrink-0" />
             ) : (
-              <AlertCircle className="h-5 w-5" />
+              <AlertCircle className="h-4 w-4 shrink-0" />
             )}
             <span>{message.text}</span>
           </div>
         )}
 
         <Tabs defaultValue={user.role === 'mother' ? 'pregnancy' : 'profile'} className="w-full">
-          <TabsList className={`grid w-full ${user.role === 'mother' ? 'grid-cols-4' : 'grid-cols-3'}`}>
+          {/* Mobile: horizontal scroll, Desktop: grid */}
+          <TabsList className="w-full flex overflow-x-auto gap-1 h-auto p-1 sm:grid sm:gap-0 sm:h-10 sm:p-0.5"
+            style={{ gridTemplateColumns: user.role === 'mother' ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)' }}
+          >
             {user.role === 'mother' && (
-              <TabsTrigger value="pregnancy">🤰 Thai kỳ</TabsTrigger>
+              <TabsTrigger value="pregnancy" className="shrink-0 sm:shrink text-xs sm:text-sm">🤰 Thai kỳ</TabsTrigger>
             )}
-            <TabsTrigger value="profile">Cá nhân</TabsTrigger>
-            <TabsTrigger value="partnership">Quan hệ</TabsTrigger>
-            <TabsTrigger value="babies">Thai nhi / Bé</TabsTrigger>
+            <TabsTrigger value="profile" className="shrink-0 sm:shrink text-xs sm:text-sm">Cá nhân</TabsTrigger>
+            <TabsTrigger value="partnership" className="shrink-0 sm:shrink text-xs sm:text-sm">Quan hệ</TabsTrigger>
+            <TabsTrigger value="babies" className="shrink-0 sm:shrink text-xs sm:text-sm whitespace-nowrap">Thai nhi / Bé</TabsTrigger>
           </TabsList>
 
           {/* Pregnancy Profile Tab — PRD core: needed for AI meal personalization */}
@@ -456,7 +484,7 @@ export default function ProfilePage() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleAddBaby} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Tên bé</Label>
                       <Input
@@ -514,7 +542,7 @@ export default function ProfilePage() {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="gender">Giới tính</Label>
                       <select
@@ -544,7 +572,7 @@ export default function ProfilePage() {
                   </div>
 
                   {babyData.status === 'born' && (
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="weightAtBirth">Cân nặng lúc sinh (kg)</Label>
                         <Input
@@ -674,6 +702,9 @@ const FOOD_PREF_OPTIONS = [
 
 function PregnancyProfileTab() {
   const { user, updatePregnancyProfile } = useApp();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isOnboarding = searchParams.get('onboarding') === '1';
 
   // Due date is the source of truth — gestationWeeks is derived
   const [dueDate, setDueDate] = React.useState(user?.dueDate ?? '');
@@ -715,19 +746,14 @@ function PregnancyProfileTab() {
     setLoading(true);
     setMsg(null);
     try {
-      // TODO: Wire to /api/users/me to persist to backend
-      // await fetch(`/api/users/me?user_id=${user?.id}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ due_date: dueDate, condition, food_preference: foodPref }),
-      // });
-
       // Update local context — computes gestationWeeks, auto-dismisses dashboard banner
       updatePregnancyProfile(dueDate, condition, foodPref);
 
       await new Promise((r) => setTimeout(r, 400));
-      setMsg({ type: 'success', text: `Đã lưu — bạn đang ở tuần ${computedWeeks} thai kỳ` });
-      setTimeout(() => setMsg(null), 4000);
+      setMsg({ type: 'success', text: `Đã lưu — bạn đang ở tuần ${computedWeeks} thai kỳ ✓` });
+
+      // Always redirect to dashboard after saving
+      setTimeout(() => router.replace('/'), 1200);
     } catch {
       setMsg({ type: 'error', text: 'Không thể lưu — vui lòng thử lại' });
     } finally {
@@ -857,8 +883,8 @@ function PregnancyProfileTab() {
           </div>
 
           <Button type="submit" disabled={loading} className="w-full gap-2">
-            <Save className="h-4 w-4" />
-            {loading ? 'Đang lưu...' : 'Lưu hồ sơ thai kỳ'}
+            <CheckCircle className="h-4 w-4" />
+            {loading ? 'Đang lưu...' : isOnboarding ? 'Lưu & Bắt đầu dùng NestAI →' : 'Lưu hồ sơ thai kỳ'}
           </Button>
         </form>
       </CardContent>

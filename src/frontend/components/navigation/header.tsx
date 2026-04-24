@@ -12,7 +12,7 @@ import { UserMenu } from '@/components/navigation/user-menu';
 import { useState } from 'react';
 
 interface HeaderProps {
-  onMenuClick: () => void;
+  onMenuClick?: () => void;
 }
 
 interface NavItem {
