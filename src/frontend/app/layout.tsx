@@ -13,8 +13,8 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'NestAI - Postpartum Care',
-  description: 'AI-powered postpartum nutrition and health support for mothers and fathers',
+  title: 'NestAI – Dinh Dưỡng Thai Kỳ',
+  description: 'Trợ lý dinh dưỡng AI cá nhân hóa cho mẹ bầu và mẹ cho con bú tại Việt Nam — thực đơn theo tuần thai, theo bệnh lý, món Việt quen thuộc.',
   icons: {
     icon: [
       {
@@ -35,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="vi" suppressHydrationWarning>
       <body className="font-sans antialiased" suppressHydrationWarning>
         <AppProvider>
           {children}

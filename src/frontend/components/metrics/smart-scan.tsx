@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Camera, Upload, X, Check, Zap, Info } from 'lucide-react';
+import { Camera, Upload, X, Check, Zap, Info, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface FoodAnalysis {
@@ -10,7 +10,10 @@ interface FoodAnalysis {
   protein: number;
   carbs: number;
   fat: number;
-  milkBenefit: string;
+  iron?: number;
+  folate?: number;
+  calcium?: number;
+  pregnancyBenefit: string;
   timestamp: Date;
 }
 
@@ -21,27 +24,55 @@ const nutritionColors = [
   { key: 'fat', label: 'Chất béo', unit: 'g', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
 ];
 
+const microNutrients = [
+  { key: 'iron', label: 'Sắt', unit: 'mg', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-100' },
+  { key: 'folate', label: 'Folate', unit: 'mcg', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-100' },
+  { key: 'calcium', label: 'Canxi', unit: 'mg', color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
+];
+
 export function SmartScan() {
   const [image, setImage] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<FoodAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = (file: File) => {
+    setError(null);
     const reader = new FileReader();
     reader.onload = (e) => {
       setImage(e.target?.result as string);
-      analyzeFood();
+      analyzeFood(e.target?.result as string);
     };
     reader.readAsDataURL(file);
   };
 
-  const analyzeFood = async () => {
+  const analyzeFood = async (imageData?: string) => {
     setLoading(true);
     setAnalysis(null);
-    setLoading(false);
+    setError(null);
+
+    try {
+      // TODO: Replace with real API call to /api/nutrition/analyze-photo
+      // const response = await fetch('/api/nutrition/analyze-photo', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ image: imageData }),
+      // });
+      // if (!response.ok) throw new Error('Không thể phân tích ảnh');
+      // const data = await response.json();
+      // setAnalysis(data);
+
+      // UI is ready — AI integration coming soon
+      // Leave analysis null to show the "coming soon" state
+      await new Promise((r) => setTimeout(r, 1000)); // Simulate network
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -52,6 +83,7 @@ export function SmartScan() {
   };
 
   const handleSaveToLog = () => {
+    // TODO: Call /api/nutrition/log to save meal
     alert('Đã lưu vào nhật ký dinh dưỡng!');
     resetScan();
   };
@@ -59,6 +91,7 @@ export function SmartScan() {
   const resetScan = () => {
     setImage(null);
     setAnalysis(null);
+    setError(null);
   };
 
   return (
@@ -89,9 +122,9 @@ export function SmartScan() {
               </div>
 
               <div>
-                <p className="text-lg font-semibold text-foreground">Chụp ảnh món ăn</p>
+                <p className="text-lg font-semibold text-foreground">Chụp ảnh bữa ăn</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  AI sẽ tự động phân tích calo & dinh dưỡng
+                  AI tự động tính calo và vi chất — không cần nhập tay
                 </p>
               </div>
 
@@ -138,7 +171,7 @@ export function SmartScan() {
           <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-100 px-4 py-3">
             <Info className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
             <p className="text-sm text-amber-800">
-              <span className="font-medium">Mẹo:</span> Chụp ảnh từ trên xuống, đủ ánh sáng để AI nhận diện chính xác nhất.
+              <span className="font-medium">Mẹo:</span> Chụp từ trên xuống, đủ ánh sáng, cả đĩa trong khung hình để AI nhận diện chính xác nhất.
             </p>
           </div>
         </>
@@ -148,12 +181,13 @@ export function SmartScan() {
           <div className="relative rounded-2xl overflow-hidden shadow-card">
             <img
               src={image}
-              alt="Ảnh món ăn"
+              alt="Ảnh bữa ăn"
               className="w-full h-64 sm:h-72 object-cover"
             />
             <button
               onClick={resetScan}
               className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-all backdrop-blur-sm"
+              aria-label="Xóa ảnh"
             >
               <X className="h-4 w-4" />
             </button>
@@ -167,7 +201,24 @@ export function SmartScan() {
             <div className="rounded-2xl border border-border/50 bg-card p-8 text-center">
               <div className="w-12 h-12 rounded-full border-3 border-primary/30 border-t-primary animate-spin mx-auto mb-3" />
               <p className="text-sm font-medium text-foreground">Đang phân tích ảnh...</p>
-              <p className="text-xs text-muted-foreground mt-1">AI đang nhận diện thức ăn</p>
+              <p className="text-xs text-muted-foreground mt-1">AI đang nhận diện thức ăn Việt Nam</p>
+            </div>
+          )}
+
+          {/* Error state */}
+          {!loading && error && (
+            <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-5">
+              <div className="flex items-center gap-2 text-destructive mb-2">
+                <AlertCircle className="h-4 w-4" />
+                <p className="text-sm font-medium">Không thể phân tích ảnh</p>
+              </div>
+              <p className="text-sm text-muted-foreground">{error}</p>
+              <button
+                onClick={resetScan}
+                className="mt-3 text-sm text-primary hover:underline"
+              >
+                Thử lại
+              </button>
             </div>
           )}
 
@@ -177,13 +228,13 @@ export function SmartScan() {
               <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between">
                 <div>
                   <h3 className="font-semibold text-foreground">{analysis.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">Phân tích dinh dưỡng</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Phân tích dinh dưỡng thai kỳ</p>
                 </div>
                 <span className="text-xs bg-primary/10 text-primary rounded-full px-2.5 py-1 font-medium">AI</span>
               </div>
 
               <div className="p-5 space-y-4">
-                {/* Nutrition Grid */}
+                {/* Macro Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {nutritionColors.map((n) => (
                     <div key={n.key} className={`${n.bg} border ${n.border} rounded-xl p-3 text-center`}>
@@ -196,12 +247,28 @@ export function SmartScan() {
                   ))}
                 </div>
 
-                {/* Milk Benefit */}
+                {/* Micronutrients */}
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Vi chất thai kỳ</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    {microNutrients.map((n) => (
+                      <div key={n.key} className={`${n.bg} border ${n.border} rounded-xl p-3 text-center`}>
+                        <p className="text-xs text-muted-foreground mb-1">{n.label}</p>
+                        <p className={`text-lg font-bold ${n.color}`}>
+                          {(analysis as any)[n.key] ?? '—'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{n.unit}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Pregnancy Benefit */}
                 <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 rounded-xl p-3.5">
-                  <span className="text-xl">🌿</span>
+                  <span className="text-xl">🤰</span>
                   <div>
-                    <p className="text-xs font-medium text-emerald-700 uppercase tracking-wide">Lợi ích cho sữa mẹ</p>
-                    <p className="text-sm text-emerald-900 mt-0.5">{analysis.milkBenefit}</p>
+                    <p className="text-xs font-medium text-emerald-700 uppercase tracking-wide">Lợi ích thai kỳ</p>
+                    <p className="text-sm text-emerald-900 mt-0.5">{analysis.pregnancyBenefit}</p>
                   </div>
                 </div>
 
@@ -213,16 +280,28 @@ export function SmartScan() {
             </div>
           )}
 
-          {/* No result yet (image uploaded but no analysis) */}
-          {!loading && !analysis && (
-            <div className="rounded-2xl border border-border/50 bg-card p-6 text-center">
-              <p className="text-muted-foreground text-sm">Ảnh đã tải lên — tính năng phân tích AI đang được triển khai.</p>
-              <button
-                onClick={resetScan}
-                className="mt-3 text-sm text-primary hover:underline"
-              >
-                Thử ảnh khác
-              </button>
+          {/* Coming soon state — image uploaded but AI not connected yet */}
+          {!loading && !analysis && !error && (
+            <div className="rounded-2xl border border-border/50 bg-card p-6">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                  <Zap className="h-5 w-5 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Ảnh đã tải lên thành công</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Tính năng phân tích AI đang được tích hợp — trong thời gian tới bạn sẽ nhận được kết quả dinh dưỡng ngay lập tức.
+                  </p>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      onClick={resetScan}
+                      className="text-sm text-primary hover:underline font-medium"
+                    >
+                      Thử ảnh khác
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
