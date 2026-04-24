@@ -13,6 +13,11 @@ interface Message {
   timestamp: Date;
 }
 
+interface ChatHistory {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 const quickSuggestions = [
   { icon: Apple, text: 'Tôi nên ăn gì để tăng sữa?' },
   { icon: Baby, text: 'Bé 2 tháng tuổi phát triển bình thường không?' },
@@ -89,7 +94,7 @@ export default function NoriPage() {
 
     const newHistory: ChatHistory[] = [
       ...chatHistory,
-      { role: 'user', content: text },
+      { role: 'user', content: msg },
     ];
 
     try {
@@ -107,18 +112,25 @@ export default function NoriPage() {
       });
 
       const data = await res.json();
-      const botContent = data.response || 'Xin lỗi, tôi không thể trả lời lúc này. Vui lòng thử lại.';
+      const botContent = data.response || generateResponse(msg);
 
-    setTimeout(() => {
-      const botMsg: Message = {
+      setChatHistory(newHistory);
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        type: 'bot',
+        content: botContent,
+        timestamp: new Date(),
+      }]);
+    } catch {
+      setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         type: 'bot',
         content: generateResponse(msg),
         timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, botMsg]);
+      }]);
+    } finally {
       setLoading(false);
-    }, 900);
+    }
   };
 
   const generateResponse = (userInput: string): string => {
