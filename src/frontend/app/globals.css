@@ -247,4 +247,31 @@
     background-color: var(--warm-sage-light);
     color: var(--warm-sage);
   }
+
+  /* iOS safe area for mobile bottom nav */
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Responsive heading overrides for mobile */
+  @media (max-width: 640px) {
+    h1 {
+      font-size: 1.75rem;
+      letter-spacing: -0.5px;
+    }
+    h2 {
+      font-size: 1.375rem;
+      letter-spacing: -0.25px;
+    }
+    h3 {
+      font-size: 1.125rem;
+    }
+  }
+
+  /* Mobile touch targets */
+  @media (max-width: 768px) {
+    button, [role="button"] {
+      min-height: 40px;
+    }
+  }
 }

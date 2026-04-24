@@ -42,12 +42,12 @@ export function HeaderNav() {
 
   if (!user) return null;
 
-  // Shared navigation
+  // Shared navigation (order: Trang chủ, Dinh dưỡng, Nori AI, Hành trình bé, Sức khoẻ, Thông báo)
   const sharedNav: NavItem[] = [
     { href: '/', label: 'Trang chủ', icon: <LayoutDashboard className="h-4 w-4" /> },
+    { href: '/nori', label: 'Nori AI', icon: <MessageCircle className="h-4 w-4" /> },
     { href: '/baby-journey', label: 'Hành Trình Của Bé', icon: <Heart className="h-4 w-4" /> },
     { href: '/notifications', label: 'Thông báo', icon: <Bell className="h-4 w-4" /> },
-    { href: '/nori', label: 'Nori', icon: <MessageCircle className="h-4 w-4" /> },
   ];
 
   // Mother navigation
@@ -89,105 +89,78 @@ export function HeaderNav() {
 
   const isActive = (href: string) => pathname === href;
 
-  return (
-    <nav className="flex items-center gap-1 md:gap-2">
-      {/* Shared items */}
-      {sharedNav.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
+  const renderLink = (item: NavItem) => (
+    <Link
+      key={item.href}
+      href={item.href}
+      className={cn(
+        'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+        isActive(item.href)
+          ? 'bg-primary text-primary-foreground'
+          : 'text-foreground hover:bg-accent'
+      )}
+    >
+      {item.icon}
+      <span className="hidden sm:inline">{item.label}</span>
+    </Link>
+  );
+
+  const renderDropdown = (group: NavGroup) => (
+    <DropdownMenu key={group.label}>
+      <DropdownMenuTrigger asChild>
+        <button
           className={cn(
             'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-            isActive(item.href)
+            group.items.some((item) => isActive(item.href))
               ? 'bg-primary text-primary-foreground'
               : 'text-foreground hover:bg-accent'
           )}
         >
-          {item.icon}
-          <span className="hidden sm:inline">{item.label}</span>
-        </Link>
-      ))}
-
-      {/* Mother-specific navigation */}
-      {user.role === 'mother' && (
-        <>
-          {motherNav.map((group) => (
-            <DropdownMenu key={group.label}>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={cn(
-                    'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                    group.items.some((item) => isActive(item.href))
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-foreground hover:bg-accent'
-                  )}
-                >
-                  {group.icon}
-                  <span className="hidden sm:inline">{group.label}</span>
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                {group.items.map((item) => (
-                  <DropdownMenuItem key={item.href} asChild>
-                    <Link href={item.href} className="flex items-center gap-2">
-                      {item.icon}
-                      {item.label}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ))}
-        </>
-      )}
-
-      {/* Father-specific navigation */}
-      {user.role === 'father' && (
-        <>
-          {fatherNav.map((group) => (
-            <DropdownMenu key={group.label}>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={cn(
-                    'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                    group.items.some((item) => isActive(item.href))
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-foreground hover:bg-accent'
-                  )}
-                >
-                  {group.icon}
-                  <span className="hidden sm:inline">{group.label}</span>
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                {group.items.map((item) => (
-                  <DropdownMenuItem key={item.href} asChild>
-                    <Link href={item.href} className="flex items-center gap-2">
-                      {item.icon}
-                      {item.label}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ))}
-          {fatherDirectLinks.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                isActive(item.href)
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-foreground hover:bg-accent'
-              )}
-            >
+          {group.icon}
+          <span className="hidden sm:inline">{group.label}</span>
+          <ChevronDown className="h-4 w-4" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        {group.items.map((item) => (
+          <DropdownMenuItem key={item.href} asChild>
+            <Link href={item.href} className="flex items-center gap-2">
               {item.icon}
-              <span className="hidden sm:inline">{item.label}</span>
+              {item.label}
             </Link>
-          ))}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  return (
+    <nav className="flex items-center gap-1 md:gap-2">
+      {user.role === 'mother' ? (
+        <>
+          {/* Trang chủ */}
+          {renderLink(sharedNav[0])}
+          {/* Dinh dưỡng */}
+          {renderDropdown(motherNav[0])}
+          {/* Nori AI */}
+          {renderLink(sharedNav[1])}
+          {/* Hành trình bé */}
+          {renderLink(sharedNav[2])}
+          {/* Sức khỏe */}
+          {renderDropdown(motherNav[1])}
+          {/* Thông báo */}
+          {renderLink(sharedNav[3])}
+        </>
+      ) : (
+        <>
+          {/* Father & other roles: shared nav then dropdowns */}
+          {sharedNav.map((item) => renderLink(item))}
+          {user.role === 'father' && (
+            <>
+              {fatherNav.map((group) => renderDropdown(group))}
+              {fatherDirectLinks.map((item) => renderLink(item))}
+            </>
+          )}
         </>
       )}
 
