@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-export function Footer() {
+import { cn } from '@/lib/utils';
+
+export function Footer({ className }: { className?: string }) {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-border/50 bg-card/60 backdrop-blur">
+    <footer className={cn('border-t border-border/50 bg-card/60 backdrop-blur', className)}>
       <div className="w-full px-4 py-8 sm:px-6">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
 
@@ -24,7 +26,7 @@ export function Footer() {
               <span className="font-bold text-foreground">NestAI</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Đồng hành cùng gia đình trong hành trình đón bé yêu. Chăm sóc mẹ và bé với trí tuệ nhân tạo.
+              Trợ lý dinh dưỡng AI cho mẹ bầu và mẹ cho con bú tại Việt Nam — thực đơn theo tuần thai, món Việt quen thuộc.
             </p>
           </div>
 

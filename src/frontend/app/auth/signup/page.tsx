@@ -66,16 +66,14 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center p-4"
       style={{ background: 'linear-gradient(135deg, #fdf3f1 0%, #fff8f5 50%, #fef0ee 100%)' }}>
       <div
-        className={`w-full max-w-4xl bg-white rounded-3xl overflow-hidden flex flex-col lg:flex-row shadow-xl shadow-rose-100/60 border border-rose-100/40 transition-all duration-700 ease-out ${
-          mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-        }`}
+        className={`w-full max-w-4xl bg-white rounded-3xl overflow-hidden flex flex-col lg:flex-row shadow-xl shadow-rose-100/60 border border-rose-100/40 transition-all duration-700 ease-out ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+          }`}
       >
         {/* Left Panel */}
         <div className="lg:w-[45%] flex flex-col" style={{ background: '#fdf0ed' }}>
           <div
-            className={`p-5 flex items-center transition-all duration-500 delay-200 ${
-              mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
-            }`}
+            className={`p-5 flex items-center transition-all duration-500 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+              }`}
           >
             <span className="bg-gradient-to-r from-rose-500 to-pink-500 bg-clip-text text-transparent text-xl font-bold tracking-wider">
               NestAI
@@ -83,9 +81,8 @@ export default function SignupPage() {
           </div>
 
           <div
-            className={`flex-1 relative overflow-hidden min-h-[260px] transition-all duration-700 delay-300 ${
-              mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}
+            className={`flex-1 relative overflow-hidden min-h-[260px] transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
           >
             <Image
               src="/kinh-nghiem-sinh-con-dau-long.jpg"
@@ -99,9 +96,8 @@ export default function SignupPage() {
             />
 
             <div
-              className={`absolute bottom-6 left-0 right-0 text-center px-6 transition-all duration-500 delay-500 ${
-                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
+              className={`absolute bottom-6 left-0 right-0 text-center px-6 transition-all duration-500 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                }`}
             >
               <h2 className="text-rose-900/80 text-xl font-semibold leading-tight tracking-tight drop-shadow-sm">
                 Bắt đầu hành trình<br />cùng gia đình bạn
@@ -113,16 +109,14 @@ export default function SignupPage() {
         {/* Right Panel */}
         <div className="lg:w-[55%] p-6 lg:p-10 flex flex-col justify-center bg-white">
           <h1
-            className={`text-gray-900 text-2xl lg:text-3xl font-bold mb-1 tracking-tight transition-all duration-500 delay-300 ${
-              mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
-            }`}
+            className={`text-gray-900 text-2xl lg:text-3xl font-bold mb-1 tracking-tight transition-all duration-500 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
+              }`}
           >
             Tạo tài khoản
           </h1>
           <p
-            className={`text-gray-400 text-sm mb-6 transition-all duration-500 delay-[350ms] ${
-              mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
-            }`}
+            className={`text-gray-400 text-sm mb-6 transition-all duration-500 delay-[350ms] ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
+              }`}
           >
             Đã có tài khoản?{' '}
             <Link
@@ -141,9 +135,8 @@ export default function SignupPage() {
             )}
 
             <div
-              className={`transition-all duration-500 delay-[400ms] ${
-                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
+              className={`transition-all duration-500 delay-[400ms] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                }`}
             >
               <input
                 name="fullName"
@@ -157,9 +150,8 @@ export default function SignupPage() {
             </div>
 
             <div
-              className={`transition-all duration-500 delay-[440ms] ${
-                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
+              className={`transition-all duration-500 delay-[440ms] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                }`}
             >
               <input
                 name="email"
@@ -173,9 +165,8 @@ export default function SignupPage() {
             </div>
 
             <div
-              className={`transition-all duration-500 delay-[480ms] ${
-                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
+              className={`transition-all duration-500 delay-[480ms] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                }`}
             >
               <input
                 name="phone"
@@ -189,9 +180,8 @@ export default function SignupPage() {
             </div>
 
             <div
-              className={`relative transition-all duration-500 delay-[520ms] ${
-                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
+              className={`relative transition-all duration-500 delay-[520ms] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                }`}
             >
               <input
                 name="password"
@@ -212,9 +202,8 @@ export default function SignupPage() {
             </div>
 
             <div
-              className={`relative transition-all duration-500 delay-[560ms] ${
-                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
+              className={`relative transition-all duration-500 delay-[560ms] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                }`}
             >
               <input
                 name="confirmPassword"
@@ -235,9 +224,8 @@ export default function SignupPage() {
             </div>
 
             <div
-              className={`transition-all duration-500 delay-[620ms] ${
-                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
+              className={`transition-all duration-500 delay-[620ms] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                }`}
             >
               <button
                 type="submit"
@@ -258,11 +246,10 @@ export default function SignupPage() {
           </form>
 
           <p
-            className={`text-center text-xs text-gray-300 mt-8 transition-all duration-500 delay-700 ${
-              mounted ? 'opacity-100' : 'opacity-0'
-            }`}
+            className={`text-center text-xs text-gray-300 mt-8 transition-all duration-500 delay-700 ${mounted ? 'opacity-100' : 'opacity-0'
+              }`}
           >
-            NestAI — Đồng hành cùng gia đình bạn
+            NestAI — Đồng hành cùng hành trình thai kỳ của bạn
           </p>
         </div>
       </div>
