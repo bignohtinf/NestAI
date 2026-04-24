@@ -6,13 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useApp } from '@/lib/context';
 
 type Step = 'role' | 'partner-info';
 
 export default function RoleSelectionPage() {
   const router = useRouter();
-  const { login } = useApp();
   const [step, setStep] = useState<Step>('role');
   const [selectedRole, setSelectedRole] = useState<'mother' | 'father' | null>(null);
   const [loading, setLoading] = useState(false);
@@ -33,19 +31,10 @@ export default function RoleSelectionPage() {
     }
   };
 
-  const handleConfirmRole = async (role: 'mother' | 'father') => {
+  const handleConfirmRole = async (_role: 'mother' | 'father') => {
     setLoading(true);
     setError('');
-
     try {
-      // TODO: Call API to update user role
-      // const response = await fetch('/api/auth/set-role', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ role }),
-      // });
-
-      login(role, role === 'mother' ? 'Mẹ' : 'Bố');
       router.push('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi');
@@ -82,7 +71,6 @@ export default function RoleSelectionPage() {
       //   }),
       // });
 
-      login('father', 'Bố');
       router.push('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi');

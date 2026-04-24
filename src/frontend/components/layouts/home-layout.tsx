@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { Header } from '@/components/navigation/header';
 import { Footer } from '@/components/navigation/footer';
 
@@ -10,7 +10,7 @@ interface HomeLayoutProps {
 
 export function HomeLayout({ children }: HomeLayoutProps) {
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-[#fdf3f1]">
       <Header />
       
       {/* Main content - Centered with side margins */}

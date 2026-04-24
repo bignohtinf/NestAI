@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ReactNode, useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { Header } from '@/components/navigation/header';
 import { Sidebar } from '@/components/navigation/sidebar';
 import { Footer } from '@/components/navigation/footer';
@@ -13,7 +13,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-[#fdf3f1]">
       <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar - Left column (cols 1-2) */}
