@@ -2,6 +2,7 @@
 .env
 .env.local
 .env*.local
+**/*.tsbuildinfo
 
 # Python
 __pycache__/

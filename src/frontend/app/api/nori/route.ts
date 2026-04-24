@@ -1,207 +1,230 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Vietnamese MOH nutrition knowledge base for pregnant/breastfeeding women
-// Sourced from QD 776/QD-BYT (2017) and QD 1470/QD-BYT (2024)
+
+// Dữ liệu CHỈ từ QĐ 776/QĐ-BYT (2017)
 const NUTRITION_KNOWLEDGE = `
-## KIẾN THỨC DINH DƯỠNG THAI KỲ VÀ CHO CON BÚ (Bộ Y tế Việt Nam)
+## DỮ LIỆU DINH DƯỠNG THAI KỲ — QĐ 776/QĐ-BYT (2017)
 
-### NHU CẦU NĂNG LƯỢNG (kcal/ngày bổ sung thêm so với bình thường)
-- 3 tháng đầu: +50 kcal
-- 3 tháng giữa: +250 kcal
-- 3 tháng cuối: +450 kcal
-- Cho con bú: +500 kcal
+### NĂNG LƯỢNG BỔ SUNG (kcal/ngày THÊM so với phụ nữ bình thường)
+| Giai đoạn | Năng lượng bổ sung |
+|---|---|
+| 3 tháng đầu (T1) | +50 kcal |
+| 3 tháng giữa (T2) | +250 kcal |
+| 3 tháng cuối (T3) | +450 kcal |
+| Cho con bú | +500 kcal |
 
-### NHU CẦU PROTEIN (g/ngày bổ sung thêm)
-- 3 tháng đầu: +1g, tỷ lệ protein động vật ≥35%
-- 3 tháng giữa: +10g, tỷ lệ protein động vật ≥35%
-- 3 tháng cuối: +31g, tỷ lệ protein động vật ≥35%
-- Cho con bú 6 tháng đầu: +19g
-- Cho con bú 6-12 tháng: +13g
+### PROTEIN BỔ SUNG (g/ngày THÊM)
+- Tỷ lệ protein động vật trong khẩu phần: ≥35%
+| Giai đoạn | Bổ sung |
+|---|---|
+| T1 | +1g |
+| T2 | +10g |
+| T3 | +31g |
+| Cho con bú 0–6 tháng | +19g |
+| Cho con bú 6–12 tháng | +13g |
 
-### NHU CẦU LIPID (g/ngày bổ sung thêm)
-- 3 tháng đầu: +1,5g
-- 3 tháng giữa: +7,5g
-- 3 tháng cuối: +15g
-- Cho con bú: +10g
-- Tỷ lệ lipid: 20-30% năng lượng tổng số
+### LIPID BỔ SUNG (g/ngày THÊM)
+- Tỷ lệ lipid chiếm 20–30% tổng năng lượng
+| Giai đoạn | Bổ sung |
+|---|---|
+| T1 | +1,5g |
+| T2 | +7,5g |
+| T3 | +15g |
+| Cho con bú | +10g |
 
-### NHU CẦU GLUCID (g/ngày bổ sung thêm)
-- 3 tháng đầu: +7-10g
-- 3 tháng giữa: +35-40g
-- 3 tháng cuối: +65-70g
-- Cho con bú: +50-55g
+### GLUCID BỔ SUNG (g/ngày THÊM)
+| Giai đoạn | Bổ sung |
+|---|---|
+| T1 | +7–10g |
+| T2 | +35–40g |
+| T3 | +65–70g |
+| Cho con bú | +50–55g |
 
-### NHU CẦU CHẤT XƠ
-- Phụ nữ có thai: 28g/ngày
+### CHẤT XƠ (g/ngày)
+- Thai kỳ: 28g/ngày
 - Cho con bú: 29g/ngày
 
-### CAN XI (mg/ngày)
-- Phụ nữ có thai: 1200mg
-- Cho con bú: 1300mg
-- Nguồn: sữa (100ml = 100-120mg canxi), phô mai, sữa chua, cá nhỏ ăn cả xương, rau xanh đậm
+---
 
-### SẮT (mg/ngày bổ sung thêm)
-- Phụ nữ có thai: +10 đến +15mg (tùy khẩu phần)
-- Bà mẹ cho con bú: 8,9-26,1mg (tùy khẩu phần và kinh nguyệt)
-- Bổ sung viên sắt khuyến nghị trong suốt thai kỳ
-- Nguồn: thịt đỏ, gan, rau xanh, đậu
+### VI CHẤT — MỤC TIÊU THEO QĐ 776/2017
 
-### KẼM (mg/ngày)
-- Phụ nữ có thai: 6-20mg (tùy mức hấp thu)
-- Cho con bú: 6,6-22mg
-- Nguồn: thịt, hải sản, trứng, ngũ cốc
+#### SẮT (mg/ngày bổ sung thêm)
+- Thai kỳ: +10 đến +15mg (tùy khẩu phần nền)
+- Cho con bú: 8,9–26,1mg (tùy khẩu phần và kinh nguyệt)
+- Khuyến nghị: bổ sung viên sắt trong suốt thai kỳ
+- Nguồn thực phẩm (ghi trong QĐ 776): thịt đỏ, gan, rau xanh đậm, các loại đậu, hải sản
+- Lưu ý: ăn kèm thực phẩm giàu vitamin C để tăng hấp thu; tránh uống trà/cà phê ngay sau bữa ăn
 
-### IOD (μg/ngày)
-- Phụ nữ có thai: 220μg
-- Cho con bú: 250μg
-- Thiếu iod gây ảnh hưởng não bộ thai nhi
-
-### FOLATE/ACID FOLIC (μg/ngày)
-- Phụ nữ có thai: 600μg
-- Cho con bú: 500μg
-- Thiếu folate gây dị tật ống thần kinh
-- Cần bổ sung trước và trong khi mang thai
-
-### VITAMIN A (μg/ngày bổ sung thêm)
-- 3 tháng đầu: +0
-- 3 tháng giữa: +0
-- 3 tháng cuối: +80μg
-- Cho con bú: +450μg
-- CẢNH BÁO: Không dùng quá 3000μg (10000IU)/ngày khi mang thai
-
-### VITAMIN D (mcg/ngày)
-- Phụ nữ có thai: 20mcg
-- Cho con bú: 20mcg
-- Nguồn: cá béo, trứng, ánh nắng
-
-### VITAMIN C (mg/ngày bổ sung thêm)
-- Phụ nữ có thai: +10mg
-- Cho con bú: +45mg
-
-### VITAMIN B1 (mg/ngày bổ sung thêm)
-- Phụ nữ có thai: +0,2mg
-- Cho con bú: +0,2mg
-
-### VITAMIN B6 (mg/ngày)
-- Phụ nữ có thai: 1,9mg
-- Cho con bú: 2,0mg
-- Thiếu B6 liên quan buồn nôn khi mang thai
-
-### VITAMIN B12 (mg/ngày)
-- Phụ nữ có thai: 2,6mg
-- Cho con bú: 2,8mg
-
-### CHOLINE (mg/ngày)
-- Phụ nữ có thai: 450mg
-- Cho con bú: 550mg
-- Quan trọng cho phát triển não bộ thai nhi
-
-### DHA
-- Quan trọng cho hình thành tế bào não và thị giác thai nhi
-- Cần thiết cho quá trình Myelin hóa tế bào thần kinh
-- Nguồn: cá hồi, cá thu, cá ngừ, dầu cá
-
-### NƯỚC
-- Cần khoảng 2500ml/ngày (bao gồm nước uống + nước từ thực phẩm)
-- Phụ nữ có thai nên uống đủ nước, hạn chế natri để giảm nguy cơ tăng huyết áp
-
-### TĂNG CÂN THAI KỲ (theo tiêu chuẩn Châu Á)
-- BMI < 18,5 (thiếu cân): tăng 12,5-18 kg
-- BMI 18,5-22,9 (bình thường): tăng 11,5-16 kg
-- BMI 23-24,9 (thừa cân): tăng 7-11,5 kg
-- BMI > 25 (béo phì): tăng 5-9 kg
-
-### SỮA VÀ CHẾ PHẨM SỮA
+#### CANXI (mg/ngày)
+- Thai kỳ: 1200mg/ngày
+- Cho con bú: 1300mg/ngày
 - 1 đơn vị ăn = 100mg canxi = 100ml sữa = 100g sữa chua = 15g phô mai
-- Sữa chua có lợi khuẩn đường ruột, ít lactose
-- Phô mai giàu canxi gấp 3-6 lần sữa
+- Nguồn (ghi trong QĐ 776): sữa và chế phẩm sữa, cá nhỏ ăn cả xương, rau xanh đậm
 
-### VẤN ĐỀ THƯỜNG GẶP KHI MANG THAI
-- Buồn nôn: liên quan thiếu vitamin B6
-- Táo bón: thiếu chất xơ, ít nước
-- Chuột rút: thiếu canxi và vitamin D
+#### FOLATE/ACID FOLIC (μg/ngày)
+- Thai kỳ: 600μg/ngày
+- Cho con bú: 500μg/ngày
+- Thiếu folate gây dị tật ống thần kinh — cần bổ sung trước và trong khi mang thai
+- Nguồn (ghi trong QĐ 776): gan, rau lá xanh đậm, các loại đậu, trái cây họ cam quýt
+
+#### DHA
+- Quan trọng cho hình thành não bộ và thị giác thai nhi
+- Cần thiết cho quá trình myelin hóa tế bào thần kinh
+- Nguồn (ghi trong QĐ 776): cá hồi, cá thu, cá ngừ, dầu cá
+
+#### IOD (μg/ngày)
+- Thai kỳ: 220μg/ngày
+- Cho con bú: 250μg/ngày
+- Thiếu iod ảnh hưởng phát triển não bộ thai nhi
+- Nguồn: muối iốt, rong biển, tôm, cá biển
+
+#### KẼM (mg/ngày)
+- Thai kỳ: 6–20mg (tùy mức hấp thu thực phẩm)
+- Cho con bú: 6,6–22mg
+- Nguồn (ghi trong QĐ 776): thịt, hải sản, trứng, ngũ cốc
+
+#### VITAMIN A (μg/ngày bổ sung)
+- T1: +0; T2: +0; T3: +80μg
+- Cho con bú: +450μg
+- Không dùng quá 3000μg (10000IU)/ngày khi mang thai
+- Nguồn (ghi trong QĐ 776): gan động vật, trứng, sữa, rau/củ màu vàng-cam-đỏ
+
+#### VITAMIN D (mcg/ngày)
+- Thai kỳ: 20mcg/ngày
+- Cho con bú: 20mcg/ngày
+- Nguồn (ghi trong QĐ 776): cá béo, trứng, ánh nắng mặt trời
+
+#### VITAMIN C (mg/ngày bổ sung)
+- Thai kỳ: +10mg
+- Cho con bú: +45mg
+- Nguồn: trái cây họ cam quýt, ổi, rau xanh
+
+#### VITAMIN B1 (mg/ngày bổ sung)
+- Thai kỳ: +0,2mg; Cho con bú: +0,2mg
+
+#### VITAMIN B6 (mg/ngày)
+- Thai kỳ: 1,9mg; Cho con bú: 2,0mg
+- Thiếu B6 liên quan đến buồn nôn khi mang thai
+
+#### VITAMIN B12 (mg/ngày)
+- Thai kỳ: 2,6mg; Cho con bú: 2,8mg
+- Nguồn: thịt, cá, trứng, sữa
+
+#### CHOLINE (mg/ngày)
+- Thai kỳ: 450mg; Cho con bú: 550mg
+- Quan trọng cho phát triển não bộ thai nhi
+- Nguồn (ghi trong QĐ 776): trứng, gan, thịt nạc, đậu
+
+---
+
+### NƯỚC (ml/ngày)
+- Thai kỳ: khoảng 2500ml (gồm nước uống + nước từ thực phẩm)
+- Cho con bú: tăng thêm so với bình thường
+
+---
+
+### TĂNG CÂN THAI KỲ — QĐ 776/2017 (tiêu chuẩn Châu Á)
+| BMI trước thai | Mức tăng cân (kg) |
+|---|---|
+| < 18,5 (thiếu cân) | 12,5–18 |
+| 18,5–22,9 (bình thường) | 11,5–16 |
+| 23–24,9 (thừa cân) | 7–11,5 |
+| ≥ 25 (béo phì) | 5–9 |
+
+---
+
+### VẤN ĐỀ DINH DƯỠNG THƯỜNG GẶP (QĐ 776/2017)
+- Buồn nôn T1: liên quan thiếu vitamin B6
+- Táo bón: thiếu chất xơ và nước
+- Chuột rút: liên quan thiếu canxi và vitamin D
 - Phù: có thể do thiếu dinh dưỡng hoặc chèn ép
 
-### THỰC PHẨM CẦN TRÁNH KHI CHO CON BÚ
+### SỮA VÀ CHẾ PHẨM SỮA (QĐ 776/2017)
+- 1 đơn vị ăn = 100mg canxi = 100ml sữa = 100g sữa chua = 15g phô mai
+- Sữa chua cung cấp lợi khuẩn, ít lactose hơn sữa tươi
+- Phô mai giàu canxi hơn sữa tươi 3–6 lần
+
+### THỰC PHẨM CẦN HẠN CHẾ KHI CHO CON BÚ (QĐ 776/2017)
 - Rượu, bia
-- Hạn chế cà phê, ớt, hành, tỏi (có thể gây khó chịu cho trẻ qua sữa)
+- Hạn chế cà phê, ớt, hành, tỏi (có thể gây khó chịu cho trẻ qua sữa mẹ)
 `;
 
+// Dữ liệu CHỈ từ QĐ 1470/QĐ-BYT (2024)
 const GDM_KNOWLEDGE = `
-## ĐÁI THÁO ĐƯỜNG THAI KỲ (QĐ 1470/QĐ-BYT 2024)
+## CHẾ ĐỘ DINH DƯỠNG ĐÁI THÁO ĐƯỜNG THAI KỲ — QĐ 1470/QĐ-BYT (2024)
 
-### ĐỊNH NGHĨA
-- ĐTĐTK là tình trạng tăng glucose huyết tương phát hiện từ 3 tháng giữa thai kỳ trở đi
-- Không có bằng chứng đái tháo đường từ trước
-- Tỷ lệ tại Việt Nam: khoảng 20% thai phụ
+### MỤC TIÊU GLUCOSE HUYẾT TƯƠNG (mao mạch)
+| Thời điểm | Mục tiêu |
+|---|---|
+| Lúc đói (trước bữa ăn) | < 5,3 mmol/l (95 mg/dl) |
+| 1 giờ sau ăn | < 7,8 mmol/l (140 mg/dl) |
+| 2 giờ sau ăn | < 6,7 mmol/l (120 mg/dl) |
 
-### YẾU TỐ NGUY CƠ CAO
-- Thừa cân/béo phì (BMI ≥ 23 theo tiêu chuẩn châu Á)
-- Tiền sử gia đình có ĐTĐ thế hệ thứ nhất
-- Tiền sử ĐTĐTK ở lần mang thai trước
-- Tuổi > 35
-- Tiền sử sinh con ≥ 4000g
-- Hội chứng buồng trứng đa nang
-- Tăng huyết áp (≥140/90 mmHg)
-- HbA1C > 5,7% hoặc tiền ĐTĐ
+---
 
-### YẾU TỐ NGUY CƠ THẤP
-- Tuổi < 25
-- BMI bình thường
-- Không có tiền sử gia đình ĐTĐ
-- Không thuộc chủng tộc nguy cơ cao
+### PHÂN BỔ NĂNG LƯỢNG KHẨU PHẦN (QĐ 1470/2024)
+- Carbohydrate: 40–45% tổng năng lượng
+- Protein: 20–25% tổng năng lượng, tỷ lệ protein động vật ≥35%
+- Lipid: 30–35% tổng năng lượng, ưu tiên chất béo không bão hòa
 
-### SÀNG LỌC VÀ CHẨN ĐOÁN
-- Thời điểm chuẩn: tuần 24-28 thai kỳ
-- Nghiệm pháp dung nạp 75g glucose - 2 giờ
-- Chẩn đoán ĐTĐTK khi ≥1 giá trị bất thường:
-  + Đói: ≥ 5,1 mmol/l (92 mg/dl)
-  + 1 giờ: ≥ 10,0 mmol/l (180 mg/dl)
-  + 2 giờ: ≥ 8,5 mmol/l (153 mg/dl)
+### CHIA BỮA ĂN (QĐ 1470/2024)
+- Chia nhỏ 3 bữa chính + 2–3 bữa phụ mỗi ngày
+- Không bỏ bữa sáng
+- Khoảng cách giữa các bữa 2–3 tiếng
+- Bữa phụ tối (trước khi ngủ): kết hợp tinh bột và protein để tránh hạ đường huyết đêm
 
-### GLUCOSE HUYẾT TƯƠNG MỤC TIÊU (mao mạch)
-- Lúc đói: < 5,3 mmol/l (95 mg/dl)
-- 1 giờ sau ăn: < 7,8 mmol/l (140 mg/dl)
-- 2 giờ sau ăn: < 6,7 mmol/l (120 mg/dl)
+---
 
-### HẬU QUẢ CHO MẸ
-- Tăng huyết áp, tiền sản giật
-- Sinh non (26% vs 9,7% bình thường)
-- Đa ối (gấp 4 lần)
-- Sẩy thai, thai lưu
-- Nhiễm khuẩn niệu
-- 17-63% tiến triển thành ĐTĐ týp 2 trong 5-16 năm sau sinh
+### THỰC PHẨM TINH BỘT — KHUYẾN CÁO (QĐ 1470/2024)
 
-### HẬU QUẢ CHO THAI NHI/TRẺ SƠ SINH
-- Thai to (≥4000g)
-- Hạ glucose huyết sơ sinh (15-25%)
-- Dị tật bẩm sinh (8-13% nếu không kiểm soát)
-- Suy hô hấp sơ sinh
-- Vàng da (25%)
-- Tăng hồng cầu
-- Về lâu dài: tăng nguy cơ béo phì, ĐTĐ týp 2 gấp 8 lần
+Nên ăn (tinh bột phức hợp, hấp thu chậm):
+- Gạo lứt, bún, miến, bánh mì nguyên cám
+- Khoai lang, yến mạch
+- Các loại đậu (đậu xanh, đậu đen, đậu lăng)
 
-### ĐIỀU TRỊ TIẾT CHẾ (bước đầu)
-- Chế độ ăn dành cho ĐTĐTK + vận động
-- 80% thai phụ đạt glucose mục tiêu sau 5 ngày tiết chế
+Hạn chế (tinh bột tinh chế, hấp thu nhanh):
+- Cơm trắng: giảm lượng, ăn kèm nhiều rau và protein
+- Bánh mì trắng, khoai tây
+
+Tránh hoàn toàn:
+- Đường trắng, mật ong, siro ngọt
+- Nước ngọt, trà sữa, nước ép trái cây đóng hộp
+- Bánh ngọt, chè ngọt, kẹo, cháo trắng loãng
+- Trái cây ngọt nhiều: xoài chín, nhãn, vải, sầu riêng, nho
+
+---
+
+### TRÁI CÂY — KHUYẾN CÁO CHO GDM (QĐ 1470/2024)
+- Ưu tiên trái cây ít ngọt: ổi, bưởi, thanh long, táo, lê
+- Hạn chế trái cây ngọt nhiều đường
+- Ăn trái cây sau bữa chính, không ăn lúc đói
+- Không uống nước ép — ăn trái cây nguyên múi để giữ chất xơ
+
+---
+
+### PROTEIN VÀ CHẤT BÉO (QĐ 1470/2024)
+Protein — nên ăn:
+- Thịt nạc (gà, heo, bò), cá, hải sản, trứng, đậu hũ
+- Ăn protein mỗi bữa để làm chậm hấp thu tinh bột
+- Hạn chế thịt chế biến sẵn (xúc xích, giăm bông)
+
+Chất béo:
+- Ưu tiên chất béo không bão hòa: dầu thực vật, cá béo
+- Hạn chế chất béo bão hòa và trans: mỡ động vật, đồ chiên rán
+
+---
+
+### RAU (QĐ 1470/2024)
+- Ăn rau không hạn chế — rau xanh ít carbohydrate
+- Ăn rau trước tinh bột trong bữa ăn để giảm đường huyết sau ăn
+- Mục tiêu ≥ 300g rau xanh/ngày
+
+---
+
+### HOẠT ĐỘNG THỂ CHẤT HỖ TRỢ TIẾT CHẾ (QĐ 1470/2024)
 - Vận động ít nhất 30 phút/ngày
 - Đi bộ hoặc tập tay 10 phút sau ăn
-
-### KHI TIẾT CHẾ KHÔNG ĐỦ
-- Sử dụng Insulin theo chỉ định bác sĩ Nội tiết
-- Theo dõi glucose mao mạch đói + sau ăn
-
-### DỰ PHÒNG
-- Kiểm soát cân nặng trước mang thai
-- Chế độ ăn lành mạnh, hạn chế đường, tinh bột tinh chế
-- Vận động thể chất đều đặn
-- Hạn chế muối < 5g/ngày, dùng muối iốt
-- Không rượu bia, thuốc lá, chất kích thích
-
-### SAU SINH
-- Kiểm tra glucose 4-12 tuần sau sinh (nghiệm pháp 75g glucose)
-- Nếu bình thường: tầm soát định kỳ 1 năm/lần
-- Nếu bất thường: khám chuyên khoa Nội tiết
+- 80% thai phụ kiểm soát được glucose chỉ bằng tiết chế ăn uống + vận động
 `;
 
 const SYSTEM_PROMPT = `Bạn là Nori, trợ lý dinh dưỡng AI thông minh cho mẹ bầu và mẹ cho con bú tại Việt Nam.
