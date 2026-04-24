@@ -25,11 +25,7 @@ export function MomDashboard() {
     return null;
   }
 
-  const weekLabel = user.weeksPostpartum > 0
-    ? `Tuần ${user.weeksPostpartum} sau sinh`
-    : `Đang mang thai`;
-
-  const weekLabel = user.weeksPostpartum > 0
+  const weekLabel = (user?.weeksPostpartum ?? 0) > 0
     ? `Tuần ${user.weeksPostpartum} sau sinh`
     : `Đang mang thai`;
 
@@ -41,7 +37,7 @@ export function MomDashboard() {
           <h2 className="text-2xl font-bold text-foreground">Xin chào, {user?.name}! 👋</h2>
           <p className="text-muted-foreground text-sm">{weekLabel} • {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         </div>
-        <Badge variant="secondary" className="text-xs">{user?.points} điểm</Badge>
+        <Badge variant="default" className="text-xs">{user?.points} điểm</Badge>
       </div>
 
       {/* ===== HERO: Sinh Thực Đơn ===== */}
@@ -57,9 +53,9 @@ export function MomDashboard() {
                 AI sinh thực đơn món Việt cá nhân hóa theo tuần thai, bệnh lý và sở thích của bạn
               </p>
               <div className="flex flex-wrap gap-2 pt-1">
-                <Badge variant="outline" className="text-xs">🤰 Theo tuần thai</Badge>
-                <Badge variant="outline" className="text-xs">🩺 Theo bệnh lý</Badge>
-                <Badge variant="outline" className="text-xs">🍚 Món Việt</Badge>
+                <Badge variant="default" className="text-xs">🤰 Theo tuần thai</Badge>
+                <Badge variant="default" className="text-xs">🩺 Theo bệnh lý</Badge>
+                <Badge variant="default" className="text-xs">🍚 Món Việt</Badge>
               </div>
             </div>
             <div className="flex flex-col gap-2 sm:items-end">
@@ -70,7 +66,7 @@ export function MomDashboard() {
                   <ChevronRight className="h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="sm" className="gap-2 w-full sm:w-auto">
+              <Button asChild variant="secondary" size="sm" className="gap-2 w-full sm:w-auto">
                 <Link href="/nutrition-scan?tab=scan">
                   <Camera className="h-4 w-4" />
                   Quét ảnh bữa ăn
