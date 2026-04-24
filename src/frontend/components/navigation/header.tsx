@@ -24,9 +24,6 @@ interface NavItem {
 
 const navigationItems: NavItem[] = [
   { href: '/', label: 'Trang chủ', roles: ['mother', 'father', 'admin'] },
-  { href: '/baby-journey', label: 'Hành Trình Bé', roles: ['mother', 'father'] },
-  { href: '/notifications', label: 'Thông báo', roles: ['mother', 'father'] },
-  { href: '/nori', label: 'Nori AI', roles: ['mother', 'father'] },
   {
     label: 'Dinh dưỡng',
     roles: ['mother'],
@@ -35,6 +32,8 @@ const navigationItems: NavItem[] = [
       { href: '/nutrition', label: 'Khuyến Nghị', roles: ['mother'] },
     ],
   },
+  { href: '/nori', label: 'Nori AI', roles: ['mother', 'father'] },
+  { href: '/baby-journey', label: 'Hành Trình Bé', roles: ['mother', 'father'] },
   {
     label: 'Sức khỏe',
     roles: ['mother'],
@@ -42,6 +41,7 @@ const navigationItems: NavItem[] = [
       { href: '/wellness', label: 'Theo Dõi Sức Khỏe', roles: ['mother'] },
     ],
   },
+  { href: '/notifications', label: 'Thông báo', roles: ['mother', 'father'] },
   {
     label: 'NutriMart',
     roles: ['father'],
