@@ -13,6 +13,11 @@ interface Message {
   timestamp: Date;
 }
 
+interface ChatHistory {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 const quickSuggestions = [
   { icon: Apple, text: 'Tôi nên ăn gì để tăng sữa?' },
   { icon: Baby, text: 'Bé 2 tháng tuổi phát triển bình thường không?' },
@@ -43,9 +48,12 @@ export default function NoriPage() {
   const { user } = useApp();
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) router.push('/auth/login');
@@ -82,17 +90,47 @@ export default function NoriPage() {
     };
     setMessages(prev => [...prev, userMsg]);
     setLoading(true);
+    setShowSuggestions(false);
 
-    setTimeout(() => {
-      const botMsg: Message = {
+    const newHistory: ChatHistory[] = [
+      ...chatHistory,
+      { role: 'user', content: msg },
+    ];
+
+    try {
+      const userContext = user
+        ? `Tuần thai/sau sinh: ${user.weeksPostpartum || 'chưa rõ'}. Vai trò: ${user.role || 'mẹ'}.`
+        : '';
+
+      const res = await fetch('/api/nori', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: newHistory,
+          userContext,
+        }),
+      });
+
+      const data = await res.json();
+      const botContent = data.response || generateResponse(msg);
+
+      setChatHistory(newHistory);
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        type: 'bot',
+        content: botContent,
+        timestamp: new Date(),
+      }]);
+    } catch {
+      setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         type: 'bot',
         content: generateResponse(msg),
         timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, botMsg]);
+      }]);
+    } finally {
       setLoading(false);
-    }, 900);
+    }
   };
 
   const generateResponse = (userInput: string): string => {
