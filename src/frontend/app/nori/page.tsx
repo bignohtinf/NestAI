@@ -4,7 +4,7 @@ import { MainLayout } from '@/components/layouts/main-layout';
 import { useApp } from '@/lib/context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import { Send, Loader2, Sparkles, Baby, Apple, ChefHat, HeartPulse } from 'lucide-react';
+import { Send, Loader2, Sparkles, Apple, ChefHat, HeartPulse, Baby } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -18,11 +18,12 @@ interface ChatHistory {
   content: string;
 }
 
+// PRD-aligned quick suggestions — pregnancy pain moments
 const quickSuggestions = [
-  { icon: Apple, text: 'Tôi nên ăn gì để tăng sữa?' },
-  { icon: Baby, text: 'Bé 2 tháng tuổi phát triển bình thường không?' },
-  { icon: ChefHat, text: 'Có công thức nấu ăn nào tốt cho mẹ không?' },
-  { icon: HeartPulse, text: 'Tôi cảm thấy mệt mỏi, phải làm sao?' },
+  { icon: Apple, text: 'Tiểu đường thai kỳ nên ăn gì hôm nay?' },
+  { icon: HeartPulse, text: 'Thiếu sắt nên ăn gì để bổ sung?' },
+  { icon: ChefHat, text: 'Tuần thai này cần vi chất gì thêm?' },
+  { icon: Baby, text: 'Thực phẩm nào không ăn được khi mang thai?' },
 ];
 
 const BOT_FRAMES = ['/bot_1.PNG', '/bot_2.PNG', '/bot_3.PNG'];
@@ -53,20 +54,37 @@ export default function NoriPage() {
   const [loading, setLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) router.push('/auth/login');
     else if (user.role === 'admin') router.push('/');
   }, [user, router]);
 
+  // Build a personalised opening message based on pregnancy week + condition
   useEffect(() => {
     if (messages.length === 0 && user) {
+      const weekLabel =
+        user.babyStatus === 'pregnant' && user.gestationWeeks
+          ? `Tuần ${user.gestationWeeks} thai kỳ`
+          : user.babyStatus === 'born' && user.weeksPostpartum
+            ? `Tuần ${user.weeksPostpartum} sau sinh`
+            : null;
+
+      const conditionNote =
+        user.condition === 'gdm'
+          ? '\n\n⚠️ Tôi biết bạn đang theo dõi tiểu đường thai kỳ — tôi sẽ ưu tiên gợi ý món GI thấp cho bạn.'
+          : user.condition === 'anemia'
+            ? '\n\n🩸 Tôi biết bạn cần tăng cường sắt — tôi sẽ ưu tiên gợi ý thực phẩm giàu sắt.'
+            : user.condition === 'hypertension'
+              ? '\n\n💊 Tôi biết bạn đang quản lý huyết áp — tôi sẽ ưu tiên gợi ý món ít muối.'
+              : '';
+
       setMessages([
         {
           id: '1',
           type: 'bot',
-          content: `Xin chào ${user?.name}! 💕\n\nTôi là Nori — trợ lý AI đồng hành cùng mẹ và bé. Tôi có thể giúp bạn:\n\n• Lời khuyên dinh dưỡng cho mẹ sau sinh\n• Thông tin phát triển của bé\n• Gợi ý công thức nấu ăn lành mạnh\n• Trả lời câu hỏi về sức khỏe\n\nHôm nay mẹ cần tôi giúp gì? 🌸`,
+          content:
+            `Xin chào ${user?.name}! 🌸\n\nTôi là Nori — trợ lý dinh dưỡng AI của bạn.${weekLabel ? ` Đang theo dõi ${weekLabel}.` : ''}${conditionNote}\n\nTôi có thể giúp bạn:\n\n• 🍚 Gợi ý món Việt phù hợp tuần thai và bệnh lý\n• 📊 Kiểm tra vi chất còn thiếu sau bữa ăn\n• ✅ Danh sách thực phẩm được/không được khi mang thai\n• 📋 Giải thích kết quả xét nghiệm (sắt, glucose)\n\nHôm nay mẹ cần tôi giúp gì? 🌿`,
           timestamp: new Date(),
         },
       ]);
@@ -98,59 +116,92 @@ export default function NoriPage() {
     ];
 
     try {
+      // Build rich context: pregnancy week + condition + food preference per PRD
+      const weekContext =
+        user?.babyStatus === 'pregnant' && user.gestationWeeks
+          ? `tuần ${user.gestationWeeks} thai kỳ`
+          : user?.babyStatus === 'born' && user.weeksPostpartum
+            ? `tuần ${user.weeksPostpartum} sau sinh`
+            : 'chưa rõ giai đoạn';
+
+      const conditionMap: Record<string, string> = {
+        gdm: 'tiểu đường thai kỳ',
+        anemia: 'thiếu máu/thiếu sắt',
+        hypertension: 'cao huyết áp thai kỳ',
+      };
+      const conditionContext =
+        user?.condition && user.condition !== 'none'
+          ? `; Bệnh lý: ${conditionMap[user.condition] || user.condition}`
+          : '';
+
+      const foodCtx =
+        user?.foodPreference && user.foodPreference !== 'no_pref'
+          ? `; Hạn chế ăn: ${user.foodPreference}`
+          : '';
+
       const userContext = user
-        ? `Tuần thai/sau sinh: ${user.weeksPostpartum || 'chưa rõ'}. Vai trò: ${user.role || 'mẹ'}.`
+        ? `[Người dùng: mẹ bầu Việt Nam. ${weekContext}${conditionContext}${foodCtx}. Trả lời tiếng Việt, ưu tiên gợi ý món Việt phù hợp.]`
         : '';
 
       const res = await fetch('/api/nori', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: newHistory,
-          userContext,
-        }),
+        body: JSON.stringify({ messages: newHistory, userContext }),
       });
 
       const data = await res.json();
-      const botContent = data.response || generateResponse(msg);
+      const botContent = data.response || generateFallback(msg);
 
       setChatHistory(newHistory);
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        type: 'bot',
-        content: botContent,
-        timestamp: new Date(),
-      }]);
+      setMessages(prev => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          content: botContent,
+          timestamp: new Date(),
+        },
+      ]);
     } catch {
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        type: 'bot',
-        content: generateResponse(msg),
-        timestamp: new Date(),
-      }]);
+      setMessages(prev => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          content: generateFallback(msg),
+          timestamp: new Date(),
+        },
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
-  const generateResponse = (userInput: string): string => {
+  // Offline fallback responses — pregnancy-focused per PRD
+  const generateFallback = (userInput: string): string => {
     const q = userInput.toLowerCase();
-    if (q.includes('dinh dưỡng') || q.includes('ăn gì') || q.includes('tăng sữa')) {
-      return `Để duy trì sức khỏe và sản xuất sữa tốt, mẹ nên:\n\n✅ Ăn đủ protein (cá hồi, trứng, thịt gà)\n✅ Uống đủ nước 8–10 cốc/ngày\n✅ Rau xanh đậm & trái cây tươi\n✅ Canxi từ sữa, phô mai, cá nhỏ\n✅ Hạnh nhân, óc chó, hạt chia\n\nBạn muốn tôi gợi ý thực đơn cụ thể không? 🍱`;
+
+    if (q.includes('tiểu đường') || q.includes('gdm') || q.includes('đường huyết')) {
+      return `Với tiểu đường thai kỳ, nguyên tắc chính là:\n\n✅ Chọn thực phẩm GI thấp\n• Cơm gạo lứt thay gạo trắng\n• Bánh mì nguyên cám thay bánh mì trắng\n• Khoai lang thay khoai tây\n\n✅ Chia 5–6 bữa nhỏ/ngày thay vì 3 bữa lớn\n\n✅ Protein mỗi bữa: trứng, cá, đậu hũ\n\n✅ Rau xanh không giới hạn: cải xanh, rau muống, bông cải\n\n❌ Tránh: nước ngọt, bánh ngọt, trái cây ngọt nhiều (xoài chín, nho)\n\nBạn muốn tôi gợi ý thực đơn cụ thể cho một ngày không? 🍱`;
     }
-    if (q.includes('sữa') || q.includes('bú')) {
-      return `Về nuôi con bằng sữa mẹ 🤱\n\n• Bé nên bú 8–12 lần/ngày trong 2 tháng đầu\n• Mỗi lần bú khoảng 15–20 phút\n• Xen kẽ hai bên ngực\n• Nếu sữa ít, hãy cho bú thường xuyên hơn\n• Mẹ cần ngủ đủ giấc và ăn uống đầy đủ\n\nMẹ đang gặp vấn đề gì cụ thể không?`;
+
+    if (q.includes('thiếu sắt') || q.includes('thiếu máu') || q.includes('anemia')) {
+      return `Để bổ sung sắt khi mang thai:\n\n🩸 Thực phẩm giàu sắt hem (hấp thụ tốt):\n• Thịt bò, thịt heo nạc\n• Gan gà/heo (2 lần/tuần)\n• Huyết heo, huyết bò\n\n🥬 Sắt non-hem + tăng hấp thụ:\n• Rau dền, rau muống, cải bó xôi\n• Đậu lăng, đậu đỏ\n• Uống kèm cam/chanh (Vitamin C tăng hấp thụ sắt)\n\n⚠️ Tránh uống trà/cà phê ngay sau bữa ăn — làm giảm hấp thụ sắt đến 60%\n\nBạn đang ở tuần thai bao nhiêu? Nhu cầu sắt tăng dần theo tam cá nguyệt.`;
     }
-    if (q.includes('bé') || q.includes('con') || q.includes('phát triển')) {
-      return `Về phát triển của bé 👶\n\n🌱 0–2 tháng: Ngủ nhiều, bú và khóc để giao tiếp\n😊 2–4 tháng: Biết cười, theo dõi ánh sáng & khuôn mặt\n🤲 4–6 tháng: Nắm tay, lẫy, bắt đầu tập ngồi\n🍽️ 6+ tháng: Sẵn sàng ăn dặm\n\nBé của mẹ đang được bao nhiêu tuổi rồi?`;
+
+    if (q.includes('vi chất') || q.includes('folate') || q.includes('canxi') || q.includes('dha')) {
+      return `Vi chất thiết yếu theo tam cá nguyệt:\n\n🤰 Tam cá nguyệt 1 (tuần 1–12):\n• Folate 600mcg/ngày — ngăn dị tật ống thần kinh\n• DHA 200mg/ngày — phát triển não\n• Nguồn: rau lá xanh đậm, cá hồi, óc chó\n\n🤰 Tam cá nguyệt 2 (tuần 13–27):\n• Canxi 1000mg/ngày — xương thai nhi\n• Sắt 27mg/ngày — bắt đầu tăng nhu cầu\n• Nguồn: sữa, phô mai, cá nhỏ ăn cả xương\n\n🤰 Tam cá nguyệt 3 (tuần 28–42):\n• Sắt 27mg/ngày — thiếu máu rất phổ biến\n• DHA tăng — não phát triển nhanh nhất\n• Nguồn: cá hồi, cá thu, trứng\n\nBạn muốn biết cụ thể tuần thai của mình cần gì?`;
     }
-    if (q.includes('công thức') || q.includes('nấu ăn') || q.includes('món')) {
-      return `Một số món ngon bổ dưỡng cho mẹ sau sinh 🍲\n\n🥣 Cháo cá hồi + rau chân vịt\n🍵 Canh gà hầm nấm linh chi\n🥗 Salad cá ngừ + dầu olive\n🫕 Súp bí đỏ + hạt bí\n\nMón nào mẹ muốn tôi hướng dẫn chi tiết?`;
+
+    if (q.includes('không ăn') || q.includes('tránh') || q.includes('kiêng') || q.includes('được ăn')) {
+      return `Danh sách thực phẩm cần lưu ý khi mang thai:\n\n❌ Tuyệt đối tránh:\n• Rượu bia — mọi giai đoạn\n• Thịt sống, cá sống (sashimi, gỏi cá) — nguy cơ Listeria\n• Gan động vật quá nhiều — vitamin A liều cao gây dị tật\n• Cá lớn nhiều thủy ngân (cá mập, cá kiếm)\n\n⚠️ Hạn chế:\n• Cà phê < 200mg caffeine/ngày (khoảng 1 cốc nhỏ)\n• Hải sản tươi sống\n• Phô mai mềm chưa tiệt trùng\n\n✅ Hoàn toàn ổn:\n• Cá hồi nấu chín, cá ngừ đóng hộp (< 2 lần/tuần)\n• Trứng chín kỹ\n• Sữa tiệt trùng\n\nCó thực phẩm cụ thể nào bạn muốn tôi kiểm tra không?`;
     }
-    if (q.includes('mệt') || q.includes('stress') || q.includes('lo lắng') || q.includes('buồn')) {
-      return `Mẹ ơi, mệt mỏi sau sinh là hoàn toàn bình thường! 💗\n\n💡 Một vài lời khuyên:\n• Tranh thủ ngủ khi bé ngủ\n• Nhờ chồng/gia đình hỗ trợ bế bé\n• Ăn đủ bữa, không bỏ bữa\n• Đi bộ nhẹ 15 phút/ngày\n• Tâm sự với người thân khi cần\n\nNếu cảm thấy quá tải kéo dài, hãy nói chuyện với bác sĩ nhé. Mẹ không đơn độc! 🌸`;
+
+    if (q.includes('buồn nôn') || q.includes('ốm nghén') || q.includes('nôn')) {
+      return `Ốm nghén tam cá nguyệt 1 — rất phổ biến! 🌿\n\nTips giảm buồn nôn:\n\n🍘 Ăn trước khi rời giường: bánh quy nhạt, bánh mì khô\n🍋 Ngửi hoặc uống nước chanh loãng\n🫚 Tránh thức ăn nhiều dầu mỡ và mùi nồng\n⏰ Ăn ít hơn nhưng thường xuyên hơn (5–6 bữa nhỏ)\n💧 Uống nước từng ngụm nhỏ, tránh uống nhiều một lúc\n🫚 Gừng: trà gừng, kẹo gừng giúp giảm buồn nôn\n\nNếu nôn nhiều hơn 3–4 lần/ngày hoặc không giữ được thức ăn, cần gặp bác sĩ để được hỗ trợ thêm nhé.`;
     }
-    return `Cảm ơn câu hỏi của mẹ! 😊\n\nTôi có thể giúp bạn về:\n• 🥗 Dinh dưỡng cho mẹ sau sinh\n• 👶 Phát triển và chăm sóc bé\n• 🍳 Công thức nấu ăn lành mạnh\n• 💊 Sức khỏe & phục hồi sau sinh\n\nHãy hỏi tôi bất cứ điều gì nhé!`;
+
+    return `Cảm ơn câu hỏi của mẹ! 😊\n\nTôi có thể giúp về:\n• 🍚 Thực đơn theo tuần thai và bệnh lý\n• 🩸 Thực phẩm bổ sung sắt/folate/canxi/DHA\n• ✅ Thực phẩm được/không được khi mang thai\n• 📋 Giải thích chỉ số xét nghiệm thai kỳ\n\nHãy hỏi tôi bất cứ điều gì nhé!`;
   };
 
   if (!user || user.role === 'admin') return null;
@@ -158,23 +209,6 @@ export default function NoriPage() {
   return (
     <MainLayout>
       <div className="space-y-4 h-full">
-
-        {/* Chat Header */}
-        <div className="rounded-2xl p-4 flex items-center gap-3 border border-violet-100"
-          style={{ background: 'linear-gradient(135deg, #faf8ff, #f3eeff)' }}>
-          <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center shrink-0 overflow-hidden border border-violet-100">
-            <BotAvatar size={52} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-lg leading-tight text-violet-900">Nori</h1>
-            <p className="text-violet-400 text-xs">Trợ lý AI • Luôn sẵn sàng lắng nghe</p>
-          </div>
-          <div className="flex items-center gap-1.5 bg-violet-100 rounded-full px-3 py-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-xs text-violet-500">Online</span>
-          </div>
-        </div>
-
         {/* Chat Window */}
         <div className="rounded-2xl border border-border/50 bg-card shadow-card flex flex-col overflow-hidden"
           style={{ height: 'calc(100vh - 300px)', minHeight: '420px' }}>
@@ -191,11 +225,10 @@ export default function NoriPage() {
                     <BotAvatar size={30} />
                   </div>
                 )}
-                <div className={`max-w-[78%] rounded-2xl px-4 py-2.5 shadow-sm ${
-                  msg.type === 'user'
-                    ? 'text-rose-900 rounded-br-sm'
-                    : 'text-green-900 rounded-bl-sm'
-                }`}
+                <div className={`max-w-[78%] rounded-2xl px-4 py-2.5 shadow-sm ${msg.type === 'user'
+                  ? 'text-rose-900 rounded-br-sm'
+                  : 'text-green-900 rounded-bl-sm'
+                  }`}
                   style={msg.type === 'user'
                     ? { background: '#fecdd3' }
                     : { background: '#dcfce7' }}
@@ -238,7 +271,7 @@ export default function NoriPage() {
             >
               <input
                 className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/15 transition-all placeholder:text-muted-foreground"
-                placeholder="Nhập câu hỏi của bạn..."
+                placeholder="Hỏi về dinh dưỡng thai kỳ..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 disabled={loading}
@@ -256,25 +289,27 @@ export default function NoriPage() {
         </div>
 
         {/* Quick Suggestions */}
-        <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-            <Sparkles className="h-3 w-3" />
-            Gợi ý câu hỏi
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {quickSuggestions.map((s) => (
-              <button
-                key={s.text}
-                onClick={() => handleSend(s.text)}
-                disabled={loading}
-                className="flex items-center gap-2.5 text-left rounded-xl border border-border/60 bg-card px-3.5 py-2.5 text-sm text-foreground/80 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all disabled:opacity-50"
-              >
-                <s.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className="leading-snug">{s.text}</span>
-              </button>
-            ))}
+        {showSuggestions && (
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+              <Sparkles className="h-3 w-3" />
+              Câu hỏi phổ biến
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {quickSuggestions.map((s) => (
+                <button
+                  key={s.text}
+                  onClick={() => handleSend(s.text)}
+                  disabled={loading}
+                  className="flex items-center gap-2.5 text-left rounded-xl border border-border/60 bg-card px-3.5 py-2.5 text-sm text-foreground/80 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all disabled:opacity-50"
+                >
+                  <s.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="leading-snug">{s.text}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </MainLayout>
   );

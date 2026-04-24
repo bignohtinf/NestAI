@@ -89,7 +89,7 @@ export function MomDashboard() {
     weekLabel = 'Thai kỳ';
   }
 
-  const isProfileIncomplete = !user.babyStatus || user.gestationWeeks == null;
+  const isProfileIncomplete = !user.babyStatus || (!user.gestationWeeks && !user.dueDate);
 
   return (
     <div className="space-y-6">
@@ -127,7 +127,7 @@ export function MomDashboard() {
               AI cần biết tuần thai và tình trạng sức khỏe của bạn
             </p>
           </div>
-          <Button asChild size="sm" variant="outline" className="shrink-0 h-7 text-xs border-amber-300 text-amber-700 hover:bg-amber-100">
+          <Button asChild size="sm" variant="secondary" className="shrink-0 h-7 text-xs border-amber-300 text-amber-700 hover:bg-amber-100">
             <Link href="/profile">
               <User className="h-3 w-3 mr-1" />
               Cập nhật
