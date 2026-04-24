@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MainLayout } from '@/components/layouts/main-layout';
 import { useRouter } from 'next/navigation';
-import { AlertCircle, CheckCircle, Plus, Trash2, Heart, Mail, Phone } from 'lucide-react';
+import { AlertCircle, CheckCircle, Plus, Trash2, Heart, Mail, Phone, Stethoscope, Save } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, isLoading, fetchUserData } = useApp();
@@ -293,12 +293,22 @@ export default function ProfilePage() {
           </div>
         )}
 
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="profile">Thông tin cá nhân</TabsTrigger>
-            <TabsTrigger value="partnership">Mối quan hệ</TabsTrigger>
-            <TabsTrigger value="babies">Bé</TabsTrigger>
+        <Tabs defaultValue={user.role === 'mother' ? 'pregnancy' : 'profile'} className="w-full">
+          <TabsList className={`grid w-full ${user.role === 'mother' ? 'grid-cols-4' : 'grid-cols-3'}`}>
+            {user.role === 'mother' && (
+              <TabsTrigger value="pregnancy">🤰 Thai kỳ</TabsTrigger>
+            )}
+            <TabsTrigger value="profile">Cá nhân</TabsTrigger>
+            <TabsTrigger value="partnership">Quan hệ</TabsTrigger>
+            <TabsTrigger value="babies">Thai nhi / Bé</TabsTrigger>
           </TabsList>
+
+          {/* Pregnancy Profile Tab — PRD core: needed for AI meal personalization */}
+          {user.role === 'mother' && (
+            <TabsContent value="pregnancy">
+              <PregnancyProfileTab />
+            </TabsContent>
+          )}
 
           {/* Profile Tab */}
           <TabsContent value="profile">
@@ -641,5 +651,217 @@ export default function ProfilePage() {
         </Tabs>
       </div>
     </MainLayout>
+  );
+}
+
+// ============================================================
+// Pregnancy Profile Tab — PRD Need #1 core data collection
+// ============================================================
+const CONDITION_OPTIONS = [
+  { value: 'none', label: 'Không có bệnh lý kèm theo', icon: '✅' },
+  { value: 'gdm', label: 'Tiểu đường thai kỳ', icon: '🍬' },
+  { value: 'anemia', label: 'Thiếu máu / thiếu sắt', icon: '🩸' },
+  { value: 'hypertension', label: 'Cao huyết áp thai kỳ', icon: '💊' },
+];
+
+const FOOD_PREF_OPTIONS = [
+  { value: 'no_pref', label: 'Không có hạn chế' },
+  { value: 'no_seafood', label: 'Không ăn hải sản' },
+  { value: 'vegetarian', label: 'Ăn chay' },
+  { value: 'no_spicy', label: 'Không cay' },
+  { value: 'no_raw', label: 'Không ăn sống / tái' },
+];
+
+function PregnancyProfileTab() {
+  const { user, updatePregnancyProfile } = useApp();
+
+  // Due date is the source of truth — gestationWeeks is derived
+  const [dueDate, setDueDate] = React.useState(user?.dueDate ?? '');
+  const [condition, setCondition] = React.useState(user?.condition ?? 'none');
+  const [foodPref, setFoodPref] = React.useState(user?.foodPreference ?? 'no_pref');
+  const [loading, setLoading] = React.useState(false);
+  const [msg, setMsg] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Compute gestationWeeks live from dueDate for display
+  const computedWeeks = React.useMemo(() => {
+    if (!dueDate) return null;
+    const due = new Date(dueDate);
+    const today = new Date();
+    const daysRemaining = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const weeks = 40 - Math.round(daysRemaining / 7);
+    if (weeks < 1 || weeks > 44) return null;
+    return weeks;
+  }, [dueDate]);
+
+  // Date bounds: due date must be in the future (not yet born) and ≤ 40 weeks away
+  const today = new Date();
+  const minDue = new Date(today); // at minimum today (already overdue edge case)
+  minDue.setDate(minDue.getDate() - 7 * 4); // allow up to 4 weeks overdue
+  const maxDue = new Date(today);
+  maxDue.setDate(maxDue.getDate() + 7 * 40); // max 40 weeks in future
+  const minDueStr = minDue.toISOString().split('T')[0];
+  const maxDueStr = maxDue.toISOString().split('T')[0];
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!dueDate) {
+      setMsg({ type: 'error', text: 'Vui lòng chọn ngày dự sinh' });
+      return;
+    }
+    if (computedWeeks === null) {
+      setMsg({ type: 'error', text: 'Ngày dự sinh không hợp lệ — vui lòng kiểm tra lại' });
+      return;
+    }
+    setLoading(true);
+    setMsg(null);
+    try {
+      // TODO: Wire to /api/users/me to persist to backend
+      // await fetch(`/api/users/me?user_id=${user?.id}`, {
+      //   method: 'PUT',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ due_date: dueDate, condition, food_preference: foodPref }),
+      // });
+
+      // Update local context — computes gestationWeeks, auto-dismisses dashboard banner
+      updatePregnancyProfile(dueDate, condition, foodPref);
+
+      await new Promise((r) => setTimeout(r, 400));
+      setMsg({ type: 'success', text: `Đã lưu — bạn đang ở tuần ${computedWeeks} thai kỳ` });
+      setTimeout(() => setMsg(null), 4000);
+    } catch {
+      setMsg({ type: 'error', text: 'Không thể lưu — vui lòng thử lại' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Stethoscope className="h-5 w-5 text-primary" />
+          Hồ sơ thai kỳ
+        </CardTitle>
+        <CardDescription>
+          AI cần thông tin này để sinh thực đơn đúng tuần thai và bệnh lý của bạn
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSave} className="space-y-5">
+          {msg && (
+            <div
+              className={`flex items-center gap-2 p-3 rounded-xl text-sm border ${
+                msg.type === 'success'
+                  ? 'bg-green-50 text-green-800 border-green-200'
+                  : 'bg-red-50 text-red-800 border-red-200'
+              }`}
+            >
+              {msg.type === 'success' ? (
+                <CheckCircle className="h-4 w-4" />
+              ) : (
+                <AlertCircle className="h-4 w-4" />
+              )}
+              {msg.text}
+            </div>
+          )}
+
+          {/* Due date input — ngày dự sinh */}
+          <div className="space-y-2">
+            <Label htmlFor="dueDate">
+              Ngày dự sinh (dự kiến)
+            </Label>
+            <Input
+              id="dueDate"
+              type="date"
+              min={minDueStr}
+              max={maxDueStr}
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              disabled={loading}
+              className="max-w-[200px]"
+            />
+            {/* Live computed week display */}
+            {dueDate && computedWeeks !== null && (
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-primary/5 border border-primary/15 max-w-sm">
+                <span className="text-xl">🤰</span>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Bạn đang ở <span className="text-primary">tuần {computedWeeks}</span> thai kỳ
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {computedWeeks < 13
+                      ? 'Tam cá nguyệt 1 — folate và DHA rất quan trọng'
+                      : computedWeeks < 28
+                      ? 'Tam cá nguyệt 2 — giai đoạn tăng trưởng chính'
+                      : 'Tam cá nguyệt 3 — cần 27mg sắt/ngày, thiếu máu rất phổ biến'}
+                  </p>
+                </div>
+              </div>
+            )}
+            {dueDate && computedWeeks === null && (
+              <p className="text-xs text-destructive">
+                Ngày dự sinh không hợp lệ — vui lòng chọn ngày trong vòng 40 tuần tới
+              </p>
+            )}
+            {!dueDate && (
+              <p className="text-xs text-muted-foreground">
+                AI sẽ tự tính tuần thai từ ngày dự sinh để cá nhân hóa thực đơn
+              </p>
+            )}
+          </div>
+
+          {/* Health condition — PRD specifies GDM, anemia, hypertension */}
+          <div className="space-y-2">
+            <Label>Tình trạng sức khỏe kèm theo</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {CONDITION_OPTIONS.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => setCondition(c.value)}
+                  disabled={loading}
+                  className={`text-left px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                    condition === c.value
+                      ? 'border-primary bg-primary/8 text-primary'
+                      : 'border-border/60 bg-card text-foreground/80 hover:border-primary/40'
+                  }`}
+                >
+                  <span className="mr-1.5">{c.icon}</span>
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Food preferences */}
+          <div className="space-y-2">
+            <Label>Sở thích / hạn chế thực phẩm</Label>
+            <div className="flex flex-wrap gap-2">
+              {FOOD_PREF_OPTIONS.map((p) => (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => setFoodPref(p.value)}
+                  disabled={loading}
+                  className={`px-3 py-1.5 rounded-full border text-sm font-medium transition-all ${
+                    foodPref === p.value
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border/60 bg-card text-foreground/70 hover:border-primary/40'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Button type="submit" disabled={loading} className="w-full gap-2">
+            <Save className="h-4 w-4" />
+            {loading ? 'Đang lưu...' : 'Lưu hồ sơ thai kỳ'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

@@ -47,19 +47,28 @@ export default function WellnessPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Theo Dõi Sức Khỏe</h1>
-          <p className="text-muted-foreground">Theo dõi xu hướng sữa, ảnh hưởng thực phẩm và khám định kì</p>
+          <p className="text-muted-foreground">
+            {user.babyStatus === 'pregnant'
+              ? 'Theo dõi sức khỏe thai kỳ, chỉ số dinh dưỡng và lịch khám định kì'
+              : 'Theo dõi xu hướng sữa, ảnh hưởng thực phẩm và khám định kì'}
+          </p>
         </div>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'trend' | 'impact' | 'checkup')} className="space-y-4">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="trend">
-              <span className="hidden sm:inline">Xu hướng</span>
+              <span className="hidden sm:inline">
+                {user.babyStatus === 'pregnant' ? 'Sức khỏe thai kỳ' : 'Xu hướng'}
+              </span>
+              <span className="sm:hidden">Xu hướng</span>
             </TabsTrigger>
             <TabsTrigger value="impact">
               <span className="hidden sm:inline">Ảnh hưởng</span>
+              <span className="sm:hidden">Ảnh hưởng</span>
             </TabsTrigger>
             <TabsTrigger value="checkup">
               <span className="hidden sm:inline">Khám định kì</span>
+              <span className="sm:hidden">Khám</span>
             </TabsTrigger>
           </TabsList>
 

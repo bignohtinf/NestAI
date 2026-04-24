@@ -137,7 +137,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          NestAI — Đồng hành cùng gia đình bạn
+          NestAI — Đồng hành cùng hành trình thai kỳ của bạn
         </p>
       </div>
     </div>

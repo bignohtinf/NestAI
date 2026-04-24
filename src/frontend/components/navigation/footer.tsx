@@ -24,7 +24,7 @@ export function Footer() {
               <span className="font-bold text-foreground">NestAI</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Đồng hành cùng gia đình trong hành trình đón bé yêu. Chăm sóc mẹ và bé với trí tuệ nhân tạo.
+              Trợ lý dinh dưỡng AI cho mẹ bầu và mẹ cho con bú tại Việt Nam — thực đơn theo tuần thai, món Việt quen thuộc.
             </p>
           </div>
 
