@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MainLayout } from '@/components/layouts/main-layout';
 import { useRouter } from 'next/navigation';
-import { AlertCircle, CheckCircle, Plus, Trash2, Heart, Mail, Phone } from 'lucide-react';
+import { AlertCircle, CheckCircle, Plus, Trash2, Heart, Mail, Phone, Stethoscope, Save } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, isLoading, fetchUserData } = useApp();
@@ -293,12 +293,22 @@ export default function ProfilePage() {
           </div>
         )}
 
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="profile">Thông tin cá nhân</TabsTrigger>
-            <TabsTrigger value="partnership">Mối quan hệ</TabsTrigger>
-            <TabsTrigger value="babies">Bé</TabsTrigger>
+        <Tabs defaultValue={user.role === 'mother' ? 'pregnancy' : 'profile'} className="w-full">
+          <TabsList className={`grid w-full ${user.role === 'mother' ? 'grid-cols-4' : 'grid-cols-3'}`}>
+            {user.role === 'mother' && (
+              <TabsTrigger value="pregnancy">🤰 Thai kỳ</TabsTrigger>
+            )}
+            <TabsTrigger value="profile">Cá nhân</TabsTrigger>
+            <TabsTrigger value="partnership">Quan hệ</TabsTrigger>
+            <TabsTrigger value="babies">Thai nhi / Bé</TabsTrigger>
           </TabsList>
+
+          {/* Pregnancy Profile Tab — PRD core: needed for AI meal personalization */}
+          {user.role === 'mother' && (
+            <TabsContent value="pregnancy">
+              <PregnancyProfileTab />
+            </TabsContent>
+          )}
 
           {/* Profile Tab */}
           <TabsContent value="profile">
@@ -641,5 +651,181 @@ export default function ProfilePage() {
         </Tabs>
       </div>
     </MainLayout>
+  );
+}
+
+// ============================================================
+// Pregnancy Profile Tab — PRD Need #1 core data collection
+// ============================================================
+const CONDITION_OPTIONS = [
+  { value: 'none', label: 'Không có bệnh lý kèm theo', icon: '✅' },
+  { value: 'gdm', label: 'Tiểu đường thai kỳ', icon: '🍬' },
+  { value: 'anemia', label: 'Thiếu máu / thiếu sắt', icon: '🩸' },
+  { value: 'hypertension', label: 'Cao huyết áp thai kỳ', icon: '💊' },
+];
+
+const FOOD_PREF_OPTIONS = [
+  { value: 'no_pref', label: 'Không có hạn chế' },
+  { value: 'no_seafood', label: 'Không ăn hải sản' },
+  { value: 'vegetarian', label: 'Ăn chay' },
+  { value: 'no_spicy', label: 'Không cay' },
+  { value: 'no_raw', label: 'Không ăn sống / tái' },
+];
+
+function PregnancyProfileTab() {
+  const { user, updatePregnancyProfile } = useApp();
+  const [gestationWeeks, setGestationWeeks] = React.useState(
+    user?.gestationWeeks?.toString() ?? ''
+  );
+  const [condition, setCondition] = React.useState(user?.condition ?? 'none');
+  const [foodPref, setFoodPref] = React.useState(user?.foodPreference ?? 'no_pref');
+  const [loading, setLoading] = React.useState(false);
+  const [msg, setMsg] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const weeks = parseInt(gestationWeeks);
+    if (gestationWeeks && (isNaN(weeks) || weeks < 1 || weeks > 42)) {
+      setMsg({ type: 'error', text: 'Tuần thai phải từ 1 – 42' });
+      return;
+    }
+    setLoading(true);
+    setMsg(null);
+    try {
+      // TODO: Wire to /api/users/me to persist pregnancy profile to backend
+      // await fetch(`/api/users/me?user_id=${user?.id}`, {
+      //   method: 'PUT',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ gestation_weeks: weeks, condition, food_preference: foodPref }),
+      // });
+
+      // Update local context immediately — dashboard banner auto-dismisses
+      updatePregnancyProfile(
+        gestationWeeks ? weeks : null,
+        condition,
+        foodPref,
+      );
+
+      await new Promise((r) => setTimeout(r, 400));
+      setMsg({ type: 'success', text: 'Cập nhật hồ sơ thai kỳ thành công' });
+      setTimeout(() => setMsg(null), 3000);
+    } catch {
+      setMsg({ type: 'error', text: 'Không thể lưu — vui lòng thử lại' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Stethoscope className="h-5 w-5 text-primary" />
+          Hồ sơ thai kỳ
+        </CardTitle>
+        <CardDescription>
+          AI cần thông tin này để sinh thực đơn đúng tuần thai và bệnh lý của bạn
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSave} className="space-y-5">
+          {msg && (
+            <div
+              className={`flex items-center gap-2 p-3 rounded-xl text-sm border ${
+                msg.type === 'success'
+                  ? 'bg-green-50 text-green-800 border-green-200'
+                  : 'bg-red-50 text-red-800 border-red-200'
+              }`}
+            >
+              {msg.type === 'success' ? (
+                <CheckCircle className="h-4 w-4" />
+              ) : (
+                <AlertCircle className="h-4 w-4" />
+              )}
+              {msg.text}
+            </div>
+          )}
+
+          {/* Gestation week */}
+          <div className="space-y-2">
+            <Label htmlFor="gestationWeeks">
+              Tuần thai hiện tại
+              <span className="text-muted-foreground text-xs ml-1">(1–42)</span>
+            </Label>
+            <Input
+              id="gestationWeeks"
+              type="number"
+              min="1"
+              max="42"
+              placeholder="Ví dụ: 28"
+              value={gestationWeeks}
+              onChange={(e) => setGestationWeeks(e.target.value)}
+              disabled={loading}
+              className="max-w-[160px]"
+            />
+            {gestationWeeks && !isNaN(parseInt(gestationWeeks)) && (
+              <p className="text-xs text-muted-foreground">
+                {parseInt(gestationWeeks) < 13
+                  ? 'Tam cá nguyệt 1 — folate và DHA rất quan trọng'
+                  : parseInt(gestationWeeks) < 28
+                  ? 'Tam cá nguyệt 2 — giai đoạn tăng trưởng chính'
+                  : 'Tam cá nguyệt 3 — cần 27mg sắt/ngày, thiếu máu rất phổ biến'}
+              </p>
+            )}
+          </div>
+
+          {/* Health condition — PRD specifies GDM, anemia, hypertension */}
+          <div className="space-y-2">
+            <Label>Tình trạng sức khỏe kèm theo</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {CONDITION_OPTIONS.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => setCondition(c.value)}
+                  disabled={loading}
+                  className={`text-left px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                    condition === c.value
+                      ? 'border-primary bg-primary/8 text-primary'
+                      : 'border-border/60 bg-card text-foreground/80 hover:border-primary/40'
+                  }`}
+                >
+                  <span className="mr-1.5">{c.icon}</span>
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Food preferences */}
+          <div className="space-y-2">
+            <Label>Sở thích / hạn chế thực phẩm</Label>
+            <div className="flex flex-wrap gap-2">
+              {FOOD_PREF_OPTIONS.map((p) => (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => setFoodPref(p.value)}
+                  disabled={loading}
+                  className={`px-3 py-1.5 rounded-full border text-sm font-medium transition-all ${
+                    foodPref === p.value
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border/60 bg-card text-foreground/70 hover:border-primary/40'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Button type="submit" disabled={loading} className="w-full gap-2">
+            <Save className="h-4 w-4" />
+            {loading ? 'Đang lưu...' : 'Lưu hồ sơ thai kỳ'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

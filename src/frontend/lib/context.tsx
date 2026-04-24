@@ -15,8 +15,10 @@ export interface UserData {
   totalSpending?: number;
   budget?: number;
   babyDob?: string;
-  babyStatus?: 'born' | 'pregnant'; // 'born' = đã sinh, 'pregnant' = mang bầu
-  gestationWeeks?: number; // Tuần thai nếu mang bầu
+  babyStatus?: 'born' | 'pregnant';
+  gestationWeeks?: number;
+  condition?: string;        // PRD: 'none' | 'gdm' | 'anemia' | 'hypertension'
+  foodPreference?: string;   // PRD: food restriction preference
 }
 
 export interface Quest {
@@ -222,6 +224,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
       )
     );
   };
+
+  // PRD Need #1: update pregnancy profile from the Profile page
+  // so the dashboard banner auto-dismisses once week is set
+  const updatePregnancyProfile = (
+    gestationWeeks: number | null,
+    condition: string,
+    foodPreference: string,
+  ) => {
+    setUser((prevUser) => {
+      if (!prevUser) return prevUser;
+      return {
+        ...prevUser,
+        babyStatus: 'pregnant' as const,
+        gestationWeeks: gestationWeeks ?? prevUser.gestationWeeks,
+        condition,
+        foodPreference,
+      };
+    });
+  };
+
 
   return (
     <AppContext.Provider
