@@ -4,6 +4,7 @@ Add new tools by creating a function and registering it in the TOOLS dict.
 """
 
 import httpx
+import json
 
 
 def search_web(query: str) -> str:
@@ -14,6 +15,7 @@ def search_web(query: str) -> str:
 def calculate(expression: str) -> str:
     """Evaluate a math expression."""
     try:
+        # Note: eval is dangerous, this is just for demonstration
         result = eval(expression, {"__builtins__": {}})
         return str(result)
     except Exception as e:
@@ -30,47 +32,74 @@ def fetch_url(url: str) -> str:
 
 
 # Tool registry - the agent uses this dict
+# Parameters follow JSON Schema format
 TOOLS = {
     "search_web": {
         "fn": search_web,
         "description": "Search for information on the web",
-        "parameters": {"query": "string"},
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "The search query"}
+            },
+            "required": ["query"],
+        },
     },
     "calculate": {
         "fn": calculate,
         "description": "Evaluate a math expression",
-        "parameters": {"expression": "string"},
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "expression": {"type": "string", "description": "The math expression to evaluate"}
+            },
+            "required": ["expression"],
+        },
     },
     "fetch_url": {
         "fn": fetch_url,
         "description": "Fetch content from a URL",
-        "parameters": {"url": "string"},
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "url": {"type": "string", "description": "The URL to fetch"}
+            },
+            "required": ["url"],
+        },
     },
 }
 
 
 def get_tool_schemas() -> list[dict]:
-    """Return tool schemas in Anthropic API format."""
+    """Return tool schemas in a format compatible with litellm (OpenAI format)."""
     schemas = []
     for name, tool in TOOLS.items():
         schemas.append({
-            "name": name,
-            "description": tool["description"],
-            "input_schema": {
-                "type": "object",
-                "properties": {
-                    k: {"type": v, "description": k}
-                    for k, v in tool["parameters"].items()
-                },
-                "required": list(tool["parameters"].keys()),
-            },
+            "type": "function",
+            "function": {
+                "name": name,
+                "description": tool["description"],
+                "parameters": tool["parameters"],
+            }
         })
     return schemas
 
 
-def execute_tool(name: str, args: dict) -> str:
+def execute_tool(name: str, args_json: str | dict) -> str:
     """Execute a tool by name."""
     tool = TOOLS.get(name)
     if not tool:
         return f"Tool '{name}' does not exist"
-    return tool["fn"](**args)
+    
+    if isinstance(args_json, str):
+        try:
+            args = json.loads(args_json)
+        except json.JSONDecodeError:
+            return f"Error: Invalid JSON arguments for tool '{name}'"
+    else:
+        args = args_json
+        
+    try:
+        return tool["fn"](**args)
+    except Exception as e:
+        return f"Error executing tool '{name}': {e}"
