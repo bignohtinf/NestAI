@@ -10,14 +10,12 @@ import { QuestCard } from '@/components/gamification/quest-card';
 import {
   Sparkles,
   Camera,
-  ChevronRight,
   Utensils,
   HeartPulse,
   AlertCircle,
-  User,
+  ChevronRight,
 } from 'lucide-react';
 
-// Pregnancy micronutrients with PRD-aligned targets
 const PREGNANCY_MICROS = [
   {
     key: 'iron',
@@ -28,7 +26,6 @@ const PREGNANCY_MICROS = [
     color: 'text-red-600',
     bg: 'bg-red-50',
     border: 'border-red-100',
-    tip: 'T2-T3: 27mg/ngày',
   },
   {
     key: 'folate',
@@ -39,7 +36,6 @@ const PREGNANCY_MICROS = [
     color: 'text-green-600',
     bg: 'bg-green-50',
     border: 'border-green-100',
-    tip: 'Ngăn dị tật ống thần kinh',
   },
   {
     key: 'calcium',
@@ -50,7 +46,6 @@ const PREGNANCY_MICROS = [
     color: 'text-blue-600',
     bg: 'bg-blue-50',
     border: 'border-blue-100',
-    tip: 'Xương & răng thai nhi',
   },
   {
     key: 'dha',
@@ -61,7 +56,6 @@ const PREGNANCY_MICROS = [
     color: 'text-indigo-600',
     bg: 'bg-indigo-50',
     border: 'border-indigo-100',
-    tip: 'Não & mắt thai nhi',
   },
 ];
 
@@ -79,174 +73,134 @@ export function MomDashboard() {
     return null;
   }
 
-  // Derive pregnancy week label — support both pregnant and postpartum
-  let weekLabel = '';
+  let weekLabel = 'Thai kỳ';
   if (user.babyStatus === 'pregnant' && user.gestationWeeks != null) {
     weekLabel = `Tuần ${user.gestationWeeks} thai kỳ`;
   } else if (user.babyStatus === 'born' && user.weeksPostpartum != null) {
     weekLabel = `Tuần ${user.weeksPostpartum} sau sinh`;
-  } else {
-    weekLabel = 'Thai kỳ';
   }
 
   const isProfileIncomplete = !user.babyStatus || (!user.gestationWeeks && !user.dueDate);
 
   return (
-    <div className="space-y-6">
-      {/* Welcome */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 max-w-4xl mx-auto">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">
             Xin chào, {user?.name}! 👋
           </h2>
-          <p className="text-muted-foreground text-sm">
-            {weekLabel} •{' '}
-            {new Date().toLocaleDateString('vi-VN', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-            })}
+          <p className="text-muted-foreground mt-1 flex items-center gap-2">
+            <span className="font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-md text-sm">
+              {weekLabel}
+            </span>
+            <span className="text-sm">
+              • {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </span>
           </p>
         </div>
         {(user?.points ?? 0) > 0 && (
-          <Badge variant="default" className="text-xs">
-            {user.points} điểm
-          </Badge>
+          <div className="flex items-center gap-1.5 bg-amber-50 text-amber-600 px-3 py-1.5 rounded-full border border-amber-200 font-medium text-sm">
+            <span>🌟</span>
+            <span>{user.points} điểm</span>
+          </div>
         )}
       </div>
 
-      {/* Profile incomplete banner */}
       {isProfileIncomplete && (
-        <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
-          <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-amber-800">
-              Hoàn thiện hồ sơ thai kỳ để nhận thực đơn cá nhân hóa
-            </p>
-            <p className="text-xs text-amber-700 mt-0.5">
-              AI cần biết tuần thai và tình trạng sức khỏe của bạn
-            </p>
+        <Link href="/profile" className="block">
+          <div className="flex items-center gap-3 rounded-2xl bg-amber-50/80 border border-amber-200/60 px-5 py-4 transition-colors hover:bg-amber-100/50">
+            <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-amber-900">
+                Hoàn thiện hồ sơ để cá nhân hóa thực đơn
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-amber-500" />
           </div>
-          <Button asChild size="sm" variant="secondary" className="shrink-0 h-7 text-xs border-amber-300 text-amber-700 hover:bg-amber-100">
-            <Link href="/profile">
-              <User className="h-3 w-3 mr-1" />
-              Cập nhật
-            </Link>
-          </Button>
-        </div>
+        </Link>
       )}
 
-      {/* ===== HERO: Sinh Thực Đơn ===== */}
-      <Card className="border-2 border-primary/40 bg-gradient-to-br from-primary/5 via-background to-emerald-50 dark:to-emerald-950/20 shadow-md">
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                <span className="text-xs font-semibold uppercase tracking-wide text-primary">
-                  Thực đơn dinh dưỡng AI
-                </span>
+      {/* Main Action Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Link href="/nutrition-scan" className="block group">
+          <Card className="h-full border-0 bg-gradient-to-br from-primary/10 to-primary/5 shadow-sm hover:shadow-md transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                <Sparkles className="h-6 w-6 text-primary" />
               </div>
-              <p className="text-base font-semibold text-foreground">
-                Sinh thực đơn hôm nay
+              <h3 className="text-xl font-bold text-foreground mb-2">
+                Thực đơn AI
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Gợi ý món ăn chuẩn y khoa cho mẹ bầu
               </p>
-              <p className="text-sm text-muted-foreground max-w-md">
-                AI gợi ý món Việt cá nhân hóa theo tuần thai, bệnh lý và sở thích của bạn
-              </p>
-              <div className="flex flex-wrap gap-2 pt-1">
-                <Badge variant="default" className="text-xs">
-                  🤰 Theo tuần thai
-                </Badge>
-                <Badge variant="default" className="text-xs">
-                  🩺 Theo bệnh lý
-                </Badge>
-                <Badge variant="default" className="text-xs">
-                  🍚 Món Việt
-                </Badge>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary" className="bg-white/60">Cá nhân hóa</Badge>
+                <Badge variant="secondary" className="bg-white/60">Dễ nấu</Badge>
               </div>
-            </div>
-            <div className="flex flex-col gap-2 sm:items-end">
-              <Button asChild size="lg" className="gap-2 w-full sm:w-auto">
-                <Link href="/nutrition-scan?tab=recommendations">
-                  <Utensils className="h-4 w-4" />
-                  Sinh thực đơn hôm nay
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="secondary"
-                size="sm"
-                className="gap-2 w-full sm:w-auto"
-              >
-                <Link href="/nutrition-scan?tab=scan">
-                  <Camera className="h-4 w-4" />
-                  Quét ảnh bữa ăn
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </Link>
 
-      {/* Vi chất thai kỳ hôm nay */}
-      <Card>
-        <CardHeader className="pb-3">
+        <Link href="/nutrition-scan" className="block group">
+          <Card className="h-full border-0 bg-gradient-to-br from-emerald-50 to-emerald-100/50 shadow-sm hover:shadow-md transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                <Camera className="h-6 w-6 text-emerald-600" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2">
+                Quét bữa ăn
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Phân tích dinh dưỡng từ ảnh chụp
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary" className="bg-white/60 text-emerald-700">Nhanh chóng</Badge>
+                <Badge variant="secondary" className="bg-white/60 text-emerald-700">Tự động</Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Vi chất */}
+      <Card className="border border-border/50 shadow-sm overflow-hidden">
+        <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold">
-              Vi chất thai kỳ hôm nay
-            </CardTitle>
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs gap-1"
-            >
-              <Link href="/nutrition-scan?tab=scan">
-                <Camera className="h-3 w-3" />
-                Thêm bữa ăn
+            <CardTitle className="text-lg font-bold">Mục tiêu vi chất</CardTitle>
+            <Button asChild variant="outline" size="sm" className="h-8 rounded-full border-border/60">
+              <Link href="/nutrition-scan">
+                <Utensils className="h-3.5 w-3.5 mr-1.5" />
+                Cập nhật
               </Link>
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Chụp ảnh bữa ăn để AI tự động tính — không cần nhập tay
-          </p>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <CardContent className="p-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {PREGNANCY_MICROS.map((micro) => (
               <div
                 key={micro.key}
-                className={`${micro.bg} border ${micro.border} rounded-xl p-3 text-center`}
+                className={`${micro.bg} border ${micro.border} rounded-2xl p-4 flex flex-col items-center justify-center text-center`}
               >
-                <div className="text-xl mb-1">{micro.icon}</div>
-                <p className={`text-sm font-bold ${micro.color}`}>—</p>
-                <p className="text-xs text-muted-foreground font-medium">
-                  {micro.label}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  mục tiêu {micro.target}
-                  {micro.unit}
-                </p>
+                <span className="text-2xl mb-2">{micro.icon}</span>
+                <span className={`text-sm font-bold ${micro.color} mb-1`}>0 / {micro.target}</span>
+                <span className="text-xs font-medium text-muted-foreground">{micro.label} ({micro.unit})</span>
               </div>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground text-center mt-3">
-            Dữ liệu sẽ cập nhật sau khi bạn quét ảnh bữa ăn
-          </p>
         </CardContent>
       </Card>
 
-      {/* Tertiary: Quests */}
+      {/* Quests */}
       {activeQuests.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-base font-semibold flex items-center gap-2">
-              <HeartPulse className="h-4 w-4 text-rose-500" />
-              Nhiệm vụ sức khỏe
-            </h3>
-          </div>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className="space-y-4">
+          <h3 className="text-lg font-bold flex items-center gap-2">
+            <HeartPulse className="h-5 w-5 text-rose-500" />
+            Nhiệm vụ hôm nay
+          </h3>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {activeQuests.map((quest) => (
               <QuestCard key={quest.id} quest={quest} />
             ))}
