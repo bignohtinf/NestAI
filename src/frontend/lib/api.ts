@@ -26,3 +26,20 @@ export async function apiCall<T>(
     throw error;
   }
 }
+
+export const nutritionApi = {
+  async getProfiles() {
+    return apiCall<{ profiles: any[] }>('/api/recommendations/profiles');
+  },
+  
+  async getFullDayRecommendations(profileStt: number, lockedMeals: Record<string, number[]> = {}, excluded: number[] = []) {
+    return apiCall<{ plans: any[] }>('/api/recommendations/recommend', {
+      method: 'POST',
+      body: JSON.stringify({
+        profile_stt: profileStt,
+        locked_meals: lockedMeals,
+        excluded: excluded
+      })
+    });
+  }
+};

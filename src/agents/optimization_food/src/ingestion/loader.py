@@ -14,35 +14,42 @@ PROFILES_DIR = RAW_DIR / "profiles"
 RECOMMENDATIONS_DIR = PROFILES_DIR / "recommendations"
 
 def load_nutrition_data() -> List[Dict[str, Any]]:
-    """Load nutritional data for all dishes from raw CSV."""
+    """Load nutritional data for all dishes from raw CSV and enrich with dish_type."""
     nutrition_file = DISHES_DIR / "raw_nutrition_table.csv"
-    if not nutrition_file.exists():
+    dish_file = DISHES_DIR / "raw_dish_table.csv"
+    
+    if not nutrition_file.exists() or not dish_file.exists():
         return []
     
+    # Load dish types mapping
+    dish_types = {}
+    with open(dish_file, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            try:
+                stt = int(row["stt"])
+                dish_types[stt] = row.get("dish_type", "món mặn")
+            except:
+                continue
+
     data = []
     with open(nutrition_file, "r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         rows = list(reader)
-        # Skip the units row if present
         if rows and "kcal" in rows[0].get("energy", ""):
             rows = rows[1:]
             
         for row in rows:
             clean_row = {}
             for k, v in row.items():
-                if isinstance(v, list):
-                    v = v[0] if v else ""
-                
                 if k == "stt":
                     try:
                         clean_row[k] = int(v)
-                    except (ValueError, TypeError):
+                    except:
                         continue
                 elif v and isinstance(v, str) and v.strip() and v != "-":
                     try:
                         val = v.strip().replace(",", ".")
-                        if val.count(".") > 1:
-                            val = val.replace(".", "", val.count(".") - 1)
                         clean_row[k] = float(val)
                     except ValueError:
                         clean_row[k] = 0.0
@@ -50,6 +57,7 @@ def load_nutrition_data() -> List[Dict[str, Any]]:
                     clean_row[k] = 0.0
             
             if "stt" in clean_row:
+                clean_row["dish_type"] = dish_types.get(clean_row["stt"], "món mặn")
                 data.append(clean_row)
     return data
 

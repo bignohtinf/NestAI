@@ -28,15 +28,15 @@ trap cleanup SIGINT
 # 1. Setup Optimization Agent (Crawler)
 setup_agent() {
     echo -e "${GREEN}[1/3] Setting up Optimization Agent...${NC}"
-    if [ -d "$ROOT_DIR/src/agents/optimization-food" ]; then
-        cd "$ROOT_DIR/src/agents/optimization-food"
+    if [ -d "$ROOT_DIR/src/agents/optimization_food" ]; then
+        cd "$ROOT_DIR/src/agents/optimization_food"
         if [ ! -d ".venv" ]; then
             python3 -m venv .venv
         fi
         source .venv/bin/activate
         pip install -q -r requirements.txt
     else
-        echo -e "${YELLOW}Warning: Optimization agent directory not found at $ROOT_DIR/src/agents/optimization-food${NC}"
+        echo -e "${YELLOW}Warning: Optimization agent directory not found at $ROOT_DIR/src/agents/optimization_food${NC}"
     fi
 }
 
