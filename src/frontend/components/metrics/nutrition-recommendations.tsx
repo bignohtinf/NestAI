@@ -5,10 +5,11 @@ import { useApp } from '@/lib/context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, RefreshCw, Utensils, ChevronDown, ChevronUp, Info, Pencil, Camera, MapPin } from 'lucide-react';
+import { Sparkles, RefreshCw, Utensils, ChevronDown, ChevronUp, Info, Pencil, Camera, MapPin, Loader2, Lock, Unlock, ChefHat } from 'lucide-react';
 import Link from 'next/link';
 import { SmartScan } from '@/components/metrics/smart-scan';
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { nutritionApi } from '@/lib/api';
 
 // Label maps
 const CONDITION_LABELS: Record<string, { label: string; icon: string }> = {
@@ -16,6 +17,12 @@ const CONDITION_LABELS: Record<string, { label: string; icon: string }> = {
   gdm: { label: 'Tiểu đường thai kỳ', icon: '🍬' },
   anemia: { label: 'Thiếu máu / thiếu sắt', icon: '🩸' },
   hypertension: { label: 'Cao huyết áp thai kỳ', icon: '💊' },
+};
+
+const TRIMESTER_INFO = (weeks: number) => {
+  if (weeks < 13) return 'Tam cá nguyệt 1 — folate rất quan trọng';
+  if (weeks < 28) return 'Tam cá nguyệt 2 — giai đoạn tăng trưởng chính';
+  return 'Tam cá nguyệt 3 — nhu cầu sắt 27mg/ngày';
 };
 
 interface Dish {
