@@ -3,12 +3,23 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import React, { useState } from 'react';
+import React from 'react';
 import {
   X,
+  Home,
+  Utensils,
+  MessageCircle,
+  Baby,
+  HeartPulse,
+  Bell,
+  ShoppingCart,
+  Calendar,
+  Settings,
+  Camera
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
+import Image from 'next/image';
 
 interface SidebarProps {
   open: boolean;
@@ -20,123 +31,42 @@ interface NavItem {
   label: string;
   icon?: any;
   roles: string[];
-  children?: NavItem[];
 }
 
 const navigationItems: NavItem[] = [
-  // Shared
-  { href: '/', label: 'Trang chủ', roles: ['mother', 'father', 'admin'] },
+  { href: '/', label: 'Trang chủ', icon: Home, roles: ['mother', 'father', 'admin'] },
   
-  // Mother - Nutrition FIRST (core feature)
-  {
-    label: '🍱 Thực đơn dinh dưỡng',
-    roles: ['mother'],
-    children: [
-      { href: '/nutrition-scan?tab=recommendations', label: 'Sinh thực đơn AI', roles: ['mother'] },
-      { href: '/nutrition-scan?tab=scan', label: 'Quét ảnh bữa ăn', roles: ['mother'] },
-      { href: '/nutrition', label: 'Khuyến nghị thực phẩm', roles: ['mother'] },
-    ],
-  },
+  // Mother
+  { href: '/nutrition-scan', label: 'Thực đơn AI', icon: Utensils, roles: ['mother'] },
   
-  { href: '/nori', label: 'Nori', roles: ['mother', 'father'] },
-  { href: '/baby-journey', label: 'Hành Trình Của Bé', roles: ['mother', 'father'] },
+  { href: '/nori', label: 'Nori AI', icon: MessageCircle, roles: ['mother', 'father'] },
+  { href: '/baby-journey', label: 'Hành trình bé', icon: Baby, roles: ['mother', 'father'] },
   
-  // Mother - Health
-  {
-    label: 'Sức khỏe',
-    roles: ['mother'],
-    children: [
-      { 
-        label: 'Theo Dõi Sức Khỏe', 
-        roles: ['mother'],
-        children: [
-          { href: '/wellness?tab=trend', label: 'Xu hướng', roles: ['mother'] },
-          { href: '/wellness?tab=impact', label: 'Ảnh hưởng', roles: ['mother'] },
-        ]
-      },
-      { href: '/wellness?tab=checkup', label: 'Cập nhật Khám định kì', roles: ['mother'] },
-    ],
-  },
+  // Mother Health
+  { href: '/wellness', label: 'Sức khỏe', icon: HeartPulse, roles: ['mother'] },
   
-  { href: '/notifications', label: 'Thông báo', roles: ['mother', 'father'] },
+  { href: '/notifications', label: 'Thông báo', icon: Bell, roles: ['mother', 'father'] },
   
-  // Father only - Grouped
-  {
-    label: 'NutriMart',
-    roles: ['father'],
-    children: [
-      { href: '/nutrimart?tab=shopping', label: 'Mua Sắm', roles: ['father'] },
-      { href: '/nutrimart?tab=cooking', label: 'Nấu Ăn', roles: ['father'] },
-    ],
-  },
-  {
-    label: 'Hỗ trợ',
-    roles: ['father'],
-    children: [
-      { href: '/?tab=checklist', label: 'Checklist', roles: ['father'] },
-      { href: '/?tab=family', label: 'Gia đình', roles: ['father'] },
-    ],
-  },
-  {
-    label: 'Planner',
-    roles: ['father'],
-    children: [
-      { href: '/planner?tab=budget', label: 'Kế Hoạch', roles: ['father'] },
-      { href: '/planner?tab=missions', label: 'Nhiệm Vụ', roles: ['father'] },
-    ],
-  },
+  // Father
+  { href: '/nutrimart', label: 'NutriMart', icon: ShoppingCart, roles: ['father'] },
+  { href: '/planner', label: 'Kế Hoạch', icon: Calendar, roles: ['father'] },
   
-  // Admin only
-  { href: '/admin', label: 'Quản trị', roles: ['admin'] },
+  // Admin
+  { href: '/admin', label: 'Quản trị', icon: Settings, roles: ['admin'] },
 ];
 
 export function Sidebar({ open, onOpenChange }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useApp();
-  const [hoveredItem, setHoveredItem] = React.useState<string | null>(null);
 
-  // Find the parent item based on current pathname
-  const getActiveParent = () => {
-    const filteredNavItems = navigationItems.filter(item => item.roles.includes(user?.role || ''));
-    for (const item of filteredNavItems) {
-      if (item.children) {
-        // Check level 1 children
-        if (item.children.some(child => {
-          const childPath = child.href?.split('?')[0];
-          const currentPath = pathname.split('?')[0];
-          return currentPath === childPath;
-        })) {
-          return item;
-        }
-        
-        // Check level 2 children (sub-children)
-        if (item.children.some(child => {
-          if (child.children) {
-            return child.children.some(subChild => {
-              const subChildPath = subChild.href?.split('?')[0];
-              const currentPath = pathname.split('?')[0];
-              return currentPath === subChildPath;
-            });
-          }
-          return false;
-        })) {
-          return item;
-        }
-      }
-    }
-    return null;
-  };
-
-  const activeParent = getActiveParent();
   const filteredItems = navigationItems.filter(item => item.roles.includes(user?.role || ''));
-  const childrenToShow = activeParent?.children?.filter(child => child.roles.includes(user?.role || '')) || [];
 
   return (
     <>
       {/* Mobile overlay */}
       {open && (
         <div
-          className="fixed inset-0 z-30 bg-background/80 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden"
           onClick={() => onOpenChange(false)}
         />
       )}
@@ -144,106 +74,65 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 h-screen w-64 border-r border-border bg-sidebar transition-transform duration-300 ease-in-out md:relative md:translate-x-0',
+          'fixed left-0 top-0 z-50 h-screen w-64 border-r border-border/50 bg-card/50 backdrop-blur-xl shadow-sm transition-transform duration-300 ease-in-out flex flex-col md:relative md:translate-x-0',
           open ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex h-full flex-col">
-          <nav className="flex-1 space-y-1 px-3 py-4">
-            {/* Show children of active parent */}
-            {childrenToShow.length > 0 && (
-              <>
-                <div className="mb-4">
-                  <p className="px-3 py-2 text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider">
-                    {activeParent?.label}
-                  </p>
-                </div>
-                {childrenToShow.map((child) => {
-                  const Icon = child.icon;
-                  const childPath = child.href?.split('?')[0];
-                  const currentPath = pathname.split('?')[0];
-                  const currentSearch = typeof window !== 'undefined' ? window.location.search : '';
-                  const childSearch = child.href?.includes('?') ? '?' + child.href.split('?')[1] : '';
-                  const isActive = child.href
-                    ? childSearch
-                      ? pathname + currentSearch === child.href
-                      : currentPath === childPath
-                    : false;
-                  const hasSubChildren = child.children && child.children.length > 0;
-                  const isHovered = hoveredItem === child.label;
-
-                  if (hasSubChildren) {
-                    return (
-                      <div 
-                        key={child.label}
-                        onMouseEnter={() => setHoveredItem(child.label)}
-                        onMouseLeave={() => setHoveredItem(null)}
-                      >
-                        <div className="px-3 py-2 text-sm font-medium text-sidebar-foreground cursor-pointer hover:text-safe-green rounded-lg transition-colors">
-                          {child.label}
-                        </div>
-                        {isHovered && (
-                          <div className="ml-4 space-y-1">
-                            {child.children!.map((subChild) => {
-                              const SubIcon = subChild.icon;
-                              const subChildPath = subChild.href;
-                              const isSubActive = pathname === subChildPath;
-
-                              return (
-                                <Link
-                                  key={subChild.href}
-                                  href={subChild.href!}
-                                  className={cn(
-                                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                                    isSubActive
-                                      ? 'bg-[#f2f9ff] text-[#0075de]'
-                                      : 'text-sidebar-foreground hover:text-safe-green'
-                                  )}
-                                  onClick={() => onOpenChange(false)}
-                                >
-                                  <span>{subChild.label}</span>
-                                </Link>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <Link
-                      key={child.href}
-                      href={child.href!}
-                      className={cn(
-                        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                        isActive
-                          ? 'bg-[#f2f9ff] text-[#0075de]'
-                          : 'text-sidebar-foreground hover:text-safe-green'
-                      )}
-                      onClick={() => onOpenChange(false)}
-                    >
-                      <span>{child.label}</span>
-                    </Link>
-                  );
-                })}
-              </>
-            )}
-          </nav>
-
-          {/* Close button for mobile */}
-          <div className="border-t border-sidebar-border p-3 md:hidden">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => onOpenChange(false)}
-              className="w-full"
-            >
-              <X className="mr-2 h-4 w-4" />
-              Đóng
-            </Button>
-          </div>
+        {/* Logo Area */}
+        <div className="flex h-16 items-center px-6 border-b border-border/30 shrink-0 justify-between md:justify-start">
+          <Link
+            href="/"
+            className="flex items-center gap-2 hover:opacity-85 transition-opacity"
+            onClick={() => onOpenChange(false)}
+          >
+            <Image
+              src="/img_0174.png"
+              alt="NestAI Logo"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
+            <span className="font-bold text-xl text-primary tracking-tight">NestAI</span>
+          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onOpenChange(false)}
+            className="md:hidden h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-5 w-5" />
+          </Button>
         </div>
+
+        {/* Navigation Links */}
+        <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1.5">
+          {filteredItems.map((item) => {
+            const Icon = item.icon;
+            const pathWithoutQuery = pathname.split('?')[0];
+            const itemPathWithoutQuery = item.href?.split('?')[0];
+            
+            const isActive = item.href === '/' 
+              ? pathWithoutQuery === '/'
+              : pathWithoutQuery.startsWith(itemPathWithoutQuery || '');
+
+            return (
+              <Link
+                key={item.label}
+                href={item.href!}
+                onClick={() => onOpenChange(false)}
+                className={cn(
+                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                  isActive
+                    ? 'bg-primary/10 text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]'
+                    : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+                )}
+              >
+                {Icon && <Icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-muted-foreground")} />}
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
       </aside>
     </>
   );
