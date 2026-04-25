@@ -1,0 +1,4 @@
+data/raw/dishes 
+data/raw/profiles
+data/processed/
+*.log
