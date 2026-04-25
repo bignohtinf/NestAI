@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '@/lib/context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,104 +18,128 @@ const CONDITION_LABELS: Record<string, { label: string; icon: string }> = {
   hypertension: { label: 'Cao huyết áp thai kỳ', icon: '💊' },
 };
 
-const TRIMESTER_INFO = (weeks: number) => {
-  if (weeks < 13) return 'Tam cá nguyệt 1 — folate rất quan trọng';
-  if (weeks < 28) return 'Tam cá nguyệt 2 — giai đoạn tăng trưởng chính';
-  return 'Tam cá nguyệt 3 — nhu cầu sắt 27mg/ngày';
-};
+interface Dish {
+  stt: string;
+  id: string;
+  dish_name_vietnamese: string;
+  group_name_vietnamese: string;
+  dish_type: string;
+}
 
-// Sample meal structure shown while AI not connected
-const SAMPLE_MENU = {
-  meals: [
-    {
-      slot: 'Bữa sáng',
-      time: '7:00',
-      icon: '🌅',
-      dishes: [
-        { name: 'Cháo yến mạch với trứng luộc', kcal: 320, note: 'GI thấp — kiểm soát đường huyết' },
-        { name: 'Sữa đậu nành không đường', kcal: 80, note: 'Protein + Canxi' },
-      ],
-    },
-    {
-      slot: 'Bữa phụ sáng',
-      time: '10:00',
-      icon: '🍎',
-      dishes: [
-        { name: 'Táo xanh + 10 hạt hạnh nhân', kcal: 150, note: 'Chất xơ — làm chậm hấp thụ đường' },
-      ],
-    },
-    {
-      slot: 'Bữa trưa',
-      time: '12:00',
-      icon: '☀️',
-      dishes: [
-        { name: 'Cơm gạo lứt (½ chén)', kcal: 180, note: 'GI thấp hơn gạo trắng' },
-        { name: 'Cá hồi áp chảo', kcal: 250, note: 'DHA cho não thai nhi' },
-        { name: 'Rau cải xào tỏi', kcal: 60, note: 'Folate + Sắt' },
-        { name: 'Canh bí đỏ nấu tôm', kcal: 90, note: 'Kẽm + Beta-carotene' },
-      ],
-    },
-    {
-      slot: 'Bữa phụ chiều',
-      time: '15:30',
-      icon: '🌿',
-      dishes: [
-        { name: 'Sữa chua không đường + việt quất', kcal: 130, note: 'Canxi + Probiotics' },
-      ],
-    },
-    {
-      slot: 'Bữa tối',
-      time: '18:30',
-      icon: '🌙',
-      dishes: [
-        { name: 'Bún bò Huế (ít huyết)', kcal: 380, note: 'Sắt + Protein — bổ sung máu' },
-        { name: 'Rau muống luộc', kcal: 40, note: 'Folate' },
-      ],
-    },
-  ],
-  totals: { kcal: 1680, protein: 82, iron: 24, folate: 520, calcium: 890, dha: 180 },
-  targets: { kcal: '1800–2200', protein: '71g', iron: '27mg', folate: '600mcg', calcium: '1000mg', dha: '200mg' },
-};
+interface MealPlan {
+  breakfast: { dishes: Dish[]; stts: number[] };
+  lunch: { dishes: Dish[]; stts: number[] };
+  dinner: { dishes: Dish[]; stts: number[] };
+}
 
 export function NutritionRecommendations() {
   const { user } = useApp();
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
-  const [expandedMeal, setExpandedMeal] = useState<string | null>('Bữa trưa');
+  const [expandedMeal, setExpandedMeal] = useState<string | null>('lunch');
+
+  const [profiles, setProfiles] = useState<any[]>([]);
+  const [selectedProfileStt, setSelectedProfileStt] = useState<string>("");
+  const [plans, setPlans] = useState<MealPlan[]>([]);
+  const [activePlanIdx, setActivePlanIdx] = useState(0);
+  const [isProfilesLoading, setIsProfilesLoading] = useState(true);
+
+  // Locking logic
+  const [lockedMeals, setLockedMeals] = useState<Record<string, number[]>>({});
 
   const gestationWeeks = user?.gestationWeeks ?? null;
   const condition = user?.condition ?? 'none';
   const conditionInfo = CONDITION_LABELS[condition] ?? CONDITION_LABELS['none'];
 
+  // Load profiles and auto-select best match
+  useEffect(() => {
+    async function loadProfiles() {
+      try {
+        const response = await nutritionApi.getProfiles();
+        setProfiles(response.profiles);
+
+        if (response.profiles.length > 0) {
+          let matchedStt = response.profiles[0].stt.toString();
+
+          if (gestationWeeks != null) {
+            const trimesterLabel = gestationWeeks < 13
+              ? "Phụ nữ có thai 3 tháng đầu"
+              : gestationWeeks < 28
+                ? "Phụ nữ có thai 3 tháng giữa"
+                : "Phụ nữ có thai 3 tháng cuối";
+
+            const match = response.profiles.find((p: any) =>
+              p.profile["Tình trạng sinh lý/Physiological condition"] === trimesterLabel
+            );
+            if (match) matchedStt = match.stt.toString();
+          }
+
+          setSelectedProfileStt(matchedStt);
+        }
+      } catch (error) {
+        console.error("Failed to load profiles:", error);
+      } finally {
+        setIsProfilesLoading(false);
+      }
+    }
+    loadProfiles();
+  }, [gestationWeeks]);
+
   const handleGenerate = async () => {
+    if (!selectedProfileStt) return;
+
     setIsGenerating(true);
-    await new Promise((r) => setTimeout(r, 1800));
-    setIsGenerating(false);
-    setHasGenerated(true);
-    setExpandedMeal('Bữa sáng');
+    try {
+      const response = await nutritionApi.getFullDayRecommendations(
+        parseInt(selectedProfileStt),
+        lockedMeals
+      );
+      setPlans(response.plans);
+      setActivePlanIdx(0);
+      setHasGenerated(true);
+    } catch (error) {
+      console.error("Failed to get recommendations:", error);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
-  const totalKcal = SAMPLE_MENU.totals.kcal;
-  const targetKcalStr = SAMPLE_MENU.targets.kcal;
+  const toggleLock = (mealKey: string, stts: number[]) => {
+    setLockedMeals(prev => {
+      const next = { ...prev };
+      if (next[mealKey]) {
+        delete next[mealKey];
+      } else {
+        next[mealKey] = stts;
+      }
+      return next;
+    });
+  };
+
+  const activePlan = plans[activePlanIdx];
+
+  const MEAL_INFO = [
+    { key: 'breakfast', label: 'Bữa sáng', icon: '🌅', time: '07:00' },
+    { key: 'lunch', label: 'Bữa trưa', icon: '☀️', time: '12:00' },
+    { key: 'dinner', label: 'Bữa tối', icon: '🌙', time: '18:30' },
+  ];
 
   return (
     <div className="space-y-4">
-      {/* Compact profile summary + generate button */}
+      {/* Configuration Card */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
-            Sinh thực đơn hôm nay
+            Sinh thực đơn cả ngày
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Profile summary row — compact, read-only */}
-          <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-muted/60 border border-border/50">
-            <div className="flex items-center gap-3 flex-1 min-w-0 flex-wrap gap-y-1.5">
-              {gestationWeeks != null ? (
-                <Badge variant="default" className="text-xs gap-1 shrink-0">
-                  🤰 Tuần {gestationWeeks}
-                </Badge>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-muted-foreground shrink-0">Hồ sơ:</span>
+              {isProfilesLoading ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
               ) : (
                 <Badge variant="warning" className="text-xs shrink-0">
                   ⚠ Chưa có tuần thai
@@ -130,29 +154,23 @@ export function NutritionRecommendations() {
                 </span>
               )}
             </div>
-            {/* Edit shortcut */}
-            <Link
-              href="/profile"
-              className="shrink-0 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-            >
-              <Pencil className="h-3 w-3" />
-              <span className="hidden sm:inline">Chỉnh sửa</span>
-            </Link>
-          </div>
 
-          {/* Missing profile warning */}
-          {gestationWeeks == null && (
-            <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3">
-              <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-500" />
-              <span>
-                Chưa có ngày dự sinh —{' '}
-                <Link href="/profile" className="underline font-medium">
-                  cập nhật hồ sơ thai kỳ
-                </Link>{' '}
-                để AI cá nhân hóa chính xác hơn.
-              </span>
+            <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-muted/60 border border-border/50">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className="text-[10px] h-5 px-1.5 gap-1 bg-white">
+                  {conditionInfo.icon} {conditionInfo.label}
+                </Badge>
+                {Object.keys(lockedMeals).length > 0 && (
+                  <Badge variant="secondary" className="text-[10px] h-5 px-1.5 gap-1 bg-amber-100 text-amber-700 border-amber-200">
+                    <Lock className="h-2.5 w-2.5" /> Đã khóa {Object.keys(lockedMeals).length} bữa
+                  </Badge>
+                )}
+              </div>
+              <Link href="/profile" className="shrink-0 text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1">
+                <Pencil className="h-2.5 w-2.5" /> Sửa
+              </Link>
             </div>
-          )}
+          </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <Button
@@ -203,114 +221,113 @@ export function NutritionRecommendations() {
         </CardContent>
       </Card>
 
-      {/* Meal plan result */}
-      <div className="space-y-3">
-        {/* Summary bar */}
-        <div className="flex items-center justify-between px-1">
-          <h3 className="text-sm font-semibold text-foreground">
-            {hasGenerated ? '✅ Thực đơn hôm nay' : '📋 Thực đơn mẫu'}
-            {condition !== 'none' && (
-              <Badge variant="default" className="ml-2 text-xs">
-                {conditionInfo.icon} {conditionInfo.label}
-              </Badge>
-            )}
-          </h3>
-          <span className="text-xs text-muted-foreground">
-            {totalKcal} / {targetKcalStr} kcal
-          </span>
-        </div>
-
-        {/* Macros summary */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-          {[
-            { label: 'Sắt', value: SAMPLE_MENU.totals.iron, unit: 'mg', target: 27, color: 'text-red-600', bg: 'bg-red-50' },
-            { label: 'Folate', value: SAMPLE_MENU.totals.folate, unit: 'mcg', target: 600, color: 'text-green-600', bg: 'bg-green-50' },
-            { label: 'Canxi', value: SAMPLE_MENU.totals.calcium, unit: 'mg', target: 1000, color: 'text-blue-600', bg: 'bg-blue-50' },
-            { label: 'DHA', value: SAMPLE_MENU.totals.dha, unit: 'mg', target: 200, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-            { label: 'Protein', value: SAMPLE_MENU.totals.protein, unit: 'g', target: 71, color: 'text-amber-600', bg: 'bg-amber-50' },
-            { label: 'Calo', value: SAMPLE_MENU.totals.kcal, unit: 'kcal', target: 2000, color: 'text-orange-600', bg: 'bg-orange-50' },
-          ].map((m) => {
-            const pct = Math.min(100, Math.round((m.value / m.target) * 100));
-            return (
-              <div key={m.label} className={`${m.bg} rounded-xl p-2 text-center`}>
-                <p className={`text-sm font-bold ${m.color}`}>{m.value}</p>
-                <p className="text-xs text-muted-foreground">{m.label}</p>
-                <div className="mt-1 h-1 w-full rounded-full bg-black/10">
-                  <div
-                    className={`h-1 rounded-full ${m.color.replace('text-', 'bg-')}`}
-                    style={{ width: `${pct}%` }}
-                  />
+      {/* Results Section */}
+      <div className="space-y-4">
+        {hasGenerated && activePlan ? (
+          <>
+            <div className="flex items-center justify-between px-1">
+              <h3 className="text-sm font-semibold text-primary flex items-center gap-2">
+                <Utensils className="h-4 w-4" />
+                Thực đơn gợi ý cho bạn
+              </h3>
+              {plans.length > 1 && (
+                <div className="flex gap-1">
+                  {plans.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActivePlanIdx(i)}
+                      className={`h-1.5 w-4 rounded-full transition-colors ${i === activePlanIdx ? 'bg-primary' : 'bg-muted'}`}
+                    />
+                  ))}
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">{pct}%</p>
-              </div>
-            );
-          })}
-        </div>
+              )}
+            </div>
 
-        {/* Meal list */}
-        <div className="space-y-2">
-          {SAMPLE_MENU.meals.map((meal) => {
-            const isExpanded = expandedMeal === meal.slot;
-            const mealKcal = meal.dishes.reduce((sum, d) => sum + d.kcal, 0);
-            return (
-              <Card key={meal.slot} className="overflow-hidden">
-                <button
-                  className="w-full text-left"
-                  onClick={() => setExpandedMeal(isExpanded ? null : meal.slot)}
-                >
-                  <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">{meal.icon}</span>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">{meal.slot}</p>
-                        <p className="text-xs text-muted-foreground">{meal.time} • {meal.dishes.length} món</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-muted-foreground">{mealKcal} kcal</span>
-                      {isExpanded ? (
-                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </div>
-                  </div>
-                </button>
+            <div className="space-y-3">
+              {MEAL_INFO.map((m) => {
+                const mealData = activePlan[m.key as keyof MealPlan];
+                const isExpanded = expandedMeal === m.key;
+                const isLocked = !!lockedMeals[m.key];
 
-                {isExpanded && (
-                  <div className="border-t border-border/40 px-4 pb-3 pt-2 space-y-2">
-                    {meal.dishes.map((dish, i) => (
-                      <div key={i} className="flex items-start justify-between gap-3 pb-1 border-b border-border/30 last:border-0 last:pb-0">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground">{dish.name}</p>
-                          <p className="text-xs text-muted-foreground mb-1.5">{dish.note}</p>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-6 text-[10px] px-2 rounded-full border-border/60 bg-muted/30 hover:bg-muted text-foreground/70 transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              window.open(`https://www.google.com/maps/search/mua+${encodeURIComponent(dish.name)}+gần+đây`, '_blank');
-                            }}
-                          >
-                            <MapPin className="h-3 w-3 mr-1" /> Tìm điểm bán gần đây
-                          </Button>
+                return (
+                  <Card key={m.key} className={`overflow-hidden transition-all ${isLocked ? 'border-amber-200 bg-amber-50/30' : ''}`}>
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <button
+                        className="flex-1 text-left flex items-center gap-3"
+                        onClick={() => setExpandedMeal(isExpanded ? null : m.key)}
+                      >
+                        <span className="text-xl">{m.icon}</span>
+                        <div>
+                          <p className="text-sm font-semibold flex items-center gap-2">
+                            {m.label}
+                            {isLocked && <Lock className="h-3 w-3 text-amber-500" />}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground">{m.time} • {mealData.dishes.length} món</p>
                         </div>
-                        <span className="text-xs font-medium text-muted-foreground shrink-0 mt-0.5">
-                          {dish.kcal} kcal
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Card>
-            );
-          })}
-        </div>
+                      </button>
 
-        <p className="text-xs text-muted-foreground text-center px-4">
-          * Thực đơn mẫu minh họa. AI sẽ sinh thực đơn cá nhân hóa theo tuần thai và bệnh lý thực tế của bạn.
-        </p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`h-8 w-8 ${isLocked ? 'text-amber-600' : 'text-muted-foreground'}`}
+                          onClick={() => toggleLock(m.key, mealData.stts)}
+                        >
+                          {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                        </Button>
+                        <button onClick={() => setExpandedMeal(isExpanded ? null : m.key)}>
+                          {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {isExpanded && (
+                      <div className="border-t border-border/40 p-4 bg-white/50">
+                        <div className="space-y-2">
+                          {mealData.dishes.length > 0 ? (
+                            mealData.dishes.map((dish, i) => (
+                              <div key={i} className="flex items-start gap-3 p-2 rounded-lg bg-white border border-border/40 shadow-sm">
+                                <Badge variant="secondary" className="mt-0.5 text-[9px] uppercase px-1 h-4 shrink-0">
+                                  {dish.dish_type.replace('món ', '')}
+                                </Badge>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium leading-tight">{dish.dish_name_vietnamese}</p>
+                                  <p className="text-[10px] text-muted-foreground mt-0.5">{dish.group_name_vietnamese}</p>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-xs text-muted-foreground italic text-center py-2">Không tìm thấy tổ hợp món phù hợp</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
+            </div>
+          </>
+        ) : !isGenerating && (
+          <div className="py-16 flex flex-col items-center justify-center text-center opacity-60">
+            <ChefHat className="h-12 w-12 text-muted-foreground mb-4" />
+            <h4 className="text-sm font-medium">Bấm &ldquo;Sinh thực đơn AI&rdquo; để bắt đầu</h4>
+            <p className="text-xs text-muted-foreground max-w-[240px] mt-1">
+              Gợi ý chi tiết cho 3 bữa ăn chính trong ngày.
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="p-4 rounded-xl bg-blue-50 border border-blue-100 flex gap-3">
+        <Info className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+        <div className="text-[11px] text-blue-700 leading-relaxed">
+          <p className="font-semibold mb-1">Mẹo sử dụng:</p>
+          <ul className="list-disc pl-3 space-y-1">
+            <li>Bấm biểu tượng 🔓 để <strong>khóa</strong> bữa ăn bạn ưng ý.</li>
+            <li>Bấm <strong>Cập nhật</strong> để AI tìm món mới cho các bữa chưa khóa.</li>
+            <li>Thực đơn đảm bảo ít nhất 1 món mặn cho bữa sáng; đầy đủ mặn, rau, canh, tinh bột cho bữa trưa và tối.</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
