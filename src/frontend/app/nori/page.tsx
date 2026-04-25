@@ -1,10 +1,12 @@
 'use client';
 
 import { MainLayout } from '@/components/layouts/main-layout';
+import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import { Send, Loader2, Sparkles, Apple, ChefHat, HeartPulse, Baby } from 'lucide-react';
+import { Send, Loader2, Sparkles, Apple, ChefHat, HeartPulse, Baby, Stethoscope, Phone, Star, Clock } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 
 interface Message {
   id: string;
@@ -18,12 +20,48 @@ interface ChatHistory {
   content: string;
 }
 
+const MOCK_EXPERTS = [
+  {
+    id: 1,
+    name: 'BS. CKII Nguyễn Thị Hương',
+    title: 'Chuyên khoa Sản & Dinh dưỡng',
+    hospital: 'Bệnh viện Từ Dũ',
+    rating: 4.9,
+    reviews: 128,
+    avatar: '👩‍⚕️',
+    price: '300.000đ/lần',
+    available: 'Hôm nay, 14:00 - 16:00'
+  },
+  {
+    id: 2,
+    name: 'ThS. BS. Trần Văn Minh',
+    title: 'Trưởng khoa Dinh dưỡng',
+    hospital: 'Viện Dinh dưỡng Quốc gia',
+    rating: 4.8,
+    reviews: 85,
+    avatar: '👨‍⚕️',
+    price: '400.000đ/lần',
+    available: 'Ngày mai, 09:00 - 11:30'
+  },
+  {
+    id: 3,
+    name: 'Phòng khám Sản khoa Hạnh Phúc',
+    title: 'Đa khoa chuyên sâu',
+    hospital: 'Quận 1, TP.HCM',
+    rating: 4.7,
+    reviews: 342,
+    avatar: '🏥',
+    price: 'Từ 250.000đ',
+    available: 'Mở cửa 24/7'
+  }
+];
+
 // PRD-aligned quick suggestions — pregnancy pain moments
 const quickSuggestions = [
   { icon: Apple, text: 'Tiểu đường thai kỳ nên ăn gì hôm nay?' },
   { icon: HeartPulse, text: 'Thiếu sắt nên ăn gì để bổ sung?' },
   { icon: ChefHat, text: 'Tuần thai này cần vi chất gì thêm?' },
-  { icon: Baby, text: 'Thực phẩm nào không ăn được khi mang thai?' },
+  { icon: Stethoscope, text: 'Tôi muốn đặt lịch khám bác sĩ' },
 ];
 
 const BOT_FRAMES = ['/bot_1.PNG', '/bot_2.PNG', '/bot_3.PNG'];
@@ -201,17 +239,77 @@ export default function NoriPage() {
       return `Ốm nghén tam cá nguyệt 1 — rất phổ biến! 🌿\n\nTips giảm buồn nôn:\n\n🍘 Ăn trước khi rời giường: bánh quy nhạt, bánh mì khô\n🍋 Ngửi hoặc uống nước chanh loãng\n🫚 Tránh thức ăn nhiều dầu mỡ và mùi nồng\n⏰ Ăn ít hơn nhưng thường xuyên hơn (5–6 bữa nhỏ)\n💧 Uống nước từng ngụm nhỏ, tránh uống nhiều một lúc\n🫚 Gừng: trà gừng, kẹo gừng giúp giảm buồn nôn\n\nNếu nôn nhiều hơn 3–4 lần/ngày hoặc không giữ được thức ăn, cần gặp bác sĩ để được hỗ trợ thêm nhé.`;
     }
 
-    return `Cảm ơn câu hỏi của mẹ! 😊\n\nTôi có thể giúp về:\n• 🍚 Thực đơn theo tuần thai và bệnh lý\n• 🩸 Thực phẩm bổ sung sắt/folate/canxi/DHA\n• ✅ Thực phẩm được/không được khi mang thai\n• 📋 Giải thích chỉ số xét nghiệm thai kỳ\n\nHãy hỏi tôi bất cứ điều gì nhé!`;
+    if (q.includes('bác sĩ') || q.includes('phòng khám') || q.includes('chuyên gia') || q.includes('đặt lịch')) {
+      return `NestAI hiện đang hợp tác với các phòng khám và chuyên gia dinh dưỡng thai kỳ hàng đầu! 🏥\n\nBạn có thể nhấn vào nút **"Gặp chuyên gia"** ở phía trên màn hình để đặt lịch tư vấn trực tuyến (Telehealth) hoặc khám trực tiếp tại phòng khám gần nhất.\n\nTrong lúc chờ đợi, bạn có câu hỏi nào về dinh dưỡng để tôi hỗ trợ thêm không?`;
+    }
+
+    return `Cảm ơn câu hỏi của mẹ! 😊\n\nTôi có thể giúp về:\n• 🍚 Thực đơn theo tuần thai và bệnh lý\n• 🩸 Thực phẩm bổ sung sắt/folate/canxi/DHA\n• 👨‍⚕️ Kết nối bác sĩ/chuyên gia dinh dưỡng\n• 📋 Giải thích chỉ số xét nghiệm thai kỳ\n\nHãy hỏi tôi bất cứ điều gì nhé!`;
   };
 
   if (!user || user.role === 'admin') return null;
 
   return (
     <MainLayout>
-      <div className="space-y-4 h-full">
+      <div className="flex flex-col gap-4 h-[calc(100dvh-12rem)] md:h-[calc(100dvh-9rem)] min-h-[600px]">
         {/* Chat Window */}
-        <div className="rounded-2xl border border-border/50 bg-card shadow-card flex flex-col overflow-hidden"
-          style={{ height: 'calc(100vh - 300px)', minHeight: '420px' }}>
+        <div className="rounded-2xl border border-border/50 bg-card shadow-card flex flex-col overflow-hidden flex-1">
+          
+          {/* Action Header - Expert Connection */}
+          <div className="bg-primary/5 border-b border-primary/10 px-4 py-2.5 flex items-center justify-between shadow-sm z-10">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                <Stethoscope className="h-3.5 w-3.5 text-primary" />
+              </div>
+              <span className="text-xs font-semibold text-primary/90">
+                Cần tư vấn chuyên sâu?
+              </span>
+            </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="h-7 text-xs px-3 rounded-full shadow-sm bg-primary hover:bg-primary/90"
+                >
+                  <Phone className="h-3 w-3 mr-1.5" /> Gặp chuyên gia
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                <DialogHeader>
+                  <DialogTitle className="text-slate-900 dark:text-slate-100">Đặt khám chuyên gia / phòng khám</DialogTitle>
+                  <DialogDescription className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed text-left">
+                    Chọn chuyên gia hoặc phòng khám phù hợp với nhu cầu của bạn để được tư vấn trực tiếp (Chức năng đang phát triển).
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  <div className="space-y-3">
+                    {MOCK_EXPERTS.map(expert => (
+                      <div key={expert.id} className="flex items-start gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-primary/40 transition-colors cursor-pointer bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50 shadow-sm">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl shrink-0">
+                          {expert.avatar}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{expert.name}</h4>
+                          <p className="text-xs text-slate-600 dark:text-slate-400 truncate mb-1.5">{expert.title} • {expert.hospital}</p>
+                          <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-600 dark:text-slate-400">
+                            <span className="flex items-center gap-1 text-amber-600 dark:text-amber-500 font-medium bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded-md border border-amber-100 dark:border-amber-500/20">
+                              <Star className="h-3 w-3 fill-amber-500 text-amber-500" /> {expert.rating} ({expert.reviews})
+                            </span>
+                            <span className="flex items-center gap-1 text-primary font-medium">
+                              <Clock className="h-3 w-3" /> {expert.available}
+                            </span>
+                          </div>
+                        </div>
+                        <Button size="sm" variant="outline" className="h-7 text-xs px-2.5 shrink-0 border-primary/30 text-primary hover:bg-primary hover:text-white" onClick={(e) => { e.stopPropagation(); alert('Đã ghi nhận lịch hẹn mô phỏng.'); }}>
+                          Chọn
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">

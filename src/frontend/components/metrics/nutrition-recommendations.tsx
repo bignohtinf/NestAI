@@ -5,7 +5,7 @@ import { useApp } from '@/lib/context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, RefreshCw, Utensils, ChevronDown, ChevronUp, Info, Pencil, Camera } from 'lucide-react';
+import { Sparkles, RefreshCw, Utensils, ChevronDown, ChevronUp, Info, Pencil, Camera, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { SmartScan } from '@/components/metrics/smart-scan';
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -280,12 +280,23 @@ export function NutritionRecommendations() {
                 {isExpanded && (
                   <div className="border-t border-border/40 px-4 pb-3 pt-2 space-y-2">
                     {meal.dishes.map((dish, i) => (
-                      <div key={i} className="flex items-start justify-between gap-3">
+                      <div key={i} className="flex items-start justify-between gap-3 pb-1 border-b border-border/30 last:border-0 last:pb-0">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground">{dish.name}</p>
-                          <p className="text-xs text-muted-foreground">{dish.note}</p>
+                          <p className="text-xs text-muted-foreground mb-1.5">{dish.note}</p>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-6 text-[10px] px-2 rounded-full border-border/60 bg-muted/30 hover:bg-muted text-foreground/70 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(`https://www.google.com/maps/search/mua+${encodeURIComponent(dish.name)}+gần+đây`, '_blank');
+                            }}
+                          >
+                            <MapPin className="h-3 w-3 mr-1" /> Tìm điểm bán gần đây
+                          </Button>
                         </div>
-                        <span className="text-xs font-medium text-muted-foreground shrink-0">
+                        <span className="text-xs font-medium text-muted-foreground shrink-0 mt-0.5">
                           {dish.kcal} kcal
                         </span>
                       </div>
