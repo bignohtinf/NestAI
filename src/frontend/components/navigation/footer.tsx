@@ -2,11 +2,17 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
 
 export function Footer({ className }: { className?: string }) {
   const currentYear = new Date().getFullYear();
+  const pathname = usePathname();
+
+  if (pathname !== '/') {
+    return null;
+  }
 
   return (
     <footer className={cn('border-t border-border/50 bg-card/60 backdrop-blur', className)}>

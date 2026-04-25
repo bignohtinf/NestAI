@@ -16,7 +16,7 @@ interface BottomNavItem {
 
 const MOTHER_NAV: BottomNavItem[] = [
   { href: '/', label: 'Trang chủ', icon: Home, roles: ['mother'] },
-  { href: '/nutrition-scan?tab=recommendations', label: 'Thực đơn', icon: Utensils, roles: ['mother'] },
+  { href: '/nutrition-scan', label: 'Thực đơn', icon: Utensils, roles: ['mother'] },
   { href: '/nori', label: 'Nori AI', icon: MessageCircle, roles: ['mother'] },
   { href: '/baby-journey', label: 'Hành trình', icon: Baby, roles: ['mother'] },
   { href: '/profile', label: 'Hồ sơ', icon: User, roles: ['mother'] },
