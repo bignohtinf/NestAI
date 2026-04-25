@@ -43,3 +43,5 @@ ehthumbs.db
 # AI logs — tracked structure, ignored content
 #.ai-log/*.jsonl
 
+data/
+

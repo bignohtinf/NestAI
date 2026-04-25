@@ -209,6 +209,23 @@
   }
 }
 
+@keyframes landingCharIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.4em) rotateX(-30deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0deg);
+  }
+}
+
+.landing-char-in {
+  animation: landingCharIn 0.4s ease forwards;
+  opacity: 0;
+  display: inline-block;
+}
+
 @layer utilities {
   /* Warm palette variables */
   :root {

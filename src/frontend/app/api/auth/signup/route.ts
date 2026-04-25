@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin, supabaseService } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,22 +42,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create user record in users table
-    const { error: userError } = await supabaseAdmin.createUser(
-      data.user.id,
-      email,
-      fullName,
-      phone,
-      'mother' // Default role is mother
-    );
+    // Create user record in users table using service role to bypass RLS
+    const adminClient = supabaseService;
+    if (!adminClient) {
+      console.error('Missing SUPABASE_SECRET_KEY — cannot insert user record');
+      return NextResponse.json(
+        { message: 'Cấu hình server thiếu service key' },
+        { status: 500 }
+      );
+    }
+
+    const { error: userError } = await adminClient
+      .from('users')
+      .insert([{ id: data.user.id, email, full_name: fullName, phone, role: 'mother' }]);
 
     if (userError) {
       console.error('Error creating user record:', JSON.stringify(userError, null, 2));
       return NextResponse.json(
-        { 
-          message: 'Đã xảy ra lỗi khi lưu thông tin người dùng',
-          error: userError
-        },
+        { message: 'Đã xảy ra lỗi khi lưu thông tin người dùng' },
         { status: 400 }
       );
     }

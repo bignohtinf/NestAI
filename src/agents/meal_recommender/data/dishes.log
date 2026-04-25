@@ -1,0 +1,8 @@
+2026-04-24 22:41:24,891 [ERROR] Future exception was never retrieved
+future: <Future finished exception=TargetClosedError('Target page, context or browser has been closed')>
+playwright._impl._errors.TargetClosedError: Target page, context or browser has been closed
+2026-04-24 22:41:24,892 [ERROR] Future exception was never retrieved
+future: <Future finished exception=TargetClosedError('Target page, context or browser has been closed')>
+playwright._impl._errors.TargetClosedError: Target page, context or browser has been closed
+2026-04-24 22:59:46,294 [INFO] Saved 1251 dish rows to /Users/chuminhquan/ai20k/A20-App-005/src/agents/optimization-food/data/raw/dishes/raw_dish_table.csv
+2026-04-24 22:59:46,297 [INFO] Saved 1252 nutrition rows to /Users/chuminhquan/ai20k/A20-App-005/src/agents/optimization-food/data/raw/dishes/raw_nutrition_table.csv
