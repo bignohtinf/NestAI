@@ -23,6 +23,17 @@ export interface UserData {
   foodPreference?: string;   // PRD: food restriction preference
 }
 
+export function computeGestationWeeks(dueDate: string | null | undefined): number | undefined {
+  if (!dueDate) return undefined;
+  const due = new Date(dueDate);
+  const today = new Date();
+  const daysRemaining = Math.ceil(
+    (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+  );
+  const weeks = 40 - Math.round(daysRemaining / 7);
+  return Math.min(44, Math.max(1, weeks));
+}
+
 export interface Quest {
   id: string;
   title: string;
