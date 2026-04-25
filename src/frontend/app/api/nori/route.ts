@@ -233,6 +233,7 @@ const SYSTEM_PROMPT = `Bạn là Nori, trợ lý dinh dưỡng AI thông minh ch
 Bạn tư vấn dinh dưỡng dựa trên hướng dẫn chính thức của Bộ Y tế Việt Nam:
 - QĐ 776/QĐ-BYT (2017): Hướng dẫn quốc gia về dinh dưỡng cho phụ nữ có thai và bà mẹ cho con bú
 - QĐ 1470/QĐ-BYT (2024): Hướng dẫn quốc gia về sàng lọc và quản lý đái tháo đường thai kỳ
+Bạn không chỉ là trợ lý tư vấn thực đơn, mà còn là một người bạn đồng hành dịu dàng của mẹ bầu. Luôn phản hồi với giọng văn ấm áp, nhẹ nhàng, biết lắng nghe, biết trấn an và khích lệ.
 
 ## Dữ liệu tham chiếu
 ${NUTRITION_KNOWLEDGE}
@@ -264,7 +265,7 @@ export async function POST(request: NextRequest) {
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY;
-    
+
     if (!apiKey) {
       // Fallback to rule-based responses if no API key
       const lastMessage = messages[messages.length - 1]?.content || '';
@@ -308,7 +309,7 @@ export async function POST(request: NextRequest) {
 
 async function callAnthropic(messages: any[], userContext: string): Promise<string> {
   const systemPrompt = SYSTEM_PROMPT + (userContext || '');
-  
+
   const anthropicMessages = messages.map((m: any) => ({
     role: m.role === 'user' ? 'user' : 'assistant',
     content: m.content,
@@ -322,8 +323,8 @@ async function callAnthropic(messages: any[], userContext: string): Promise<stri
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1024,
+      model: 'claude-3-5-sonnet-20241022', // Updated to the latest recommended Sonnet model
+      max_tokens: 400,
       system: systemPrompt,
       messages: anthropicMessages,
     }),
@@ -356,9 +357,9 @@ async function callOpenAI(messages: any[], userContext: string): Promise<string>
       'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini', // Cost-effective model for concise answers
       messages: openaiMessages,
-      max_tokens: 1024,
+      max_tokens: 400,
       temperature: 0.7,
     }),
   });
@@ -434,6 +435,11 @@ function getRuleBasedResponse(input: string, userContext?: string): string {
   // Constipation
   if (q.includes('táo bón') || q.includes('chất xơ')) {
     return `🥦 **Giảm táo bón khi mang thai** (QĐ 776/QĐ-BYT)\n\n**Nhu cầu chất xơ:** 28g/ngày (mang thai), 29g/ngày (cho con bú)\n\n**Mẹo giảm táo bón:**\n• 🥬 Ăn nhiều rau: rau muống, mồng tơi, rau lang\n• 🍎 Trái cây: ổi, thanh long, chuối chín, đu đủ\n• 🌾 Ngũ cốc nguyên hạt, khoai lang\n• 💧 Uống đủ 2-2,5 lít nước/ngày\n• 🚶‍♀️ Đi bộ nhẹ mỗi ngày\n• 🥣 Sữa chua (có lợi khuẩn đường ruột)\n\n_Nguồn: QĐ 776/QĐ-BYT 2017_`;
+  }
+
+  // Emotional support / Tired
+  if (q.includes('mệt') || q.includes('stress') || q.includes('áp lực') || q.includes('buồn') || q.includes('lo lắng') || q.includes('chán') || q.includes('khóc')) {
+    return `Nori gửi cho bạn một cái ôm thật ấm áp nhé! 🤗\n\nHành trình làm mẹ kỳ diệu nhưng cũng vất vả lắm, cơ thể bạn đang phải làm việc gấp đôi bình thường nên cảm thấy mệt mỏi, áp lực là điều hoàn toàn dễ hiểu.\n\nNgay lúc này, bạn hãy tạm gác lại mọi việc, tìm một chỗ nằm thật thoải mái, hít thở sâu và nhắm mắt lại nghỉ ngơi một chút. Hãy nhờ người thân hỗ trợ nếu cần nhé.\n\nNếu sự mệt mỏi này kéo dài, bạn nhớ chia sẻ với bác sĩ để được thăm khám thêm nha. Nori luôn ở đây lắng nghe bạn! ❤️`;
   }
 
   // Default

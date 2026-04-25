@@ -5,16 +5,10 @@ import { useApp } from '@/lib/context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, RefreshCw, Utensils, ChevronDown, ChevronUp, Info, Pencil, Loader2, ChefHat, Lock, Unlock } from 'lucide-react';
+import { Sparkles, RefreshCw, Utensils, ChevronDown, ChevronUp, Info, Pencil, Camera } from 'lucide-react';
 import Link from 'next/link';
-import { nutritionApi } from '@/lib/api';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SmartScan } from '@/components/metrics/smart-scan';
+import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Label maps
 const CONDITION_LABELS: Record<string, { label: string; icon: string }> = {
@@ -139,9 +133,6 @@ export function NutritionRecommendations() {
             <Sparkles className="h-4 w-4 text-primary" />
             Sinh thực đơn cả ngày
           </CardTitle>
-          <CardDescription>
-            Tự động cân đối dinh dưỡng cho Sáng, Trưa và Tối
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-3">
@@ -150,18 +141,17 @@ export function NutritionRecommendations() {
               {isProfilesLoading ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
               ) : (
-                <Select value={selectedProfileStt} onValueChange={setSelectedProfileStt}>
-                  <SelectTrigger className="h-8 text-xs bg-muted/50">
-                    <SelectValue placeholder="Chọn hồ sơ" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {profiles.filter(p => p.profile["Tình trạng sinh lý/Physiological condition"]).map((p) => (
-                      <SelectItem key={p.stt} value={p.stt.toString()} className="text-xs">
-                        {p.profile["Tình trạng sinh lý/Physiological condition"]} ({p.profile["Nhóm tuổi/Age group"]})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Badge variant="warning" className="text-xs shrink-0">
+                  ⚠ Chưa có tuần thai
+                </Badge>
+              )}
+              <Badge variant="default" className="text-xs gap-1 shrink-0">
+                {conditionInfo.icon} {conditionInfo.label}
+              </Badge>
+              {gestationWeeks != null && (
+                <span className="text-xs text-muted-foreground hidden sm:inline">
+                  {TRIMESTER_INFO(gestationWeeks)}
+                </span>
               )}
             </div>
 
@@ -182,24 +172,52 @@ export function NutritionRecommendations() {
             </div>
           </div>
 
-          <Button
-            onClick={handleGenerate}
-            disabled={isGenerating || !selectedProfileStt}
-            size="lg"
-            className="w-full gap-2 shadow-sm"
-          >
-            {isGenerating ? (
-              <>
-                <RefreshCw className="h-4 w-4 animate-spin" />
-                AI đang tính toán...
-              </>
-            ) : (
-              <>
-                <ChefHat className="h-4 w-4" />
-                {hasGenerated ? 'Cập nhật các bữa chưa khóa' : 'Sinh thực đơn AI'}
-              </>
-            )}
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <Button
+              onClick={handleGenerate}
+              disabled={isGenerating}
+              className="w-full sm:flex-1 gap-2"
+            >
+              {isGenerating ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  Đang tạo...
+                </>
+              ) : (
+                <>
+                  <Utensils className="h-4 w-4" />
+                  {hasGenerated ? 'Tạo lại' : 'Tạo thực đơn'}
+                </>
+              )}
+            </Button>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="secondary" className="w-full sm:w-auto gap-2 shrink-0 border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10">
+                  <Camera className="h-4 w-4" />
+                  Quét ảnh bữa ăn
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Quét ảnh bữa ăn</DialogTitle>
+                </DialogHeader>
+                <div className="py-2">
+                  <SmartScan />
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {!hasGenerated && !isGenerating && (
+            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+              <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-400" />
+              <span>
+                Thực đơn mẫu bên dưới — bấm &ldquo;Tạo thực đơn&rdquo; để AI sinh thực đơn
+                theo đúng tuần thai và bệnh lý của bạn.
+              </span>
+            </div>
+          )}
         </CardContent>
       </Card>
 
