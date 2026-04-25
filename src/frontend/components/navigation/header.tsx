@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
 import { LogOut, Menu } from 'lucide-react';
@@ -120,3 +120,4 @@ export function Header({ onMenuClick }: HeaderProps) {
     </header>
   );
 }
+

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ReactNode, useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { Header } from '@/components/navigation/header';
 import { Sidebar } from '@/components/navigation/sidebar';
 import { Footer } from '@/components/navigation/footer';

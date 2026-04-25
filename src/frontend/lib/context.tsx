@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase, supabaseAdmin } from './supabase';
 
 export interface UserData {
@@ -50,6 +51,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
   const [quests, setQuests] = useState<Quest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -140,21 +142,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, _password: string) => {
     setIsLoading(true);
     try {
-      // HARDCODED: accept any credentials for testing
-      const name = email.split('@')[0] || 'User';
-      setUser({
-        id: 'test-' + Date.now(),
-        email,
-        name,
-        role: 'mother',
-      });
+      const { data, error } = await supabaseAdmin.signIn(email, password);
+      if (error) throw error;
+
+      if (data?.user) {
+        const { data: userData, error: userError } = await supabaseAdmin.getUser(data.user.id);
+        if (userError || !userData) throw new Error('Không tìm thấy thông tin người dùng');
+
+        setUser({
+          id: userData.id,
+          email: userData.email,
+          name: userData.full_name || 'User',
+          role: userData.role || 'mother',
+        });
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
   const logout = async () => {
-    // Update UI immediately, then clear auth session in Supabase/storage.
     setUser(null);
     setQuests([]);
 
@@ -163,11 +173,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
 
     if (typeof window !== 'undefined') {
-      // Remove any persisted Supabase auth keys to avoid stale restored sessions.
       Object.keys(localStorage)
         .filter((key) => key.startsWith('sb-'))
         .forEach((key) => localStorage.removeItem(key));
     }
+
+    router.push('/');
   };
 
   const addPoints = (points: number) => {
