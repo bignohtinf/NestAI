@@ -122,22 +122,20 @@ export function MomDashboard() {
       )}
 
       {/* Main Action Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <Link href="/nutrition-scan" className="block group">
           <Card className="h-full border-0 bg-gradient-to-br from-primary/10 to-primary/5 shadow-sm hover:shadow-md transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-                <Sparkles className="h-6 w-6 text-primary" />
+            <CardContent className="p-4 flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl sm:rounded-2xl shadow-sm flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">
-                Thực đơn AI
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Gợi ý món ăn chuẩn y khoa cho mẹ bầu
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary" className="bg-white/60">Cá nhân hóa</Badge>
-                <Badge variant="secondary" className="bg-white/60">Dễ nấu</Badge>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm sm:text-base font-bold text-foreground mb-0.5 truncate">
+                  Thực đơn AI
+                </h3>
+                <p className="text-xs text-muted-foreground truncate">
+                  Gợi ý món ăn chuẩn y khoa cho mẹ bầu
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -145,19 +143,17 @@ export function MomDashboard() {
 
         <Link href="/nutrition-scan" className="block group">
           <Card className="h-full border-0 bg-gradient-to-br from-emerald-50 to-emerald-100/50 shadow-sm hover:shadow-md transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-                <Camera className="h-6 w-6 text-emerald-600" />
+            <CardContent className="p-4 flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl sm:rounded-2xl shadow-sm flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Camera className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">
-                Quét bữa ăn
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Phân tích dinh dưỡng từ ảnh chụp
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary" className="bg-white/60 text-emerald-700">Nhanh chóng</Badge>
-                <Badge variant="secondary" className="bg-white/60 text-emerald-700">Tự động</Badge>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm sm:text-base font-bold text-foreground mb-0.5 truncate">
+                  Quét bữa ăn
+                </h3>
+                <p className="text-xs text-muted-foreground truncate">
+                  Phân tích dinh dưỡng từ ảnh chụp
+                </p>
               </div>
             </CardContent>
           </Card>
