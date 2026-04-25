@@ -5,7 +5,7 @@ import { useApp } from '@/lib/context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, RefreshCw, Utensils, ChevronDown, ChevronUp, Info, Pencil, Camera } from 'lucide-react';
+import { Sparkles, RefreshCw, Utensils, ChevronDown, ChevronUp, Info, Pencil, Camera, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { SmartScan } from '@/components/metrics/smart-scan';
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -37,13 +37,13 @@ export function NutritionRecommendations() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
   const [expandedMeal, setExpandedMeal] = useState<string | null>('lunch');
-  
+
   const [profiles, setProfiles] = useState<any[]>([]);
   const [selectedProfileStt, setSelectedProfileStt] = useState<string>("");
   const [plans, setPlans] = useState<MealPlan[]>([]);
   const [activePlanIdx, setActivePlanIdx] = useState(0);
   const [isProfilesLoading, setIsProfilesLoading] = useState(true);
-  
+
   // Locking logic
   const [lockedMeals, setLockedMeals] = useState<Record<string, number[]>>({});
 
@@ -57,23 +57,23 @@ export function NutritionRecommendations() {
       try {
         const response = await nutritionApi.getProfiles();
         setProfiles(response.profiles);
-        
+
         if (response.profiles.length > 0) {
           let matchedStt = response.profiles[0].stt.toString();
-          
+
           if (gestationWeeks != null) {
-            const trimesterLabel = gestationWeeks < 13 
-              ? "Phụ nữ có thai 3 tháng đầu" 
-              : gestationWeeks < 28 
-                ? "Phụ nữ có thai 3 tháng giữa" 
+            const trimesterLabel = gestationWeeks < 13
+              ? "Phụ nữ có thai 3 tháng đầu"
+              : gestationWeeks < 28
+                ? "Phụ nữ có thai 3 tháng giữa"
                 : "Phụ nữ có thai 3 tháng cuối";
-            
-            const match = response.profiles.find((p: any) => 
+
+            const match = response.profiles.find((p: any) =>
               p.profile["Tình trạng sinh lý/Physiological condition"] === trimesterLabel
             );
             if (match) matchedStt = match.stt.toString();
           }
-          
+
           setSelectedProfileStt(matchedStt);
         }
       } catch (error) {
@@ -87,7 +87,7 @@ export function NutritionRecommendations() {
 
   const handleGenerate = async () => {
     if (!selectedProfileStt) return;
-    
+
     setIsGenerating(true);
     try {
       const response = await nutritionApi.getFullDayRecommendations(
@@ -233,8 +233,8 @@ export function NutritionRecommendations() {
               {plans.length > 1 && (
                 <div className="flex gap-1">
                   {plans.map((_, i) => (
-                    <button 
-                      key={i} 
+                    <button
+                      key={i}
                       onClick={() => setActivePlanIdx(i)}
                       className={`h-1.5 w-4 rounded-full transition-colors ${i === activePlanIdx ? 'bg-primary' : 'bg-muted'}`}
                     />
@@ -248,7 +248,7 @@ export function NutritionRecommendations() {
                 const mealData = activePlan[m.key as keyof MealPlan];
                 const isExpanded = expandedMeal === m.key;
                 const isLocked = !!lockedMeals[m.key];
-                
+
                 return (
                   <Card key={m.key} className={`overflow-hidden transition-all ${isLocked ? 'border-amber-200 bg-amber-50/30' : ''}`}>
                     <div className="flex items-center justify-between px-4 py-3">
@@ -265,11 +265,11 @@ export function NutritionRecommendations() {
                           <p className="text-[11px] text-muted-foreground">{m.time} • {mealData.dishes.length} món</p>
                         </div>
                       </button>
-                      
+
                       <div className="flex items-center gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           className={`h-8 w-8 ${isLocked ? 'text-amber-600' : 'text-muted-foreground'}`}
                           onClick={() => toggleLock(m.key, mealData.stts)}
                         >
