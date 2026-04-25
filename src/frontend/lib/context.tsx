@@ -139,7 +139,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const login = async (email: string, _password: string) => {
+  const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
       const { data, error } = await supabaseAdmin.signIn(email, password);

@@ -10,3 +10,5 @@ httpx==0.25.2
 pillow==10.1.0
 python-multipart==0.0.6
 supabase==2.4.1
+ortools>=9.8.0
+pandas>=2.0.0
