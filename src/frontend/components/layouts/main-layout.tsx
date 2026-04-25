@@ -16,20 +16,20 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <OnboardingGuard>
-      <div className="flex min-h-screen flex-col bg-background">
-        <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-        <div className="flex flex-1 overflow-hidden">
-          {/* Sidebar - Left column (cols 1-2) */}
-          <Sidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
-
-          {/* Main content - Right columns (cols 3-12) */}
-          <main className="flex-1 overflow-y-auto min-w-0">
-            <div className="w-full px-3 py-4 sm:px-4 sm:py-6 md:px-6 pb-24 md:pb-6">
+      <div className="flex h-screen overflow-hidden bg-background">
+        <Sidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
+        
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+          <Header onMenuClick={() => setSidebarOpen(true)} />
+          
+          <main className="flex-1 overflow-y-auto w-full">
+            <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8 pb-24 md:pb-8">
               {children}
             </div>
+            <Footer className="hidden md:block mt-auto" />
           </main>
         </div>
-        <Footer className="hidden md:block" />
+
         <MobileBottomNav />
       </div>
     </OnboardingGuard>

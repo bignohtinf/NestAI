@@ -5,8 +5,10 @@ import { useApp } from '@/lib/context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, RefreshCw, Utensils, ChevronDown, ChevronUp, Info, Pencil } from 'lucide-react';
+import { Sparkles, RefreshCw, Utensils, ChevronDown, ChevronUp, Info, Pencil, Camera } from 'lucide-react';
 import Link from 'next/link';
+import { SmartScan } from '@/components/metrics/smart-scan';
+import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Label maps
 const CONDITION_LABELS: Record<string, { label: string; icon: string }> = {
@@ -105,9 +107,6 @@ export function NutritionRecommendations() {
             <Sparkles className="h-4 w-4 text-primary" />
             Sinh thực đơn hôm nay
           </CardTitle>
-          <CardDescription>
-            AI gợi ý món Việt phù hợp với hồ sơ thai kỳ của bạn
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Profile summary row — compact, read-only */}
@@ -118,11 +117,11 @@ export function NutritionRecommendations() {
                   🤰 Tuần {gestationWeeks}
                 </Badge>
               ) : (
-                <Badge variant="secondary" className="text-xs shrink-0">
+                <Badge variant="warning" className="text-xs shrink-0">
                   ⚠ Chưa có tuần thai
                 </Badge>
               )}
-              <Badge variant="secondary" className="text-xs gap-1 shrink-0">
+              <Badge variant="default" className="text-xs gap-1 shrink-0">
                 {conditionInfo.icon} {conditionInfo.label}
               </Badge>
               {gestationWeeks != null && (
@@ -155,24 +154,42 @@ export function NutritionRecommendations() {
             </div>
           )}
 
-          <Button
-            onClick={handleGenerate}
-            disabled={isGenerating}
-            size="lg"
-            className="w-full gap-2"
-          >
-            {isGenerating ? (
-              <>
-                <RefreshCw className="h-4 w-4 animate-spin" />
-                AI đang tạo thực đơn...
-              </>
-            ) : (
-              <>
-                <Utensils className="h-4 w-4" />
-                {hasGenerated ? 'Tạo lại thực đơn' : 'Tạo thực đơn hôm nay'}
-              </>
-            )}
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <Button
+              onClick={handleGenerate}
+              disabled={isGenerating}
+              className="w-full sm:flex-1 gap-2"
+            >
+              {isGenerating ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  Đang tạo...
+                </>
+              ) : (
+                <>
+                  <Utensils className="h-4 w-4" />
+                  {hasGenerated ? 'Tạo lại' : 'Tạo thực đơn'}
+                </>
+              )}
+            </Button>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="secondary" className="w-full sm:w-auto gap-2 shrink-0 border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10">
+                  <Camera className="h-4 w-4" />
+                  Quét ảnh bữa ăn
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Quét ảnh bữa ăn</DialogTitle>
+                </DialogHeader>
+                <div className="py-2">
+                  <SmartScan />
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
 
           {!hasGenerated && !isGenerating && (
             <div className="flex items-start gap-2 text-xs text-muted-foreground">
