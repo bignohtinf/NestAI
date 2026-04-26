@@ -9,9 +9,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MainLayout } from '@/components/layouts/main-layout';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AlertCircle, CheckCircle, Plus, Trash2, Heart, Mail, Phone, Stethoscope, Sparkles } from 'lucide-react';
+import { AlertCircle, CheckCircle, Plus, Trash2, Heart, Mail, Phone, Sparkles } from 'lucide-react';
 
-// Suspense boundary required by Next.js when using useSearchParams()
+const PREDEFINED_ALLERGIES = [
+  'Hải sản', 'Đậu phộng', 'Các loại hạt', 'Sữa bò', 'Trứng', 'Đậu nành', 'Lúa mì (Gluten)'
+];
+
+const PREDEFINED_DISLIKES = [
+  'Đồ cay', 'Đồ sống/tái', 'Hành/Tỏi', 'Rau mùi', 'Đồ nhiều dầu mỡ', 'Đồ quá ngọt'
+];
 export default function ProfilePage() {
   return (
     <Suspense fallback={<MainLayout><div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" /></div></MainLayout>}>
@@ -24,13 +30,18 @@ function ProfilePageContent() {
   const { user, isLoading, fetchUserData } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isOnboarding = searchParams.get('onboarding') === '1';
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [babies, setBabies] = useState<any[]>([]);
   const [loadingBabies, setLoadingBabies] = useState(true);
+  const [isAddingBaby, setIsAddingBaby] = useState(false);
 
   const [phone, setPhone] = useState('');
+  const [dob, setDob] = useState('');
+  const [allergies, setAllergies] = useState<string[]>([]);
+  const [dislikes, setDislikes] = useState<string[]>([]);
+  const [initialData, setInitialData] = useState({ phone: '', dob: '', allergies: [] as string[], dislikes: [] as string[] });
+
   const [activePartnership, setActivePartnership] = useState<{
     id: string;
     partner: { full_name: string; email: string; phone?: string; role: string } | null;
@@ -64,7 +75,18 @@ function ProfilePageContent() {
     if (!user?.id) return;
     fetch(`/api/users/me?user_id=${user.id}`)
       .then((r) => r.json())
-      .then((data) => { if (data.phone) setPhone(data.phone); })
+      .then((data) => { 
+        if (data.phone) setPhone(data.phone); 
+        if (data.dob) setDob(data.dob);
+        if (data.allergies) setAllergies(data.allergies);
+        if (data.dislikes) setDislikes(data.dislikes);
+        setInitialData({
+          phone: data.phone || '',
+          dob: data.dob || '',
+          allergies: data.allergies || [],
+          dislikes: data.dislikes || []
+        });
+      })
       .catch(() => {});
   }, [user?.id]);
 
@@ -126,8 +148,15 @@ function ProfilePageContent() {
     }));
   };
 
+  const isDirty = 
+    phone !== initialData.phone ||
+    dob !== initialData.dob ||
+    JSON.stringify([...allergies].sort()) !== JSON.stringify([...initialData.allergies].sort()) ||
+    JSON.stringify([...dislikes].sort()) !== JSON.stringify([...initialData.dislikes].sort());
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isDirty) return;
     setLoading(true);
     setMessage(null);
 
@@ -135,14 +164,16 @@ function ProfilePageContent() {
       const response = await fetch(`/api/users/me?user_id=${user?.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone, dob, allergies, dislikes }),
       });
 
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Cập nhật số điện thoại thành công' });
+        setMessage({ type: 'success', text: 'Cập nhật thông tin thành công' });
+        setInitialData({ phone, dob, allergies, dislikes });
+        fetchUserData(); // Refresh context so dashboard hides banner
         setTimeout(() => setMessage(null), 3000);
       } else {
-        throw new Error('Không thể cập nhật số điện thoại');
+        throw new Error('Không thể cập nhật thông tin');
       }
     } catch (err) {
       setMessage({
@@ -244,6 +275,7 @@ function ProfilePageContent() {
         setMessage({ type: 'success', text: 'Thêm bé thành công' });
         setTimeout(() => setMessage(null), 3000);
         fetchUserData();
+        setIsAddingBaby(false);
       } else {
         throw new Error('Không thể thêm bé');
       }
@@ -287,20 +319,6 @@ function ProfilePageContent() {
           <h1 className="text-2xl sm:text-3xl font-bold">Trang cá nhân</h1>
           <p className="text-muted-foreground mt-1 text-sm">Quản lý thông tin cá nhân, mối quan hệ và bé</p>
         </div>
-
-        {/* Onboarding welcome banner */}
-        {isOnboarding && (
-          <div className="flex items-start gap-3 rounded-xl bg-primary/5 border border-primary/20 p-4">
-            <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-semibold text-foreground">Chào mừng bạn đến với NestAI! 🎉</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Hãy điền thông tin thai kỳ để AI cá nhân hóa thực đơn dinh dưỡng phù hợp nhất cho bạn.
-              </p>
-            </div>
-          </div>
-        )}
-
         {message && (
           <div
             className={`flex items-center gap-2 p-3 rounded-lg text-sm ${
@@ -318,25 +336,15 @@ function ProfilePageContent() {
           </div>
         )}
 
-        <Tabs defaultValue={user.role === 'mother' ? 'pregnancy' : 'profile'} className="w-full">
+        <Tabs defaultValue="profile" className="w-full">
           {/* Mobile: horizontal scroll, Desktop: grid */}
           <TabsList className="w-full flex overflow-x-auto gap-1 h-auto p-1 sm:grid sm:gap-0 sm:h-10 sm:p-0.5"
-            style={{ gridTemplateColumns: user.role === 'mother' ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)' }}
+            style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}
           >
-            {user.role === 'mother' && (
-              <TabsTrigger value="pregnancy" className="shrink-0 sm:shrink text-xs sm:text-sm">🤰 Thai kỳ</TabsTrigger>
-            )}
             <TabsTrigger value="profile" className="shrink-0 sm:shrink text-xs sm:text-sm">Cá nhân</TabsTrigger>
             <TabsTrigger value="partnership" className="shrink-0 sm:shrink text-xs sm:text-sm">Quan hệ</TabsTrigger>
             <TabsTrigger value="babies" className="shrink-0 sm:shrink text-xs sm:text-sm whitespace-nowrap">Thai nhi / Bé</TabsTrigger>
           </TabsList>
-
-          {/* Pregnancy Profile Tab — PRD core: needed for AI meal personalization */}
-          {user.role === 'mother' && (
-            <TabsContent value="pregnancy">
-              <PregnancyProfileTab />
-            </TabsContent>
-          )}
 
           {/* Profile Tab */}
           <TabsContent value="profile">
@@ -376,8 +384,49 @@ function ProfilePageContent() {
                     />
                   </div>
 
-                  <Button type="submit" disabled={loading} className="w-full">
-                    {loading ? 'Đang cập nhật...' : 'Cập nhật số điện thoại'}
+                  <div className="space-y-2">
+                    <Label htmlFor="dob">Ngày tháng năm sinh</Label>
+                    <Input
+                      id="dob"
+                      type="date"
+                      value={dob}
+                      onChange={(e) => setDob(e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Dị ứng (tùy chọn)</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {PREDEFINED_ALLERGIES.map(item => (
+                        <div
+                          key={item}
+                          onClick={() => setAllergies(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item])}
+                          className={`cursor-pointer px-3 py-1.5 rounded-full text-sm border transition-colors ${allergies.includes(item) ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted'}`}
+                        >
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Món không thích (tùy chọn)</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {PREDEFINED_DISLIKES.map(item => (
+                        <div
+                          key={item}
+                          onClick={() => setDislikes(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item])}
+                          className={`cursor-pointer px-3 py-1.5 rounded-full text-sm border transition-colors ${dislikes.includes(item) ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted'}`}
+                        >
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button type="submit" disabled={loading || !isDirty} className="w-full">
+                    {loading ? 'Đang cập nhật...' : 'Cập nhật thông tin'}
                   </Button>
                 </form>
               </CardContent>
@@ -476,155 +525,6 @@ function ProfilePageContent() {
 
           {/* Babies Tab */}
           <TabsContent value="babies" className="space-y-4">
-            {/* Add Baby Form */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Thêm bé mới</CardTitle>
-                <CardDescription>Nhập thông tin của bé</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleAddBaby} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Tên bé</Label>
-                      <Input
-                        id="name"
-                        name="name"
-                        value={babyData.name}
-                        onChange={handleBabyChange}
-                        disabled={loading}
-                        placeholder="Tên bé"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="status">Tình trạng</Label>
-                      <select
-                        id="status"
-                        name="status"
-                        value={babyData.status}
-                        onChange={handleBabyChange}
-                        disabled={loading}
-                        className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                      >
-                        <option value="born">Đã sinh</option>
-                        <option value="pregnant">Mang bầu</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {babyData.status === 'born' ? (
-                    <div className="space-y-2">
-                      <Label htmlFor="dateOfBirth">Ngày sinh</Label>
-                      <Input
-                        id="dateOfBirth"
-                        name="dateOfBirth"
-                        type="date"
-                        value={babyData.dateOfBirth}
-                        onChange={handleBabyChange}
-                        disabled={loading}
-                      />
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Label htmlFor="gestationWeeks">Tuần thai</Label>
-                      <Input
-                        id="gestationWeeks"
-                        name="gestationWeeks"
-                        type="number"
-                        min="0"
-                        max="42"
-                        value={babyData.gestationWeeks}
-                        onChange={handleBabyChange}
-                        disabled={loading}
-                        placeholder="Nhập tuần thai (0-42)"
-                      />
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="gender">Giới tính</Label>
-                      <select
-                        id="gender"
-                        name="gender"
-                        value={babyData.gender}
-                        onChange={handleBabyChange}
-                        disabled={loading}
-                        className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                      >
-                        <option value="male">Nam</option>
-                        <option value="female">Nữ</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="bloodType">Nhóm máu</Label>
-                      <Input
-                        id="bloodType"
-                        name="bloodType"
-                        value={babyData.bloodType}
-                        onChange={handleBabyChange}
-                        disabled={loading}
-                        placeholder="O+"
-                      />
-                    </div>
-                  </div>
-
-                  {babyData.status === 'born' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="weightAtBirth">Cân nặng lúc sinh (kg)</Label>
-                        <Input
-                          id="weightAtBirth"
-                          name="weightAtBirth"
-                          type="number"
-                          step="0.1"
-                          value={babyData.weightAtBirth}
-                          onChange={handleBabyChange}
-                          disabled={loading}
-                          placeholder="3.5"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="heightAtBirth">Chiều cao lúc sinh (cm)</Label>
-                        <Input
-                          id="heightAtBirth"
-                          name="heightAtBirth"
-                          type="number"
-                          step="0.1"
-                          value={babyData.heightAtBirth}
-                          onChange={handleBabyChange}
-                          disabled={loading}
-                          placeholder="50"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">Ghi chú</Label>
-                    <textarea
-                      id="notes"
-                      name="notes"
-                      value={babyData.notes}
-                      onChange={handleBabyChange}
-                      disabled={loading}
-                      placeholder="Ghi chú thêm về bé"
-                      className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                      rows={3}
-                    />
-                  </div>
-
-                  <Button type="submit" disabled={loading} className="w-full">
-                    <Plus className="h-4 w-4 mr-2" />
-                    {loading ? 'Đang thêm...' : 'Thêm bé'}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
             {/* Babies List */}
             {loadingBabies ? (
               <div className="text-center py-8">
@@ -675,219 +575,179 @@ function ProfilePageContent() {
                 ))}
               </div>
             )}
+
+            {!isAddingBaby ? (
+              <Button 
+                onClick={() => setIsAddingBaby(true)} 
+                className="w-full border border-border/60" 
+                variant="secondary"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Thêm bé mới
+              </Button>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Thêm bé mới</CardTitle>
+                  <CardDescription>Nhập thông tin của bé</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleAddBaby} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Tên bé</Label>
+                        <Input
+                          id="name"
+                          name="name"
+                          value={babyData.name}
+                          onChange={handleBabyChange}
+                          disabled={loading}
+                          placeholder="Tên bé"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="status">Tình trạng</Label>
+                        <select
+                          id="status"
+                          name="status"
+                          value={babyData.status}
+                          onChange={handleBabyChange}
+                          disabled={loading}
+                          className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                        >
+                          <option value="born">Đã sinh</option>
+                          <option value="pregnant">Mang bầu</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {babyData.status === 'born' ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="dateOfBirth">Ngày sinh</Label>
+                        <Input
+                          id="dateOfBirth"
+                          name="dateOfBirth"
+                          type="date"
+                          value={babyData.dateOfBirth}
+                          onChange={handleBabyChange}
+                          disabled={loading}
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label htmlFor="gestationWeeks">Tuần thai</Label>
+                        <Input
+                          id="gestationWeeks"
+                          name="gestationWeeks"
+                          type="number"
+                          min="0"
+                          max="42"
+                          value={babyData.gestationWeeks}
+                          onChange={handleBabyChange}
+                          disabled={loading}
+                          placeholder="Nhập tuần thai (0-42)"
+                        />
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="gender">Giới tính</Label>
+                        <select
+                          id="gender"
+                          name="gender"
+                          value={babyData.gender}
+                          onChange={handleBabyChange}
+                          disabled={loading}
+                          className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                        >
+                          <option value="male">Nam</option>
+                          <option value="female">Nữ</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="bloodType">Nhóm máu</Label>
+                        <Input
+                          id="bloodType"
+                          name="bloodType"
+                          value={babyData.bloodType}
+                          onChange={handleBabyChange}
+                          disabled={loading}
+                          placeholder="O+"
+                        />
+                      </div>
+                    </div>
+
+                    {babyData.status === 'born' && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="weightAtBirth">Cân nặng lúc sinh (kg)</Label>
+                          <Input
+                            id="weightAtBirth"
+                            name="weightAtBirth"
+                            type="number"
+                            step="0.1"
+                            value={babyData.weightAtBirth}
+                            onChange={handleBabyChange}
+                            disabled={loading}
+                            placeholder="3.5"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="heightAtBirth">Chiều cao lúc sinh (cm)</Label>
+                          <Input
+                            id="heightAtBirth"
+                            name="heightAtBirth"
+                            type="number"
+                            step="0.1"
+                            value={babyData.heightAtBirth}
+                            onChange={handleBabyChange}
+                            disabled={loading}
+                            placeholder="50"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="notes">Ghi chú</Label>
+                      <textarea
+                        id="notes"
+                        name="notes"
+                        value={babyData.notes}
+                        onChange={handleBabyChange}
+                        disabled={loading}
+                        placeholder="Ghi chú thêm về bé"
+                        className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                      <Button 
+                        type="button" 
+                        variant="secondary" 
+                        className="flex-1 border border-border/60"
+                        onClick={() => setIsAddingBaby(false)}
+                        disabled={loading}
+                      >
+                        Hủy bỏ
+                      </Button>
+                      <Button type="submit" disabled={loading} className="flex-1">
+                        <Plus className="h-4 w-4 mr-2" />
+                        {loading ? 'Đang thêm...' : 'Thêm bé'}
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </div>
     </MainLayout>
-  );
-}
-
-// ============================================================
-// Pregnancy Profile Tab — PRD Need #1 core data collection
-// ============================================================
-const CONDITION_OPTIONS = [
-  { value: 'none', label: 'Không có bệnh lý kèm theo', icon: '✅' },
-  { value: 'gdm', label: 'Tiểu đường thai kỳ', icon: '🍬' },
-  { value: 'anemia', label: 'Thiếu máu / thiếu sắt', icon: '🩸' },
-  { value: 'hypertension', label: 'Cao huyết áp thai kỳ', icon: '💊' },
-];
-
-const FOOD_PREF_OPTIONS = [
-  { value: 'no_pref', label: 'Không có hạn chế' },
-  { value: 'no_seafood', label: 'Không ăn hải sản' },
-  { value: 'vegetarian', label: 'Ăn chay' },
-  { value: 'no_spicy', label: 'Không cay' },
-  { value: 'no_raw', label: 'Không ăn sống / tái' },
-];
-
-function PregnancyProfileTab() {
-  const { user, updatePregnancyProfile } = useApp();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const isOnboarding = searchParams.get('onboarding') === '1';
-
-  // Due date is the source of truth — gestationWeeks is derived
-  const [dueDate, setDueDate] = React.useState(user?.dueDate ?? '');
-  const [condition, setCondition] = React.useState(user?.condition ?? 'none');
-  const [foodPref, setFoodPref] = React.useState(user?.foodPreference ?? 'no_pref');
-  const [loading, setLoading] = React.useState(false);
-  const [msg, setMsg] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  // Compute gestationWeeks live from dueDate for display
-  const computedWeeks = React.useMemo(() => {
-    if (!dueDate) return null;
-    const due = new Date(dueDate);
-    const today = new Date();
-    const daysRemaining = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    const weeks = 40 - Math.round(daysRemaining / 7);
-    if (weeks < 1 || weeks > 44) return null;
-    return weeks;
-  }, [dueDate]);
-
-  // Date bounds: due date must be in the future (not yet born) and ≤ 40 weeks away
-  const today = new Date();
-  const minDue = new Date(today); // at minimum today (already overdue edge case)
-  minDue.setDate(minDue.getDate() - 7 * 4); // allow up to 4 weeks overdue
-  const maxDue = new Date(today);
-  maxDue.setDate(maxDue.getDate() + 7 * 40); // max 40 weeks in future
-  const minDueStr = minDue.toISOString().split('T')[0];
-  const maxDueStr = maxDue.toISOString().split('T')[0];
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!dueDate) {
-      setMsg({ type: 'error', text: 'Vui lòng chọn ngày dự sinh' });
-      return;
-    }
-    if (computedWeeks === null) {
-      setMsg({ type: 'error', text: 'Ngày dự sinh không hợp lệ — vui lòng kiểm tra lại' });
-      return;
-    }
-    setLoading(true);
-    setMsg(null);
-    try {
-      // Update local context — computes gestationWeeks, auto-dismisses dashboard banner
-      updatePregnancyProfile(dueDate, condition, foodPref);
-
-      await new Promise((r) => setTimeout(r, 400));
-      setMsg({ type: 'success', text: `Đã lưu — bạn đang ở tuần ${computedWeeks} thai kỳ ✓` });
-
-      // Always redirect to dashboard after saving
-      setTimeout(() => router.replace('/'), 1200);
-    } catch {
-      setMsg({ type: 'error', text: 'Không thể lưu — vui lòng thử lại' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Stethoscope className="h-5 w-5 text-primary" />
-          Hồ sơ thai kỳ
-        </CardTitle>
-        <CardDescription>
-          AI cần thông tin này để sinh thực đơn đúng tuần thai và bệnh lý của bạn
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSave} className="space-y-5">
-          {msg && (
-            <div
-              className={`flex items-center gap-2 p-3 rounded-xl text-sm border ${
-                msg.type === 'success'
-                  ? 'bg-green-50 text-green-800 border-green-200'
-                  : 'bg-red-50 text-red-800 border-red-200'
-              }`}
-            >
-              {msg.type === 'success' ? (
-                <CheckCircle className="h-4 w-4" />
-              ) : (
-                <AlertCircle className="h-4 w-4" />
-              )}
-              {msg.text}
-            </div>
-          )}
-
-          {/* Due date input — ngày dự sinh */}
-          <div className="space-y-2">
-            <Label htmlFor="dueDate">
-              Ngày dự sinh (dự kiến)
-            </Label>
-            <Input
-              id="dueDate"
-              type="date"
-              min={minDueStr}
-              max={maxDueStr}
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              disabled={loading}
-              className="max-w-[200px]"
-            />
-            {/* Live computed week display */}
-            {dueDate && computedWeeks !== null && (
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-primary/5 border border-primary/15 max-w-sm">
-                <span className="text-xl">🤰</span>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    Bạn đang ở <span className="text-primary">tuần {computedWeeks}</span> thai kỳ
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {computedWeeks < 13
-                      ? 'Tam cá nguyệt 1 — folate và DHA rất quan trọng'
-                      : computedWeeks < 28
-                      ? 'Tam cá nguyệt 2 — giai đoạn tăng trưởng chính'
-                      : 'Tam cá nguyệt 3 — cần 27mg sắt/ngày, thiếu máu rất phổ biến'}
-                  </p>
-                </div>
-              </div>
-            )}
-            {dueDate && computedWeeks === null && (
-              <p className="text-xs text-destructive">
-                Ngày dự sinh không hợp lệ — vui lòng chọn ngày trong vòng 40 tuần tới
-              </p>
-            )}
-            {!dueDate && (
-              <p className="text-xs text-muted-foreground">
-                AI sẽ tự tính tuần thai từ ngày dự sinh để cá nhân hóa thực đơn
-              </p>
-            )}
-          </div>
-
-          {/* Health condition — PRD specifies GDM, anemia, hypertension */}
-          <div className="space-y-2">
-            <Label>Tình trạng sức khỏe kèm theo</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {CONDITION_OPTIONS.map((c) => (
-                <button
-                  key={c.value}
-                  type="button"
-                  onClick={() => setCondition(c.value)}
-                  disabled={loading}
-                  className={`text-left px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
-                    condition === c.value
-                      ? 'border-primary bg-primary/8 text-primary'
-                      : 'border-border/60 bg-card text-foreground/80 hover:border-primary/40'
-                  }`}
-                >
-                  <span className="mr-1.5">{c.icon}</span>
-                  {c.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Food preferences */}
-          <div className="space-y-2">
-            <Label>Sở thích / hạn chế thực phẩm</Label>
-            <div className="flex flex-wrap gap-2">
-              {FOOD_PREF_OPTIONS.map((p) => (
-                <button
-                  key={p.value}
-                  type="button"
-                  onClick={() => setFoodPref(p.value)}
-                  disabled={loading}
-                  className={`px-3 py-1.5 rounded-full border text-sm font-medium transition-all ${
-                    foodPref === p.value
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border/60 bg-card text-foreground/70 hover:border-primary/40'
-                  }`}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <Button type="submit" disabled={loading} className="w-full gap-2">
-            <CheckCircle className="h-4 w-4" />
-            {loading ? 'Đang lưu...' : isOnboarding ? 'Lưu & Bắt đầu dùng NestAI →' : 'Lưu hồ sơ thai kỳ'}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
   );
 }

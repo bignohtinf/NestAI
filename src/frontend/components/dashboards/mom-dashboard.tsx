@@ -80,7 +80,7 @@ export function MomDashboard() {
     weekLabel = `Tuần ${user.weeksPostpartum} sau sinh`;
   }
 
-  const isProfileIncomplete = !user.babyStatus || (!user.gestationWeeks && !user.dueDate);
+  const isProfileIncomplete = !user.dob;
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
@@ -108,17 +108,12 @@ export function MomDashboard() {
       </div>
 
       {isProfileIncomplete && (
-        <Link href="/profile" className="block">
-          <div className="flex items-center gap-3 rounded-2xl bg-amber-50/80 border border-amber-200/60 px-5 py-4 transition-colors hover:bg-amber-100/50">
-            <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-amber-900">
-                Hoàn thiện hồ sơ để cá nhân hóa thực đơn
-              </p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-amber-500" />
-          </div>
-        </Link>
+        <div className="flex items-center gap-2 bg-blue-50/50 text-blue-800 px-3 py-2 rounded-lg border border-blue-100/50 text-sm">
+          <AlertCircle className="h-4 w-4 shrink-0 text-blue-500" />
+          <p>
+            💡 <Link href="/profile" className="font-medium underline underline-offset-2 hover:text-blue-900">Hoàn thiện hồ sơ cá nhân</Link> (Ngày sinh, Dị ứng...) giúp AI cá nhân hóa thực đơn chính xác hơn cho bạn.
+          </p>
+        </div>
       )}
 
       {/* Main Action Cards */}
@@ -165,7 +160,7 @@ export function MomDashboard() {
         <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-bold">Mục tiêu vi chất</CardTitle>
-            <Button asChild variant="outline" size="sm" className="h-8 rounded-full border-border/60">
+            <Button asChild variant="secondary" size="sm" className="h-8 rounded-full border border-border/60">
               <Link href="/nutrition-scan">
                 <Utensils className="h-3.5 w-3.5 mr-1.5" />
                 Cập nhật
