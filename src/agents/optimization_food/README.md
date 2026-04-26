@@ -83,8 +83,53 @@ print(combinations)
 - ✅ **Nutrition Analysis:** Processes raw nutrition tables for over 1,200 Vietnamese dishes.
 - ✅ **Constraint Satisfaction:** Uses `ortools` to solve complex multi-nutrient requirements (Energy, Protein, Fat, Carbs).
 - ✅ **Personalized Recommendations:** Maps health profiles to specific nutritional thresholds based on age, gender, and activity level.
+- ✅ **Budget Constraints:** Supports daily budget or per-meal budget limits (VNĐ) to generate cost-effective meal plans.
 - ✅ **Cleaned Data Pipeline:** Automated cleaning of raw CSVs into normalized formats.
 - ✅ **Web Integration:** Exposes recommendation logic via FastAPI endpoints in the main backend.
+
+### Budget Constraint Usage
+
+The optimizer supports two budget modes:
+
+**1. Daily budget (auto-split by meal ratio 25/40/35):**
+```json
+POST /api/food/recommend
+{
+  "profile_stt": 1,
+  "daily_budget_vnd": 120000
+}
+```
+→ Sáng: 30,000₫ | Trưa: 48,000₫ | Tối: 42,000₫
+
+**2. Per-meal budget (explicit):**
+```json
+POST /api/food/recommend
+{
+  "profile_stt": 1,
+  "meal_budgets_vnd": {
+    "breakfast": 25000,
+    "lunch": 50000,
+    "dinner": 40000
+  }
+}
+```
+
+**Response includes estimated cost:**
+```json
+{
+  "plans": [{
+    "breakfast": { "dishes": [...], "stts": [1, 5] },
+    "lunch": { "dishes": [...], "stts": [10, 20, 30, 40] },
+    "dinner": { "dishes": [...], "stts": [50, 60, 70] },
+    "estimated_cost": {
+      "breakfast": 20000,
+      "lunch": 45000,
+      "dinner": 38000,
+      "total": 103000
+    }
+  }]
+}
+```
 
 ## 📊 Dish Data EDA Report
 
