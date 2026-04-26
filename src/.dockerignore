@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env.local
+
+# Agents — crawlers not needed at runtime
+agents/optimization_food/data/raw/dishes/images/
+agents/scan-food/
+agents/optimization_food/scripts/
+
+# Node (frontend has its own .dockerignore)
+frontend/node_modules/
+frontend/.next/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Git
+.git/
+.gitignore
+
+# Docs
+docs/
+*.md
+!backend/README.md
