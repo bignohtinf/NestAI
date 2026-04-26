@@ -1,8 +1,62 @@
+"""
+Core CP-SAT optimization logic for meal recommendations.
+
+This module is a pure computation engine — it receives data and returns results.
+All data fetching (from Supabase or CSV) is handled by the caller.
+
+Nutrition data is per 100g. The optimizer uses IntVar (0..MAX_UNITS) to determine
+the number of portion units for each dish. Each unit = UNIT_GRAMS (default 50g),
+allowing fine-grained portions like 150g, 250g, 350g.
+
+Example: IntVar = 5, UNIT_GRAMS = 50 → 250g → nutrition = value_per_100g × 2.5
+"""
+
 import re
-import json
 from typing import List, Dict, Any, Optional, Tuple
 from ortools.sat.python import cp_model
-from ..ingestion.loader import load_nutrition_data, load_recommendations, get_dish_details
+
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+# Portion unit size in grams (smaller = finer granularity)
+# CP-SAT only supports integers, so we use small units to simulate floats
+UNIT_GRAMS = 50  # Each IntVar unit = 50g
+
+# Max portion units per dish (e.g., 10 units × 50g = 500g max)
+MAX_UNITS = 10
+
+# Integer scale factor for CP-SAT nutrient calculations
+# Nutrients are per 100g, so 1 unit (50g) contributes nutrient × 50/100 = nutrient × 0.5
+# We scale by 1000 to preserve precision: int(nutrient * 1000 * UNIT_GRAMS / 100)
+SCALE = 1000
+NUTRIENT_PER_UNIT = UNIT_GRAMS / 100.0  # = 0.5 for 50g units
+
+# Meal nutrient distribution ratios
+MEAL_RATIOS = {
+    "breakfast": 0.25,
+    "lunch": 0.40,
+    "dinner": 0.35,
+}
+
+# Default portion sizes per dish type (in units of UNIT_GRAMS)
+# e.g., 6 units × 50g = 300g for rice/noodles
+DEFAULT_PORTIONS = {
+    "món tinh bột": 6,   # Cơm/phở ~300g
+    "món mặn": 4,        # Thịt/cá ~200g
+    "món rau": 3,        # Rau ~150g
+    "món canh": 5,        # Canh ~250g
+    "tráng miệng": 2,   # Trái cây ~100g
+}
+
+# Max dishes and total units per meal
+MEAL_STRUCTURE = {
+    "breakfast": {"min_dishes": 1, "max_dishes": 3, "max_total_units": 14},  # ~700g max
+    "lunch":     {"min_dishes": 3, "max_dishes": 5, "max_total_units": 22},  # ~1100g max
+    "dinner":    {"min_dishes": 3, "max_dishes": 5, "max_total_units": 20},  # ~1000g max
+}
+
+PRIMARY_NUTRIENT_KEYS = ["energy", "protein", "fat", "carbohydrate"]
 
 # ---------------------------------------------------------------------------
 # Utility Functions
@@ -10,15 +64,14 @@ from ..ingestion.loader import load_nutrition_data, load_recommendations, get_di
 
 def parse_range(value_str: str) -> Tuple[float, float]:
     """Parse a value string into a (min, max) range."""
-    # Matches ranges like "550.0 - 650.0" or single numbers
     range_match = re.findall(r"(\d+\.?\d*)", value_str.replace(",", "."))
     if len(range_match) >= 2:
         return float(range_match[0]), float(range_match[1])
     elif len(range_match) == 1:
         val = float(range_match[0])
-        # Apply 5% delta if it's a single number
         return val * 0.95, val * 1.05
     return 0.0, 0.0
+
 
 def map_rec_to_nutrition_key(rec_name: str) -> Optional[str]:
     """Map recommendation names to nutrition table keys."""
@@ -39,125 +92,282 @@ def map_rec_to_nutrition_key(rec_name: str) -> Optional[str]:
             return v
     return None
 
+
+# ---------------------------------------------------------------------------
+# Budget Helpers
+# ---------------------------------------------------------------------------
+
+def _resolve_meal_budgets(
+    daily_budget: Optional[float] = None,
+    meal_budgets: Optional[Dict[str, float]] = None,
+) -> Dict[str, Optional[float]]:
+    """
+    Resolve per-meal budget limits (VNĐ).
+
+    Priority:
+      1. Explicit per-meal budget (meal_budgets['breakfast'] = 30000)
+      2. Daily budget split by meal ratio (25/40/35)
+      3. None → no budget constraint for that meal
+    """
+    resolved: Dict[str, Optional[float]] = {
+        "breakfast": None,
+        "lunch": None,
+        "dinner": None,
+    }
+
+    if daily_budget is not None and daily_budget > 0:
+        for meal, ratio in MEAL_RATIOS.items():
+            resolved[meal] = daily_budget * ratio
+
+    if meal_budgets:
+        for meal, budget in meal_budgets.items():
+            if meal in resolved and budget is not None and budget > 0:
+                resolved[meal] = budget
+
+    return resolved
+
+
 # ---------------------------------------------------------------------------
 # Core Optimization Logic
 # ---------------------------------------------------------------------------
 
 def recommend_full_day_meals(
-    user_profile: Dict[str, Any], 
+    all_dishes: List[Dict[str, Any]],
+    daily_recommendations: List[Dict[str, Any]],
     locked_meals: Dict[str, List[int]] = None,
-    excluded_dishes: List[int] = None, 
-    limit: int = 5
-) -> List[Dict[str, List[int]]]:
+    excluded_dishes: List[int] = None,
+    limit: int = 5,
+    daily_budget: Optional[float] = None,
+    meal_budgets: Optional[Dict[str, float]] = None,
+) -> List[Dict[str, Any]]:
     """
-    Generate breakfast, lunch, and dinner recommendations.
-    
+    Generate breakfast, lunch, and dinner recommendations using CP-SAT solver.
+
+    Each dish can have 0..MAX_SERVINGS servings (each serving = 100g).
+    Nutrient contributions scale linearly with servings.
+
     Args:
-        user_profile: Profile dict
+        all_dishes: List of dish dicts with keys: stt, dish_type, energy, protein,
+                    fat, carbohydrate, price_vnd (optional), serving_size (optional), ...
+        daily_recommendations: List of recommendation dicts with keys:
+                               nutrient_name, unit, value_str
         locked_meals: Dict like {'breakfast': [stt1, stt2]} for pre-selected meals
         excluded_dishes: List of STTs to never include
         limit: Number of full-day plans to return
+        daily_budget: Total daily budget in VNĐ
+        meal_budgets: Per-meal budgets in VNĐ
+
+    Returns:
+        List of day plans:
+        {
+            'breakfast': [
+                {'stt': 5, 'servings': 3, 'grams': 300},
+                {'stt': 120, 'servings': 1, 'grams': 100},
+            ],
+            'lunch': [...],
+            'dinner': [...],
+            'estimated_cost': {'breakfast': float, 'lunch': float, 'dinner': float, 'total': float},
+            'nutrition_summary': {
+                'breakfast': {'energy': float, 'protein': float, ...},
+                'lunch': {...},
+                'dinner': {...},
+                'total': {...}
+            }
+        }
     """
-    profile_stt = user_profile.get("stt")
-    if profile_stt is None:
+    if not all_dishes or not daily_recommendations:
         return []
-        
-    all_nutrition = load_nutrition_data()
-    daily_recommendations = load_recommendations(profile_stt)
+
     excluded = excluded_dishes or []
     locked = locked_meals or {}
-    
-    # 1. Define distribution of daily nutrients per meal
-    # Breakfast: 20%, Lunch: 40%, Dinner: 40% (Approximate)
-    MEAL_RATIOS = {
-        "breakfast": 0.25,
-        "lunch": 0.40,
-        "dinner": 0.35
-    }
-    
-    PRIMARY_KEYS = ["energy", "protein", "fat", "carbohydrate"]
-    SCALE = 100
-    
-    # 2. Extract targets
+
+    # 1. Extract daily nutrient targets from recommendations
     targets = {}
     for rec in daily_recommendations:
-        key = map_rec_to_nutrition_key(rec["name"])
-        if key in PRIMARY_KEYS:
+        name = rec.get("nutrient_name") or rec.get("name", "")
+        key = map_rec_to_nutrition_key(name)
+        if key in PRIMARY_NUTRIENT_KEYS:
             targets[key] = parse_range(rec["value_str"])
 
     if not targets:
         return []
 
-    # 3. Solve per meal (Sequential approach for better performance and simplicity)
-    # In a more complex version, we could solve all meals together, 
-    # but sequential allows easier user interaction (lock/unlock).
-    
-    available_dishes = [d for d in all_nutrition if d["stt"] not in excluded]
-    
+    # 2. Resolve budget constraints
+    budget_limits = _resolve_meal_budgets(daily_budget, meal_budgets)
+    has_any_budget = any(v is not None for v in budget_limits.values())
+
+    # 3. Filter available dishes
+    available_dishes = [d for d in all_dishes if d["stt"] not in excluded]
+
+    # Pre-compute unit size for each dish
+    for d in available_dishes:
+        d.setdefault("unit_grams", UNIT_GRAMS)
+
     final_plans = []
-    
+
     for _ in range(limit):
-        day_plan = {}
+        day_plan: Dict[str, Any] = {}
+        day_cost: Dict[str, float] = {}
+        day_nutrition: Dict[str, Dict[str, float]] = {}
         current_excluded = list(excluded)
-        
+
         for meal_name in ["breakfast", "lunch", "dinner"]:
+            # ─── Handle locked meals ────────────────────────────────
             if meal_name in locked and locked[meal_name]:
-                day_plan[meal_name] = locked[meal_name]
-                current_excluded.extend(locked[meal_name])
+                locked_stts = locked[meal_name]
+                day_plan[meal_name] = [
+                    {
+                        "stt": stt,
+                        "units": DEFAULT_PORTIONS.get(
+                            next((d["dish_type"] for d in available_dishes if d["stt"] == stt), "món mặn"), 2
+                        ),
+                        "grams": DEFAULT_PORTIONS.get(
+                            next((d["dish_type"] for d in available_dishes if d["stt"] == stt), "món mặn"), 2
+                        ) * UNIT_GRAMS,
+                    }
+                    for stt in locked_stts
+                ]
+                # Calculate cost & nutrition for locked meals
+                locked_cost = 0.0
+                locked_nutrition = {k: 0.0 for k in PRIMARY_NUTRIENT_KEYS}
+                for item in day_plan[meal_name]:
+                    dish = next((d for d in available_dishes if d["stt"] == item["stt"]), None)
+                    if dish:
+                        factor = item["units"] * NUTRIENT_PER_UNIT
+                        locked_cost += (dish.get("price_vnd") or 0) * factor
+                        for k in PRIMARY_NUTRIENT_KEYS:
+                            locked_nutrition[k] += dish.get(k, 0) * factor
+                day_cost[meal_name] = locked_cost
+                day_nutrition[meal_name] = locked_nutrition
+                current_excluded.extend(locked_stts)
                 continue
-            
-            # Create sub-problem for this meal
+
+            # ─── Build CP-SAT model ─────────────────────────────────
             model = cp_model.CpModel()
-            dish_vars = {}
+            dish_vars: Dict[int, Any] = {}
+            is_selected: Dict[int, Any] = {}  # BoolVar: whether dish is selected at all
             meal_available = [d for d in available_dishes if d["stt"] not in current_excluded]
-            
+
+            structure = MEAL_STRUCTURE[meal_name]
+
             for dish in meal_available:
-                dish_vars[dish["stt"]] = model.NewBoolVar(f'{meal_name}_dish_{dish["stt"]}')
-            
-            # Apply nutrient constraints for this meal
+                stt = dish["stt"]
+                # IntVar: number of portion units (0 = not selected)
+                # Each unit = UNIT_GRAMS (50g). Max units based on dish type.
+                default_units = DEFAULT_PORTIONS.get(dish["dish_type"], 4)
+                max_u = min(MAX_UNITS, default_units + 2)  # Allow some flexibility
+                dish_vars[stt] = model.NewIntVar(0, max_u, f'{meal_name}_u_{stt}')
+                # BoolVar: is this dish selected (units > 0)?
+                is_selected[stt] = model.NewBoolVar(f'{meal_name}_sel_{stt}')
+                # Link: selected ↔ units > 0
+                model.Add(dish_vars[stt] >= 1).OnlyEnforceIf(is_selected[stt])
+                model.Add(dish_vars[stt] == 0).OnlyEnforceIf(is_selected[stt].Not())
+
+            # ─── Nutrient constraints (per meal) ────────────────────
+            # Each unit = UNIT_GRAMS. Nutrient per unit = nutrient_per_100g × (UNIT_GRAMS/100)
+            # We scale everything: coeff = int(nutrient_per_100g × NUTRIENT_PER_UNIT × SCALE)
             ratio = MEAL_RATIOS[meal_name]
             for key, (min_val, max_val) in targets.items():
                 total_nutrient = sum(
-                    int(dish.get(key, 0) * SCALE) * dish_vars[dish["stt"]]
+                    int(dish.get(key, 0) * NUTRIENT_PER_UNIT * SCALE) * dish_vars[dish["stt"]]
                     for dish in meal_available
                 )
-                model.Add(total_nutrient >= int(min_val * ratio * 0.8 * SCALE)) # 20% flexibility
+                # 20% flexibility band
+                model.Add(total_nutrient >= int(min_val * ratio * 0.8 * SCALE))
                 model.Add(total_nutrient <= int(max_val * ratio * 1.2 * SCALE))
 
-            # Apply structure constraints
-            total_dishes = sum(dish_vars.values())
+            # ─── Structure constraints ──────────────────────────────
+            total_selected = sum(is_selected.values())
+            model.Add(total_selected >= structure["min_dishes"])
+            model.Add(total_selected <= structure["max_dishes"])
+
+            # Total units cap (prevents unrealistic total volume)
+            total_units = sum(dish_vars.values())
+            model.Add(total_units <= structure["max_total_units"])
+
             if meal_name == "breakfast":
-                model.Add(total_dishes >= 1)
-                model.Add(total_dishes <= 3)
-                # At least one món mặn or món tinh bột for breakfast usually
-                mon_man_vars = [dish_vars[d["stt"]] for d in meal_available if d["dish_type"] == "món mặn"]
-                if mon_man_vars:
-                    model.Add(sum(mon_man_vars) >= 1)
+                # At least one món mặn or món tinh bột for breakfast
+                starch_or_savory = [
+                    is_selected[d["stt"]] for d in meal_available
+                    if d["dish_type"] in ("món mặn", "món tinh bột")
+                ]
+                if starch_or_savory:
+                    model.Add(sum(starch_or_savory) >= 1)
             else:
-                # Lunch/Dinner: 3-5 dishes
-                model.Add(total_dishes >= 3)
-                model.Add(total_dishes <= 5)
-                
-                # Type requirements
+                # Lunch/Dinner: require diverse dish types
                 type_reqs = ["món mặn", "món rau", "món tinh bột", "món canh"]
                 for t in type_reqs:
-                    vars_of_type = [dish_vars[d["stt"]] for d in meal_available if d["dish_type"] == t]
+                    vars_of_type = [is_selected[d["stt"]] for d in meal_available if d["dish_type"] == t]
                     if vars_of_type:
                         model.Add(sum(vars_of_type) >= 1)
 
-            # Solver
+            # ─── Budget constraint ──────────────────────────────────
+            # Price is per serving (per 100g equivalent), scaled by portion units
+            meal_budget = budget_limits.get(meal_name)
+            if meal_budget is not None:
+                total_cost = sum(
+                    int((dish.get("price_vnd") or 0) * NUTRIENT_PER_UNIT * SCALE) * dish_vars[dish["stt"]]
+                    for dish in meal_available
+                )
+                model.Add(total_cost <= int(meal_budget * SCALE))
+
+            # ─── Objective ──────────────────────────────────────────
+            # Minimize cost when budget is active
+            if has_any_budget:
+                cost_obj = sum(
+                    int((dish.get("price_vnd") or 0) * NUTRIENT_PER_UNIT * SCALE) * dish_vars[dish["stt"]]
+                    for dish in meal_available
+                )
+                model.Minimize(cost_obj)
+
+            # ─── Solve ──────────────────────────────────────────────
             solver = cp_model.CpSolver()
-            solver.parameters.max_time_in_seconds = 2.0
+            solver.parameters.max_time_in_seconds = 3.0
             status = solver.Solve(model)
-            
+
             if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-                selected = [stt for stt, var in dish_vars.items() if solver.Value(var)]
-                day_plan[meal_name] = selected
-                current_excluded.extend(selected)
+                selected_items = []
+                meal_cost = 0.0
+                meal_nutrients = {k: 0.0 for k in PRIMARY_NUTRIENT_KEYS}
+
+                for dish in meal_available:
+                    stt = dish["stt"]
+                    units = solver.Value(dish_vars[stt])
+                    if units > 0:
+                        grams = units * UNIT_GRAMS
+                        factor = units * NUTRIENT_PER_UNIT  # e.g., 5 units × 0.5 = 2.5× per 100g
+                        selected_items.append({
+                            "stt": stt,
+                            "units": units,
+                            "grams": grams,
+                        })
+                        meal_cost += (dish.get("price_vnd") or 0) * factor
+                        for k in PRIMARY_NUTRIENT_KEYS:
+                            meal_nutrients[k] += dish.get(k, 0) * factor
+                        current_excluded.append(stt)
+
+                day_plan[meal_name] = selected_items
+                day_cost[meal_name] = round(meal_cost, 0)
+                day_nutrition[meal_name] = {k: round(v, 1) for k, v in meal_nutrients.items()}
             else:
-                day_plan[meal_name] = [] # Failed to find combo
-        
-        if day_plan["breakfast"] or day_plan["lunch"] or day_plan["dinner"]:
+                day_plan[meal_name] = []
+                day_cost[meal_name] = 0
+                day_nutrition[meal_name] = {k: 0.0 for k in PRIMARY_NUTRIENT_KEYS}
+
+        # ─── Aggregate day totals ───────────────────────────────────
+        has_any_meals = any(day_plan[m] for m in ["breakfast", "lunch", "dinner"])
+        if has_any_meals:
+            day_cost["total"] = sum(day_cost.get(m, 0) for m in ["breakfast", "lunch", "dinner"])
+
+            # Nutrition totals
+            total_nutrition = {k: 0.0 for k in PRIMARY_NUTRIENT_KEYS}
+            for m in ["breakfast", "lunch", "dinner"]:
+                for k in PRIMARY_NUTRIENT_KEYS:
+                    total_nutrition[k] += day_nutrition.get(m, {}).get(k, 0.0)
+            day_nutrition["total"] = {k: round(v, 1) for k, v in total_nutrition.items()}
+
+            day_plan["estimated_cost"] = day_cost
+            day_plan["nutrition_summary"] = day_nutrition
             final_plans.append(day_plan)
-            
+
     return final_plans
