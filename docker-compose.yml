@@ -1,0 +1,31 @@
+# ============================================================================
+# NestAI — Docker Compose (Development)
+# ============================================================================
+#
+# Usage:
+#   docker compose up -d          # Start backend
+#   docker compose logs -f        # Follow logs
+#   docker compose down           # Stop
+#
+# Prerequisites:
+#   1. Apply migration: 004_nutrition_optimization.sql on Supabase
+#   2. Seed data: cd src/backend && python -m scripts.seed_nutrition_data
+#   3. Frontend: cd src/frontend && npm run dev  (no Docker)
+#
+# ============================================================================
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: src/backend/Dockerfile
+    container_name: nestai-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./src/backend/.env
+    volumes:
+      # Hot-reload for development
+      - ./src/backend:/app
+      - ./src/agents:/app/agents
+    restart: unless-stopped
