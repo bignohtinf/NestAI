@@ -64,7 +64,7 @@ export default function PlannerPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Nhiệm Vụ</CardTitle>
-                <CardDescription>Quản lý các nhiệm vụ hàng ngày</CardDescription>
+                <CardDescription>Quản lý nhiệm vụ hàng ngày</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-12">
