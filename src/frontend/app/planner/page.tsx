@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { BudgetOptimization } from '@/components/metrics/budget-optimization';
 import { useApp } from '@/lib/context';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-function PlannerContent() {
+export default function PlannerPage() {
   const { user } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -76,13 +76,5 @@ function PlannerContent() {
         </Tabs>
       </div>
     </MainLayout>
-  );
-}
-
-export default function PlannerPage() {
-  return (
-    <Suspense fallback={<div className="p-8 text-center">Loading Planner...</div>}>
-      <PlannerContent />
-    </Suspense>
   );
 }

@@ -5,9 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MilkBabyImpact } from '@/components/metrics/milk-baby-impact';
 import { useApp } from '@/lib/context';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState } from 'react';
 
-function WellnessContent() {
+export default function WellnessPage() {
   const { user } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -88,13 +88,5 @@ function WellnessContent() {
         </Tabs>
       </div>
     </MainLayout>
-  );
-}
-
-export default function WellnessPage() {
-  return (
-    <Suspense fallback={<div className="p-8 text-center">Loading Wellness...</div>}>
-      <WellnessContent />
-    </Suspense>
   );
 }
