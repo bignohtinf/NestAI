@@ -9,21 +9,22 @@ import { X, Loader2 } from 'lucide-react';
 interface AddFoodFormProps {
   onSuccess: () => void;
   onCancel: () => void;
+  initialData?: any;
 }
 
 const categories = ['vegetable', 'fruit', 'protein', 'dairy', 'grain', 'supplement'];
 
-export function AddFoodForm({ onSuccess, onCancel }: AddFoodFormProps) {
+export function AddFoodForm({ onSuccess, onCancel, initialData }: AddFoodFormProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    calories: '',
-    protein: '',
-    carbs: '',
-    fat: '',
+    name: initialData?.dish_name_vi || '',
+    calories: initialData?.energy?.toString() || '',
+    protein: initialData?.protein?.toString() || '',
+    carbs: initialData?.carbohydrate?.toString() || '',
+    fat: initialData?.fat?.toString() || '',
     fiber: '',
-    price: '',
-    category: 'vegetable',
+    price: initialData?.price_vnd?.toString() || '',
+    category: initialData?.dish_type || 'vegetable',
     serving_size: '100',
     unit: 'g',
   });
@@ -38,37 +39,31 @@ export function AddFoodForm({ onSuccess, onCancel }: AddFoodFormProps) {
     setLoading(true);
 
     try {
-      const params = new URLSearchParams({
-        name: formData.name,
-        calories: formData.calories,
-        protein: formData.protein,
-        carbs: formData.carbs,
-        fat: formData.fat,
-        fiber: formData.fiber,
-        price: formData.price,
-        category: formData.category,
-        serving_size: formData.serving_size,
-        unit: formData.unit,
+      const payload = {
+        stt: initialData?.stt || Math.floor(Math.random() * 10000) + 2000,
+        dish_name_vi: formData.name,
+        energy: parseFloat(formData.calories) || 0,
+        protein: parseFloat(formData.protein) || 0,
+        carbohydrate: parseFloat(formData.carbs) || 0,
+        fat: parseFloat(formData.fat) || 0,
+        price_vnd: parseFloat(formData.price) || 0,
+        dish_type: formData.category,
+      };
+
+      const url = initialData 
+        ? `http://localhost:8000/api/admin/nutrition-database/${initialData.stt}`
+        : `http://localhost:8000/api/admin/nutrition-database`;
+        
+      const method = initialData ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
 
-      const response = await fetch(`http://localhost:8000/api/admin/nutrition-database?${params}`, {
-        method: 'POST',
-      });
-
-      if (!response.ok) throw new Error('Failed to add food');
+      if (!response.ok) throw new Error('Failed to save food');
       
-      setFormData({
-        name: '',
-        calories: '',
-        protein: '',
-        carbs: '',
-        fat: '',
-        fiber: '',
-        price: '',
-        category: 'vegetable',
-        serving_size: '100',
-        unit: 'g',
-      });
       onSuccess();
     } catch (error) {
       console.error('Failed to add food:', error);
@@ -82,7 +77,7 @@ export function AddFoodForm({ onSuccess, onCancel }: AddFoodFormProps) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <div>
-          <CardTitle>Thêm thực phẩm mới</CardTitle>
+          <CardTitle>{initialData ? 'Chỉnh sửa thực phẩm' : 'Thêm thực phẩm mới'}</CardTitle>
           <CardDescription>Nhập thông tin dinh dưỡng của thực phẩm</CardDescription>
         </div>
         <Button variant="ghost" size="sm" onClick={onCancel} className="h-8 w-8 p-0">
@@ -238,7 +233,7 @@ export function AddFoodForm({ onSuccess, onCancel }: AddFoodFormProps) {
             </Button>
             <Button type="submit" disabled={loading} className="gap-2">
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Thêm thực phẩm
+              {initialData ? 'Lưu thay đổi' : 'Thêm thực phẩm'}
             </Button>
           </div>
         </form>

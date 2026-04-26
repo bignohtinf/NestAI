@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Bell, Check, X, UserPlus } from 'lucide-react';
+import { Bell, Check, X, UserPlus, Utensils } from 'lucide-react';
+import { nutritionApi } from '@/lib/api';
 
 interface PartnershipRequest {
   id: string;
@@ -16,10 +17,21 @@ interface PartnershipRequest {
   sender: { full_name: string; email: string } | null;
 }
 
+interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+  data?: Record<string, any>;
+}
+
 export default function NotificationsPage() {
   const { user } = useApp();
   const router = useRouter();
   const [requests, setRequests] = useState<PartnershipRequest[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -34,20 +46,35 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     if (!user?.id || user.role === 'admin') return;
-    fetchPendingRequests();
+    fetchData();
   }, [user?.id]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      await Promise.all([fetchPendingRequests(), fetchNotifications()]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchPendingRequests = async () => {
     try {
-      setLoading(true);
       const res = await fetch(`/api/partnerships/pending?user_id=${user!.id}`);
       if (!res.ok) return;
       const data = await res.json();
       setRequests(data.partnerships || []);
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      console.error('Failed to fetch partnership requests:', e);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const data = await nutritionApi.getNotifications(user!.id, false, 50);
+      setNotifications(data.notifications || []);
+    } catch (e) {
+      console.error('Failed to fetch notifications:', e);
     }
   };
 
@@ -74,7 +101,20 @@ export default function NotificationsPage() {
     }
   };
 
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      await nutritionApi.markNotificationRead(notificationId);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n))
+      );
+    } catch (e) {
+      console.error('Failed to mark notification as read:', e);
+    }
+  };
+
   if (!user || user.role === 'admin') return null;
+
+  const totalCount = requests.length + notifications.length;
 
   return (
     <MainLayout>
@@ -82,8 +122,8 @@ export default function NotificationsPage() {
         <div>
           <h1 className="text-3xl font-bold">Thông báo</h1>
           <p className="text-muted-foreground mt-1">
-            {requests.length > 0
-              ? `Bạn có ${requests.length} yêu cầu kết nối đang chờ`
+            {totalCount > 0
+              ? `Bạn có ${totalCount} thông báo mới`
               : 'Không có thông báo mới'}
           </p>
         </div>
@@ -105,8 +145,40 @@ export default function NotificationsPage() {
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
           </div>
-        ) : requests.length > 0 ? (
+        ) : totalCount > 0 ? (
           <div className="space-y-3">
+            {/* Meal Plan Notifications */}
+            {notifications.map((notif) => (
+              <Card key={notif.id} className={notif.is_read ? 'opacity-60' : ''}>
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-4">
+                    <div className="mt-1 p-2 rounded-full bg-emerald-50">
+                      <Utensils className="h-5 w-5 text-emerald-500" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{notif.title}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">{notif.message}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatTime(new Date(notif.created_at))}
+                      </p>
+                      {!notif.is_read && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => handleMarkAsRead(notif.id)}
+                          className="mt-3 gap-1"
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                          Đánh dấu đã đọc
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Partnership Requests */}
             {requests.map((req) => (
               <Card key={req.id}>
                 <CardContent className="p-4">

@@ -29,16 +29,6 @@ export default function AdminPage() {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage system content, configuration, and partnerships</p>
-        </div>
-
-        <div className="rounded-lg bg-amber-50 p-4 dark:bg-amber-900/20">
-          <p className="text-sm text-amber-900 dark:text-amber-200">
-            ⚠️ Admin Mode - Configuration for system administrators only
-          </p>
-        </div>
 
         <Tabs defaultValue="recipes" className="space-y-4">
           <TabsList className="grid w-full grid-cols-4">

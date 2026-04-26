@@ -17,22 +17,13 @@ export interface UserData {
   budget?: number;
   babyDob?: string;
   babyStatus?: 'born' | 'pregnant';
-  gestationWeeks?: number;   // computed from dueDate; also fetched from DB
-  dueDate?: string;          // ISO date string e.g. '2025-08-15' — source of truth
-  condition?: string;        // PRD: 'none' | 'gdm' | 'anemia' | 'hypertension'
-  foodPreference?: string;   // PRD: food restriction preference
+  gestationWeeks?: number;
+  dob?: string;
+  allergies?: string[];
+  dislikes?: string[];
 }
 
-export function computeGestationWeeks(dueDate: string | null | undefined): number | undefined {
-  if (!dueDate) return undefined;
-  const due = new Date(dueDate);
-  const today = new Date();
-  const daysRemaining = Math.ceil(
-    (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
-  );
-  const weeks = 40 - Math.round(daysRemaining / 7);
-  return Math.min(44, Math.max(1, weeks));
-}
+
 
 export interface Quest {
   id: string;
@@ -54,7 +45,6 @@ interface AppContextType {
   updateBudget: (amount: number) => void;
   updateBabyInfo: (babyDob: string) => void;
   updateQuest: (questId: string, completed: boolean) => void;
-  updatePregnancyProfile: (dueDate: string | null, condition: string, foodPreference: string) => void;
   fetchUserData: () => Promise<void>;
   isLoading: boolean;
 }
@@ -80,7 +70,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const now = new Date();
         const birthDate = new Date(baby.date_of_birth);
         const weeks = Math.floor((now.getTime() - birthDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
-        setUser((prev) => prev ? { ...prev, babyStatus: 'born', weeksPostpartum: weeks } : prev);
+        setUser((prev) => prev ? { ...prev, babyStatus: 'born', weeksPostpartum: weeks, babyDob: baby.date_of_birth } : prev);
       } else if (baby.gestation_weeks != null) {
         setUser((prev) => prev ? { ...prev, babyStatus: 'pregnant', gestationWeeks: baby.gestation_weeks } : prev);
       }
@@ -108,6 +98,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         email: userData.email,
         name: userData.full_name || 'User',
         role: userData.role || 'mother',
+        dob: userData.dob,
+        allergies: userData.allergies,
+        dislikes: userData.dislikes,
       });
 
       fetchBabyInfo(userData.id);
@@ -135,6 +128,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
             email: userData.email,
             name: userData.full_name || 'User',
             role: userData.role || 'mother',
+            dob: userData.dob,
+            allergies: userData.allergies,
+            dislikes: userData.dislikes,
           });
           fetchBabyInfo(userData.id);
         }
@@ -165,6 +161,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           email: userData.email,
           name: userData.full_name || 'User',
           role: userData.role || 'mother',
+          dob: userData.dob,
+          allergies: userData.allergies,
+          dislikes: userData.dislikes,
         });
       }
     } catch (error) {
@@ -240,42 +239,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  // PRD Need #1: update pregnancy profile from the Profile page.
-  // Accepts dueDate (ngày dự sinh), computes gestationWeeks automatically.
-  // Dashboard banner auto-dismisses once dueDate is set.
-  const updatePregnancyProfile = (
-    dueDate: string | null,
-    condition: string,
-    foodPreference: string,
-  ) => {
-    setUser((prevUser) => {
-      if (!prevUser) return prevUser;
-
-      let computedWeeks: number | undefined = prevUser.gestationWeeks;
-      if (dueDate) {
-        // Standard: full-term = 40 weeks = 280 days from LMP
-        // gestationWeeks = 40 - ceil(daysUntilDue / 7)
-        const due = new Date(dueDate);
-        const today = new Date();
-        const daysRemaining = Math.ceil(
-          (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
-        );
-        const weeks = 40 - Math.round(daysRemaining / 7);
-        computedWeeks = Math.min(44, Math.max(1, weeks));
-      }
-
-      return {
-        ...prevUser,
-        babyStatus: 'pregnant' as const,
-        dueDate: dueDate ?? prevUser.dueDate,
-        gestationWeeks: computedWeeks,
-        condition,
-        foodPreference,
-      };
-    });
-  };
-
-
   return (
     <AppContext.Provider
       value={{
@@ -289,7 +252,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         updateBudget,
         updateBabyInfo,
         updateQuest,
-        updatePregnancyProfile,
         fetchUserData,
         isLoading,
       }}

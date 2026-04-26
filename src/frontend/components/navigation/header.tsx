@@ -95,9 +95,11 @@ export function Header({ onMenuClick }: HeaderProps) {
                   ? `Tuần ${user.gestationWeeks} thai`
                   : user.babyStatus === 'born' && user.weeksPostpartum != null
                     ? `Tuần ${user.weeksPostpartum} sau sinh`
-                    : user.role === 'admin'
-                      ? 'Admin'
-                      : ''}
+                    : user.age != null
+                      ? `${user.age} tuổi`
+                      : user.role === 'admin'
+                        ? 'Admin'
+                        : ''}
               </span>
             </div>
 
