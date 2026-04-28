@@ -266,11 +266,9 @@ export default function NoriPage() {
             </div>
             <Dialog>
               <DialogTrigger asChild>
-                <Button 
-                  variant="default" 
+                <Button style={{ backgroundColor: '#dcfce7', borderColor: '#dcfce7', color: '#166534' }}
                   size="sm" 
-                  className="h-7 text-xs px-3 rounded-full shadow-sm bg-primary hover:bg-primary/90"
-                >
+                  className="h-7 text-xs px-3 rounded-full shadow-sm bg-primary hover:bg-primary/90">
                   <Phone className="h-3 w-3 mr-1.5" /> Gặp chuyên gia
                 </Button>
               </DialogTrigger>
