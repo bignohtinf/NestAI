@@ -274,38 +274,36 @@ export default function NoriPage() {
                   <Phone className="h-3 w-3 mr-1.5" /> Gặp chuyên gia
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+              <DialogContent className="sm:max-w-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                 <DialogHeader>
-                  <DialogTitle className="text-slate-900 dark:text-slate-100">Đặt khám chuyên gia / phòng khám</DialogTitle>
+                  <DialogTitle className="text-slate-900 dark:text-slate-100">Đặt lịch chuyên gia / phòng khám</DialogTitle>
                   <DialogDescription className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed text-left">
-                    Chọn chuyên gia hoặc phòng khám phù hợp với nhu cầu của bạn để được tư vấn trực tiếp (Chức năng đang phát triển).
+                    Chọn chuyên gia hoặc phòng khám phù hợp với nhu cầu của bạn để được tư vấn trực tiếp.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-2">
-                  <div className="space-y-3">
-                    {MOCK_EXPERTS.map(expert => (
-                      <div key={expert.id} className="flex items-start gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-primary/40 transition-colors cursor-pointer bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50 shadow-sm">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl shrink-0">
-                          {expert.avatar}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{expert.name}</h4>
-                          <p className="text-xs text-slate-600 dark:text-slate-400 truncate mb-1.5">{expert.title} • {expert.hospital}</p>
-                          <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-600 dark:text-slate-400">
-                            <span className="flex items-center gap-1 text-amber-600 dark:text-amber-500 font-medium bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded-md border border-amber-100 dark:border-amber-500/20">
-                              <Star className="h-3 w-3 fill-amber-500 text-amber-500" /> {expert.rating} ({expert.reviews})
-                            </span>
-                            <span className="flex items-center gap-1 text-primary font-medium">
-                              <Clock className="h-3 w-3" /> {expert.available}
-                            </span>
-                          </div>
-                        </div>
-                        <Button size="sm" variant="outline" className="h-7 text-xs px-2.5 shrink-0 border-primary/30 text-primary hover:bg-primary hover:text-white" onClick={(e) => { e.stopPropagation(); alert('Đã ghi nhận lịch hẹn mô phỏng.'); }}>
-                          Chọn
-                        </Button>
+                <div className="space-y-2.5 py-1">
+                  {MOCK_EXPERTS.map(expert => (
+                    <div key={expert.id} className="flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-primary/40 transition-colors cursor-pointer bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50 shadow-sm">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-xl shrink-0">
+                        {expert.avatar}
                       </div>
-                    ))}
-                  </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">{expert.name}</h4>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">{expert.title} • {expert.hospital}</p>
+                        <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-600 dark:text-slate-400">
+                          <span className="flex items-center gap-1 text-amber-600 dark:text-amber-500 font-medium bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded-md border border-amber-100 dark:border-amber-500/20">
+                            <Star className="h-3 w-3 fill-amber-500 text-amber-500" /> {expert.rating} ({expert.reviews})
+                          </span>
+                          <span className="flex items-center gap-1 text-primary font-medium">
+                            <Clock className="h-3 w-3" /> {expert.available}
+                          </span>
+                        </div>
+                      </div>
+                      <Button size="sm" variant="ghost" className="h-7 text-xs px-2.5 shrink-0 border border-primary/30 text-primary hover:bg-primary hover:text-white" onClick={(e) => { e.stopPropagation(); alert('Đã ghi nhận lịch hẹn mô phỏng.'); }}>
+                        Chọn
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               </DialogContent>
             </Dialog>
