@@ -1,12 +1,16 @@
 ---
-title: "Tư thế ngủ tốt cho bà bầu"
-keyword: bầu
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/tu-ngu-tot-cho-ba-bau-vi
 category: Sinh hoạt
-stage: [3_thang_dau, 3_thang_giua, 3_thang_cuoi]
+keyword: bầu
 safety_level: An toàn
+source: vinmec
+stage:
+- 3_thang_dau
+- 3_thang_giua
+- 3_thang_cuoi
+title: Tư thế ngủ tốt cho bà bầu
+url: https://www.vinmec.com/vie/bai-viet/tu-ngu-tot-cho-ba-bau-vi
 ---
+
 
 # Tư thế ngủ tốt cho bà bầu
 

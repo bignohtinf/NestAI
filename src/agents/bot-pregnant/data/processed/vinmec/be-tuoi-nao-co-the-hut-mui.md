@@ -1,12 +1,15 @@
 ---
-title: "Bé tuổi nào có thể hút mũi?"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/be-tuoi-nao-co-hut-mui-vi
 category: Y tế
-stage: [duoi_6_thang, 6_12_thang]
+keyword: bé
 safety_level: Cân nhắc
+source: vinmec
+stage:
+- duoi_6_thang
+- 6_12_thang
+title: Bé tuổi nào có thể hút mũi?
+url: https://www.vinmec.com/vie/bai-viet/be-tuoi-nao-co-hut-mui-vi
 ---
+
 
 # Bé tuổi nào có thể hút mũi?
 

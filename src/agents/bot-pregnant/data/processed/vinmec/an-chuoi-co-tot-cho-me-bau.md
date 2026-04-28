@@ -1,12 +1,16 @@
 ---
-title: "Ăn chuối có tốt cho mẹ bầu?"
+category: Dinh dưỡng
 keyword: bầu
+safety_level: An toàn
 source: vinmec
+stage:
+- 3_thang_dau
+- 3_thang_giua
+- 3_thang_cuoi
+title: Ăn chuối có tốt cho mẹ bầu?
 url: https://www.vinmec.com/vie/bai-viet/chuoi-co-tot-cho-me-bau-vi
-category: "Dinh dưỡng"
-stage: ["3_thang_dau", "3_thang_giua", "3_thang_cuoi"]
-safety_level: "An toàn"
 ---
+
 
 # Ăn chuối có tốt cho mẹ bầu?
 

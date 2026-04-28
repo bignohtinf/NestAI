@@ -1,12 +1,14 @@
 ---
-title: "Dấu hiệu bé sắp biết nói"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/dau-hieu-be-sap-biet-noi-vi
 category: Phát triển
-stage: [1_3_tuoi]
+keyword: bé
 safety_level: An toàn
+source: vinmec
+stage:
+- 1_3_tuoi
+title: Dấu hiệu bé sắp biết nói
+url: https://www.vinmec.com/vie/bai-viet/dau-hieu-be-sap-biet-noi-vi
 ---
+
 
 # Dấu hiệu bé sắp biết nói
 

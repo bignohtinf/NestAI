@@ -1,12 +1,14 @@
 ---
-title: "Đau hàm - Chuyện bé xé ra to"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/dau-ham-chuyen-be-xe-ra-vi
 category: Y tế
-stage: [1_3_tuoi]
+keyword: bé
 safety_level: Cân nhắc
+source: vinmec
+stage:
+- 1_3_tuoi
+title: Đau hàm - Chuyện bé xé ra to
+url: https://www.vinmec.com/vie/bai-viet/dau-ham-chuyen-be-xe-ra-vi
 ---
+
 
 # Đau hàm - Chuyện bé xé ra to
 

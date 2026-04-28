@@ -1,12 +1,16 @@
 ---
-title: "Bà bầu thức khuya có tốt không?"
-keyword: bầu
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/ba-bau-thuc-khuya-co-tot-khong-vi
 category: Sinh hoạt
-stage: [3_thang_dau, 3_thang_giua, 3_thang_cuoi]
+keyword: bầu
 safety_level: Cân nhắc
+source: vinmec
+stage:
+- 3_thang_dau
+- 3_thang_giua
+- 3_thang_cuoi
+title: Bà bầu thức khuya có tốt không?
+url: https://www.vinmec.com/vie/bai-viet/ba-bau-thuc-khuya-co-tot-khong-vi
 ---
+
 
 # Bà bầu thức khuya có tốt không?
 

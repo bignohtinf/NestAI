@@ -1,12 +1,14 @@
 ---
-title: "Tập cho bé ăn dặm như thế nào?"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/tap-cho-be-dam-nhu-nao-vi
 category: Dinh dưỡng
-stage: [6_12_thang]
+keyword: bé
 safety_level: An toàn
+source: vinmec
+stage:
+- 6_12_thang
+title: Tập cho bé ăn dặm như thế nào?
+url: https://www.vinmec.com/vie/bai-viet/tap-cho-be-dam-nhu-nao-vi
 ---
+
 
 # Tập cho bé ăn dặm như thế nào?
 

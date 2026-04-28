@@ -1,12 +1,14 @@
 ---
-title: "Chế độ dinh dưỡng cho bé mới sinh"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/dinh-duong-cho-be-moi-sinh-vi
 category: Dinh dưỡng
-stage: [so_sinh]
+keyword: bé
 safety_level: An toàn
+source: vinmec
+stage:
+- so_sinh
+title: Chế độ dinh dưỡng cho bé mới sinh
+url: https://www.vinmec.com/vie/bai-viet/dinh-duong-cho-be-moi-sinh-vi
 ---
+
 
 # Chế độ dinh dưỡng cho bé mới sinh
 

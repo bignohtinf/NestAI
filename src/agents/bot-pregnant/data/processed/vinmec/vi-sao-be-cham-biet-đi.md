@@ -1,12 +1,14 @@
 ---
-title: "Vì sao bé chậm biết đi?"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/vi-sao-be-cham-biet-di-vi
 category: Phát triển
-stage: [1_3_tuoi]
+keyword: bé
 safety_level: Cân nhắc
+source: vinmec
+stage:
+- 1_3_tuoi
+title: Vì sao bé chậm biết đi?
+url: https://www.vinmec.com/vie/bai-viet/vi-sao-be-cham-biet-di-vi
 ---
+
 
 # Vì sao bé chậm biết đi?
 

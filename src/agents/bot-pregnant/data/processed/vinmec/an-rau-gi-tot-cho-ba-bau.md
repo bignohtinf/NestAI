@@ -1,12 +1,16 @@
 ---
-title: "Ăn rau gì tốt cho bà bầu?"
-keyword: bầu
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/rau-gi-tot-cho-ba-bau-vi
 category: Dinh dưỡng
-stage: [3_thang_dau, 3_thang_giua, 3_thang_cuoi]
+keyword: bầu
 safety_level: An toàn
+source: vinmec
+stage:
+- 3_thang_dau
+- 3_thang_giua
+- 3_thang_cuoi
+title: Ăn rau gì tốt cho bà bầu?
+url: https://www.vinmec.com/vie/bai-viet/rau-gi-tot-cho-ba-bau-vi
 ---
+
 
 # Ăn rau gì tốt cho bà bầu?
 

@@ -1,12 +1,15 @@
 ---
-title: "Dấu hiệu bé đang đòi bú"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/dau-hieu-be-dang-doi-bu-vi
 category: Dinh dưỡng
-stage: [so_sinh, duoi_6_thang]
+keyword: bé
 safety_level: An toàn
+source: vinmec
+stage:
+- so_sinh
+- duoi_6_thang
+title: Dấu hiệu bé đang đòi bú
+url: https://www.vinmec.com/vie/bai-viet/dau-hieu-be-dang-doi-bu-vi
 ---
+
 
 # Dấu hiệu bé đang đòi bú
 

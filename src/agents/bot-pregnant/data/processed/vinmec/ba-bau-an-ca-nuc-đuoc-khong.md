@@ -1,12 +1,16 @@
 ---
-title: "Bà bầu ăn cá nục được không?"
-keyword: bầu
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/ba-bau-ca-nuc-duoc-khong-vi
 category: Dinh dưỡng
-stage: [3_thang_dau, 3_thang_giua, 3_thang_cuoi]
+keyword: bầu
 safety_level: An toàn
+source: vinmec
+stage:
+- 3_thang_dau
+- 3_thang_giua
+- 3_thang_cuoi
+title: Bà bầu ăn cá nục được không?
+url: https://www.vinmec.com/vie/bai-viet/ba-bau-ca-nuc-duoc-khong-vi
 ---
+
 
 # Bà bầu ăn cá nục được không?
 

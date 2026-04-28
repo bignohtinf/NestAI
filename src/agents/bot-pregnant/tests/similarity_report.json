@@ -1,0 +1,473 @@
+{
+  "summary": {
+    "total_questions": 65,
+    "matched_questions": 65,
+    "missing_questions": 0,
+    "exact_match_count": 0,
+    "average_semantic_similarity": 0.8752,
+    "average_lexical_similarity": 0.4645,
+    "average_final_score": 0.752,
+    "weights": {
+      "semantic": 0.7,
+      "lexical": 0.3
+    }
+  },
+  "missing_question_list": [],
+  "details": [
+    {
+      "index": 1,
+      "question": "Mục đích của việc tư vấn chăm sóc sức khỏe sinh sản là gì?",
+      "semantic_similarity": 0.9311,
+      "lexical_similarity": 0.4786,
+      "final_score": 0.7954
+    },
+    {
+      "index": 2,
+      "question": "Phụ nữ mang thai cần được quản lý và khám thai ít nhất bao nhiêu lần trong suốt thai kỳ?",
+      "semantic_similarity": 0.9178,
+      "lexical_similarity": 0.5399,
+      "final_score": 0.8045
+    },
+    {
+      "index": 3,
+      "question": "Theo tiêu chuẩn của ADA (2011), đái tháo đường thai kỳ được chẩn đoán dựa trên các giá trị đường huyết nào?",
+      "semantic_similarity": 0.9281,
+      "lexical_similarity": 0.4547,
+      "final_score": 0.7861
+    },
+    {
+      "index": 4,
+      "question": "Khi tiệt khuẩn dụng cụ bằng phương pháp sấy khô, cần duy trì nhiệt độ và thời gian như thế nào?",
+      "semantic_similarity": 0.9193,
+      "lexical_similarity": 0.701,
+      "final_score": 0.8538
+    },
+    {
+      "index": 5,
+      "question": "Phương pháp phá thai bằng thuốc đến hết 9 tuần tuổi sử dụng sự phối hợp của những loại thuốc nào?",
+      "semantic_similarity": 0.6881,
+      "lexical_similarity": 0.4569,
+      "final_score": 0.6188
+    },
+    {
+      "index": 6,
+      "question": "Chảy máu sau đẻ được định nghĩa như thế nào và nguyên nhân phổ biến nhất gây ra tình trạng này là gì?",
+      "semantic_similarity": 0.9702,
+      "lexical_similarity": 0.446,
+      "final_score": 0.813
+    },
+    {
+      "index": 7,
+      "question": "Những trường hợp nào được coi là chống chỉ định tuyệt đối của việc đặt dụng cụ tử cung (DCTC)?",
+      "semantic_similarity": 0.9187,
+      "lexical_similarity": 0.3782,
+      "final_score": 0.7565
+    },
+    {
+      "index": 8,
+      "question": "Lứa tuổi vị thành niên được quy định từ bao nhiêu tuổi và được chia làm những giai đoạn nào?",
+      "semantic_similarity": 0.9425,
+      "lexical_similarity": 0.7337,
+      "final_score": 0.8799
+    },
+    {
+      "index": 9,
+      "question": "Tiêu chuẩn xuất viện đối với trẻ đẻ non/nhẹ cân là gì?",
+      "semantic_similarity": 0.9196,
+      "lexical_similarity": 0.5816,
+      "final_score": 0.8182
+    },
+    {
+      "index": 10,
+      "question": "Khi nào thì trẻ sơ sinh có chỉ định được hỗ trợ hô hấp bằng cách bóp bóng qua mặt nạ?",
+      "semantic_similarity": 0.7486,
+      "lexical_similarity": 0.0694,
+      "final_score": 0.5448
+    },
+    {
+      "index": 11,
+      "question": "Viêm âm đạo do trùng roi có đặc điểm khí hư như thế nào và phác đồ điều trị ra sao?",
+      "semantic_similarity": 0.9227,
+      "lexical_similarity": 0.6256,
+      "final_score": 0.8336
+    },
+    {
+      "index": 12,
+      "question": "Tiêu chuẩn vàng để chẩn đoán hội chứng mãn dục nam giới là gì?",
+      "semantic_similarity": 0.9603,
+      "lexical_similarity": 0.7697,
+      "final_score": 0.9031
+    },
+    {
+      "index": 13,
+      "question": "Tân sản nội biểu mô cổ tử cung (CIN) là gì và nguyên nhân chính gây ra bệnh này là do đâu?",
+      "semantic_similarity": 0.9903,
+      "lexical_similarity": 0.7518,
+      "final_score": 0.9188
+    },
+    {
+      "index": 14,
+      "question": "Thuốc chống co giật nào được ưu tiên sử dụng để điều trị tiền sản giật nặng và sản giật, và cần theo dõi dấu hiệu gì khi dùng?",
+      "semantic_similarity": 0.9157,
+      "lexical_similarity": 0.2517,
+      "final_score": 0.7165
+    },
+    {
+      "index": 15,
+      "question": "Triệt sản nam bằng phương pháp thắt và cắt ống dẫn tinh có tác dụng phòng tránh các bệnh lây truyền qua đường tình dục và HIV/AIDS không?",
+      "semantic_similarity": 0.795,
+      "lexical_similarity": 0.5196,
+      "final_score": 0.7124
+    },
+    {
+      "index": 16,
+      "question": "Năng lượng cần bổ sung thêm cho phụ nữ có thai và bà mẹ cho con bú trong từng giai đoạn là bao nhiêu?",
+      "semantic_similarity": 0.9207,
+      "lexical_similarity": 0.17,
+      "final_score": 0.6955
+    },
+    {
+      "index": 17,
+      "question": "Mức tăng cân khuyến nghị cho phụ nữ mang thai có tình trạng dinh dưỡng bình thường (BMI từ 18,5-24,9) là bao nhiêu?",
+      "semantic_similarity": 0.8592,
+      "lexical_similarity": 0.5833,
+      "final_score": 0.7765
+    },
+    {
+      "index": 18,
+      "question": "Việc thiếu hụt axit folic trong thai kỳ có thể gây ra hậu quả gì cho thai nhi?",
+      "semantic_similarity": 0.8829,
+      "lexical_similarity": 0.4604,
+      "final_score": 0.7562
+    },
+    {
+      "index": 19,
+      "question": "Phụ nữ có thai và bà mẹ cho con bú được khuyến nghị sử dụng bao nhiêu đơn vị sữa và chế phẩm sữa mỗi ngày?",
+      "semantic_similarity": 0.9203,
+      "lexical_similarity": 0.5504,
+      "final_score": 0.8093
+    },
+    {
+      "index": 20,
+      "question": "Một đơn vị ăn của sữa và chế phẩm sữa (cung cấp 100mg canxi) tương đương với lượng thực phẩm thực tế nào?",
+      "semantic_similarity": 0.8507,
+      "lexical_similarity": 0.3601,
+      "final_score": 0.7035
+    },
+    {
+      "index": 21,
+      "question": "Nhu cầu canxi khuyến nghị hàng ngày cho thai phụ và bà mẹ cho con bú là bao nhiêu?",
+      "semantic_similarity": 0.9537,
+      "lexical_similarity": 0.6692,
+      "final_score": 0.8683
+    },
+    {
+      "index": 22,
+      "question": "Thai phụ bị tiểu đường thai kỳ cần xử trí thế nào khi có triệu chứng hạ đường huyết?",
+      "semantic_similarity": 0.8919,
+      "lexical_similarity": 0.7296,
+      "final_score": 0.8432
+    },
+    {
+      "index": 23,
+      "question": "Chế độ dinh dưỡng cho thai phụ bị tiền sản giật cần đảm bảo những nguyên tắc gì?",
+      "semantic_similarity": 0.7075,
+      "lexical_similarity": 0.4828,
+      "final_score": 0.6401
+    },
+    {
+      "index": 24,
+      "question": "Thai phụ bị bệnh gan (như viêm gan B) cần kiêng khem và lưu ý gì trong chế biến thức ăn?",
+      "semantic_similarity": 0.8862,
+      "lexical_similarity": 0.1347,
+      "final_score": 0.6607
+    },
+    {
+      "index": 25,
+      "question": "DHA đóng vai trò quan trọng như thế nào đối với thai nhi?",
+      "semantic_similarity": 0.7301,
+      "lexical_similarity": 0.3442,
+      "final_score": 0.6143
+    },
+    {
+      "index": 26,
+      "question": "Chất xơ có tác dụng gì đối với phụ nữ có thai và nhu cầu khuyến nghị là bao nhiêu?",
+      "semantic_similarity": 0.9772,
+      "lexical_similarity": 0.6866,
+      "final_score": 0.89
+    },
+    {
+      "index": 27,
+      "question": "Thai phụ bị thiếu máu nên chọn lựa thực phẩm như thế nào để tăng cường hấp thu sắt?",
+      "semantic_similarity": 0.6585,
+      "lexical_similarity": 0.2246,
+      "final_score": 0.5283
+    },
+    {
+      "index": 28,
+      "question": "Vitamin A có vai trò gì và nhu cầu khuyến nghị cho phụ nữ mang thai là bao nhiêu?",
+      "semantic_similarity": 0.9218,
+      "lexical_similarity": 0.2484,
+      "final_score": 0.7198
+    },
+    {
+      "index": 29,
+      "question": "Tỷ lệ lipid (chất béo) được khuyến nghị trong khẩu phần ăn của phụ nữ có thai là bao nhiêu?",
+      "semantic_similarity": 0.9055,
+      "lexical_similarity": 0.2961,
+      "final_score": 0.7227
+    },
+    {
+      "index": 30,
+      "question": "Quy trình tư vấn dinh dưỡng trực tiếp cho bà mẹ gồm các bước nhận định và lượng giá như thế nào?",
+      "semantic_similarity": 0.8262,
+      "lexical_similarity": 0.2657,
+      "final_score": 0.658
+    },
+    {
+      "index": 31,
+      "question": "Đái tháo đường thai kỳ được định nghĩa như thế nào theo Hội Nội tiết Hoa Kỳ?",
+      "semantic_similarity": 0.9383,
+      "lexical_similarity": 0.6718,
+      "final_score": 0.8583
+    },
+    {
+      "index": 32,
+      "question": "Quyết định số 1470/QĐ-BYT năm 2024 về đái tháo đường thai kỳ thay thế cho văn bản nào?",
+      "semantic_similarity": 0.9025,
+      "lexical_similarity": 0.8348,
+      "final_score": 0.8822
+    },
+    {
+      "index": 33,
+      "question": "Những yếu tố nguy cơ nào làm thai phụ dễ mắc đái tháo đường thai kỳ?",
+      "semantic_similarity": 0.9174,
+      "lexical_similarity": 0.3602,
+      "final_score": 0.7503
+    },
+    {
+      "index": 34,
+      "question": "Bao nhiêu phần trăm phụ nữ mắc đái tháo đường thai kỳ sẽ tiến triển thành đái tháo đường týp 2 sau sinh?",
+      "semantic_similarity": 0.9357,
+      "lexical_similarity": 0.8511,
+      "final_score": 0.9103
+    },
+    {
+      "index": 35,
+      "question": "Đối với thai phụ, đái tháo đường thai kỳ có thể dẫn đến những biến chứng, tai biến gì?",
+      "semantic_similarity": 0.8532,
+      "lexical_similarity": 0.1241,
+      "final_score": 0.6345
+    },
+    {
+      "index": 36,
+      "question": "Khi nào là thời điểm chuẩn và tốt nhất để tầm soát đái tháo đường thai kỳ cho mọi thai phụ?",
+      "semantic_similarity": 0.8109,
+      "lexical_similarity": 0.7293,
+      "final_score": 0.7864
+    },
+    {
+      "index": 37,
+      "question": "Thai phụ cần chuẩn bị gì trước khi thực hiện nghiệm pháp dung nạp 75 gram glucose?",
+      "semantic_similarity": 0.9353,
+      "lexical_similarity": 0.5028,
+      "final_score": 0.8055
+    },
+    {
+      "index": 38,
+      "question": "Tiêu chuẩn chẩn đoán đái tháo đường thai kỳ qua nghiệm pháp dung nạp 75 gram glucose 2 giờ là gì?",
+      "semantic_similarity": 0.7517,
+      "lexical_similarity": 0.1384,
+      "final_score": 0.5677
+    },
+    {
+      "index": 39,
+      "question": "Theo hướng dẫn, mức glucose huyết tương mao mạch mục tiêu đối với thai phụ lúc đói và 2 giờ sau ăn là bao nhiêu?",
+      "semantic_similarity": 0.8273,
+      "lexical_similarity": 0.2663,
+      "final_score": 0.659
+    },
+    {
+      "index": 40,
+      "question": "Thai phụ bị đái tháo đường thai kỳ được khuyến cáo hoạt động thể chất như thế nào?",
+      "semantic_similarity": 0.8386,
+      "lexical_similarity": 0.6642,
+      "final_score": 0.7863
+    },
+    {
+      "index": 41,
+      "question": "Chế độ dinh dưỡng đối với lượng Glucid và lượng rau xanh cho thai phụ có nguy cơ mắc bệnh là bao nhiêu?",
+      "semantic_similarity": 0.7665,
+      "lexical_similarity": 0.3949,
+      "final_score": 0.655
+    },
+    {
+      "index": 42,
+      "question": "Mức năng lượng ăn vào được khuyến cáo cho thai phụ bị thừa cân, béo phì trước khi mang thai là bao nhiêu?",
+      "semantic_similarity": 0.9584,
+      "lexical_similarity": 0.6066,
+      "final_score": 0.8528
+    },
+    {
+      "index": 43,
+      "question": "Phác đồ điều trị khởi đầu cho thai phụ đái tháo đường thai kỳ chỉ bị tăng glucose huyết tương buổi sáng lúc đói là gì?",
+      "semantic_similarity": 0.894,
+      "lexical_similarity": 0.2944,
+      "final_score": 0.7141
+    },
+    {
+      "index": 44,
+      "question": "Sau khi sinh, phụ nữ từng mắc đái tháo đường thai kỳ cần được đánh giá lại chuyển hóa glucose vào thời điểm nào?",
+      "semantic_similarity": 0.8468,
+      "lexical_similarity": 0.4318,
+      "final_score": 0.7223
+    },
+    {
+      "index": 45,
+      "question": "Đối với thai phụ mắc đái tháo đường thai kỳ, việc sử dụng insulin cần thay đổi thế nào ngay sau khi sinh?",
+      "semantic_similarity": 0.9056,
+      "lexical_similarity": 0.1747,
+      "final_score": 0.6863
+    },
+    {
+      "index": 46,
+      "question": "Phụ nữ mang thai ăn chuối trong 3 tháng đầu thai kỳ có tác dụng gì?",
+      "semantic_similarity": 0.9384,
+      "lexical_similarity": 0.7183,
+      "final_score": 0.8724
+    },
+    {
+      "index": 47,
+      "question": "Mẹ bầu ăn chuối quá nhiều có sao không?",
+      "semantic_similarity": 0.8891,
+      "lexical_similarity": 0.3653,
+      "final_score": 0.732
+    },
+    {
+      "index": 48,
+      "question": "Bà bầu tiêu thụ gừng với liều lượng bao nhiêu thì được coi là an toàn?",
+      "semantic_similarity": 0.9578,
+      "lexical_similarity": 0.7901,
+      "final_score": 0.9075
+    },
+    {
+      "index": 49,
+      "question": "Tại sao phụ nữ mang thai không nên uống trà gừng hay ăn gừng gần lúc chuyển dạ?",
+      "semantic_similarity": 0.9492,
+      "lexical_similarity": 0.8502,
+      "final_score": 0.9195
+    },
+    {
+      "index": 50,
+      "question": "Bà bầu cần thực hiện xét nghiệm máu vào những thời điểm nào trong thai kỳ?",
+      "semantic_similarity": 0.935,
+      "lexical_similarity": 0.5944,
+      "final_score": 0.8328
+    },
+    {
+      "index": 51,
+      "question": "Thai phụ có cần nhịn ăn trước khi xét nghiệm máu không?",
+      "semantic_similarity": 0.7881,
+      "lexical_similarity": 0.2642,
+      "final_score": 0.6309
+    },
+    {
+      "index": 52,
+      "question": "Thời gian ngủ hợp lý mỗi ngày cho phụ nữ mang thai là bao nhiêu?",
+      "semantic_similarity": 0.9709,
+      "lexical_similarity": 0.6478,
+      "final_score": 0.8739
+    },
+    {
+      "index": 53,
+      "question": "Việc mẹ bầu ngủ ít hơn 6 tiếng mỗi ngày có thể mang lại hậu quả gì?",
+      "semantic_similarity": 0.8553,
+      "lexical_similarity": 0.4722,
+      "final_score": 0.7404
+    },
+    {
+      "index": 54,
+      "question": "Trẻ 16 tháng tuổi đã có thể ăn cơm được chưa? Vì sao?",
+      "semantic_similarity": 0.8885,
+      "lexical_similarity": 0.2254,
+      "final_score": 0.6895
+    },
+    {
+      "index": 55,
+      "question": "Đến khi nào thì trẻ em có thể bắt đầu làm quen với cơm nhão?",
+      "semantic_similarity": 0.7382,
+      "lexical_similarity": 0.3086,
+      "final_score": 0.6093
+    },
+    {
+      "index": 56,
+      "question": "Trẻ 16 tháng tuổi cần bổ sung bao nhiêu kẽm mỗi ngày để phát triển tốt?",
+      "semantic_similarity": 0.9294,
+      "lexical_similarity": 0.4528,
+      "final_score": 0.7864
+    },
+    {
+      "index": 57,
+      "question": "Bỏng ở trẻ em được chia thành bao nhiêu mức độ?",
+      "semantic_similarity": 0.7364,
+      "lexical_similarity": 0.4,
+      "final_score": 0.6355
+    },
+    {
+      "index": 58,
+      "question": "Khi bé bị bỏng độ 1, cha mẹ có thể dùng nguyên liệu tự nhiên nào bôi lên vết bỏng cho bé?",
+      "semantic_similarity": 0.9079,
+      "lexical_similarity": 0.4472,
+      "final_score": 0.7697
+    },
+    {
+      "index": 59,
+      "question": "Dậy thì sớm được định nghĩa ở độ tuổi nào đối với bé gái và bé trai?",
+      "semantic_similarity": 0.9624,
+      "lexical_similarity": 0.8792,
+      "final_score": 0.9375
+    },
+    {
+      "index": 60,
+      "question": "Trẻ bị dậy thì sớm có dùng thuốc để điều trị được không?",
+      "semantic_similarity": 0.872,
+      "lexical_similarity": 0.0557,
+      "final_score": 0.6271
+    },
+    {
+      "index": 61,
+      "question": "Bé lớn 2 tuổi và bé thứ hai cách nhau 2 tuổi có thể bú chung sữa mẹ được không?",
+      "semantic_similarity": 0.8327,
+      "lexical_similarity": 0.2886,
+      "final_score": 0.6694
+    },
+    {
+      "index": 62,
+      "question": "Kết quả xét nghiệm phân của trẻ có xuất hiện kén Amip thì có biểu hiện cho tình trạng bệnh bất thường không?",
+      "semantic_similarity": 0.7478,
+      "lexical_similarity": 0.1372,
+      "final_score": 0.5646
+    },
+    {
+      "index": 63,
+      "question": "Bé bị tiêu chảy đi cầu phân lỏng 5 ngày liên tục và xét nghiệm phân có Bạch cầu (++) thì có thể bị bệnh gì?",
+      "semantic_similarity": 0.6831,
+      "lexical_similarity": 0.2197,
+      "final_score": 0.5441
+    },
+    {
+      "index": 64,
+      "question": "Mẹ bầu có thể dùng hỗn hợp chanh tươi và mật ong để làm giảm cơn ho như thế nào?",
+      "semantic_similarity": 0.9563,
+      "lexical_similarity": 0.4977,
+      "final_score": 0.8187
+    },
+    {
+      "index": 65,
+      "question": "Dầu khuynh diệp được sử dụng như thế nào để trị ho ngứa cổ cho phụ nữ mang thai?",
+      "semantic_similarity": 0.9081,
+      "lexical_similarity": 0.5706,
+      "final_score": 0.8069
+    }
+  ]
+}

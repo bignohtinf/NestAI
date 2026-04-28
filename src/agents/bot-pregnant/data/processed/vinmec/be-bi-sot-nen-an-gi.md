@@ -1,12 +1,15 @@
 ---
-title: "Bé bị sốt nên ăn gì?"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/be-bi-sot-nen-gi-vi
 category: Dinh dưỡng
-stage: [6_12_thang, 1_3_tuoi]
+keyword: bé
 safety_level: Cân nhắc
+source: vinmec
+stage:
+- 6_12_thang
+- 1_3_tuoi
+title: Bé bị sốt nên ăn gì?
+url: https://www.vinmec.com/vie/bai-viet/be-bi-sot-nen-gi-vi
 ---
+
 
 # Bé bị sốt nên ăn gì?
 

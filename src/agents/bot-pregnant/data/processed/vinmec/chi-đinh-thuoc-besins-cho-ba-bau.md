@@ -1,12 +1,16 @@
 ---
-title: "Chỉ định thuốc Besins cho bà bầu"
-keyword: bầu
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/chi-dinh-thuoc-besins-cho-ba-bau-vi
 category: Y tế
-stage: [3_thang_dau, 3_thang_giua, 3_thang_cuoi]
+keyword: bầu
 safety_level: Nguy cơ
+source: vinmec
+stage:
+- 3_thang_dau
+- 3_thang_giua
+- 3_thang_cuoi
+title: Chỉ định thuốc Besins cho bà bầu
+url: https://www.vinmec.com/vie/bai-viet/chi-dinh-thuoc-besins-cho-ba-bau-vi
 ---
+
 
 # Chỉ định thuốc Besins cho bà bầu
 

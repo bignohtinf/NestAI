@@ -1,0 +1,894 @@
+(python3.11) D:\Vin\projects\A20-App-005\src\agents\bot-pregnant>python -m src.crawler.crawl_vinmec
+
+🔍 Tìm keyword: bầu
+  📍 Trang 1: https://www.vinmec.com/vie/ket-qua-tim-kiem/?q=bầu
+  📊 Tìm thấy 12 bài viết trên trang 1
+  📍 Trang 2: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 2
+  📍 Trang 3: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 3
+  📍 Trang 4: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 4
+  ✅ Bà bầu bị sốt, phải làm sao?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-bi-sot-phai-lam-sao-vi
+  ✅ Hướng dẫn massage bụng bầu đúng cách
+     🔗 https://www.vinmec.com/vie/bai-viet/huong-dan-massage-bung-bau-dung-cach-vi
+  ✅ Tháp dinh dưỡng dành cho bà bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/thap-dinh-duong-danh-cho-ba-bau-vi
+  ✅ Khi bà bầu bị viêm gan B
+     🔗 https://www.vinmec.com/vie/bai-viet/khi-ba-bau-bi-viem-gan-b-vi
+  📍 Trang 5: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 5
+  ✅ Bà bầu ăn rau húng quế được không?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-rau-hung-que-duoc-khong-vi
+  ✅ Lá tía tô bà bầu có ăn được không?
+     🔗 https://www.vinmec.com/vie/bai-viet/la-tia-ba-bau-co-duoc-khong-vi
+  ✅ Bà bầu ăn giá đỗ có tốt không?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-gia-do-co-tot-khong-vi
+  ✅ Đang có bầu ăn khoai tây được không?
+     🔗 https://www.vinmec.com/vie/bai-viet/dang-co-bau-khoai-tay-duoc-khong-vi
+  ✅ Các đồ ăn nhẹ tốt cho bà bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/cac-do-nhe-tot-cho-ba-bau-vi
+  ✅ Bà bầu có ăn rau ngót được không?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-co-rau-ngot-duoc-khong-vi
+  ✅ Bà bầu nên kiêng ăn những món gì?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-nen-kieng-nhung-mon-gi-vi
+  ✅ Dấu hiệu cảm cúm ở bà bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/dau-hieu-cam-cum-o-ba-bau-vi
+  📍 Trang 6: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 6
+  ✅ Bà bầu tập thể dục thế nào cho tốt?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-tap-duc-nao-cho-tot-vi
+  ✅ Ăn giá đỗ có tốt cho bà bầu?
+     🔗 https://www.vinmec.com/vie/bai-viet/gia-do-co-tot-cho-ba-bau-vi
+  ✅ Nắng nóng bà bầu ăn gì cho mát
+     🔗 https://www.vinmec.com/vie/bai-viet/nang-nong-ba-bau-gi-cho-mat-vi
+  ✅ Bà bầu có ăn được hàu biển không?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-co-duoc-hau-bien-khong-vi
+  ✅ Củ dền bà bầu có ăn được không?
+     🔗 https://www.vinmec.com/vie/bai-viet/cu-den-ba-bau-co-duoc-khong-vi
+  ✅ Các loại hạt ăn vặt cho bà bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/cac-loai-hat-vat-cho-ba-bau-vi
+  ✅ Các món cháo tốt cho bà bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/cac-mon-chao-tot-cho-ba-bau-vi
+  ✅ Khắc phục đau khớp ở bà bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/khac-phuc-dau-khop-o-ba-bau-vi
+  ✅ Các thuốc nhỏ mũi an toàn cho bà bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/cac-thuoc-nho-mui-toan-cho-ba-bau-vi
+  📍 Trang 7: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 7
+  ✅ Đang có bầu đặt thuốc viêm được không?
+     🔗 https://www.vinmec.com/vie/bai-viet/dang-co-bau-dat-thuoc-viem-duoc-khong-vi
+  ✅ Bà bầu ăn nhiều sinh con thông minh?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-an-nhieu-sinh-con-thong-minh-vi
+  ✅ Mẹ bầu vỡ ối bao lâu thì đẻ?
+     🔗 https://www.vinmec.com/vie/bai-viet/me-bau-vo-oi-bao-lau-thi-de-vi
+  ✅ Bà bầu muốn giảm cân, có nên không?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-muon-giam-can-co-nen-khong-vi
+  ✅ Bà bầu ăn gì để con tăng cân nhanh?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-gi-de-con-tang-can-nhanh-vi
+  ✅ Bà bầu cần xét nghiệm máu khi nào?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-can-xet-nghiem-mau-khi-nao-vi
+  ✅ Bà bầu cần bao nhiêu calo mỗi ngày?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-can-bao-nhieu-calo-moi-ngay-vi
+  ✅ Bà bầu cần bao nhiêu vitamin A mỗi ngày?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-can-bao-nhieu-vitamin-moi-ngay-vi
+  ✅ Bà bầu có nên đi dép cao gót?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-co-nen-di-dep-cao-got-vi
+  📍 Trang 8: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 8
+  ✅ Làm gì khi mẹ bầu bị thiếu ối?
+     🔗 https://www.vinmec.com/vie/bai-viet/lam-gi-khi-me-bau-bi-thieu-oi-vi
+  ✅ Aspirin khuyên dùng cho một số bà bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/aspirin-khuyen-dung-cho-mot-so-ba-bau-vi
+  ✅ Có bầu dùng lăn khử mùi được không?
+     🔗 https://www.vinmec.com/vie/bai-viet/co-bau-dung-lan-khu-mui-duoc-khong-vi
+  ✅ Uống nước chanh có tốt cho bà bầu?
+     🔗 https://www.vinmec.com/vie/bai-viet/uong-nuoc-chanh-co-tot-cho-ba-bau-vi
+  ✅ Gel bôi trĩ cho bà bầu có an toàn?
+     🔗 https://www.vinmec.com/vie/bai-viet/gel-boi-tri-cho-ba-bau-co-toan-vi
+  ✅ Bà bầu ăn quất hồng bì có được không?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-quat-hong-bi-co-duoc-khong-vi
+  ✅ Cách chữa đau mắt đỏ cho bà bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/cach-chua-dau-mat-do-cho-ba-bau-vi
+  ✅ Bà bầu có được dùng dầu gió không?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-co-duoc-dung-dau-gio-khong-vi
+  ✅ Thuốc Pymenospain cho bà bầu có được không?
+     🔗 https://www.vinmec.com/vie/bai-viet/thuoc-pymenospain-cho-ba-bau-co-duoc-khong-vi
+  📍 Trang 9: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 9
+  ✅ Những bài tập thể dục cho bà bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/nhung-bai-tap-the-duc-cho-ba-bau-vi
+  ✅ Sự thay đổi của bà bầu tuần 29
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-29-vi
+  ✅ Sự thay đổi của bà bầu tuần 4
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-4-vi
+  ✅ Những cách hạ đường huyết cho bà bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/nhung-cach-ha-duong-huyet-cho-ba-bau-vi
+  ✅ Sự thay đổi của bà bầu tuần 17
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-17-vi
+  ✅ Sự thay đổi của bà bầu tuần 3
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-3-vi
+  ✅ Sự thay đổi của bà bầu tuần 27
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-27-vi
+  ✅ Sự thay đổi của bà bầu tuần 2
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-2-vi
+  ✅ Sự thay đổi của bà bầu tuần 28
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-28-vi
+  📍 Trang 10: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 10
+  ✅ Sự thay đổi của bà bầu tuần 22
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-22-vi
+  ✅ Sự thay đổi của bà bầu tuần 31
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-31-vi
+  ✅ Sự thay đổi của bà bầu tuần 24
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-24-vi
+  ✅ Sự thay đổi của bà bầu tuần 23
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-23-vi
+  ✅ Sự thay đổi của bà bầu tuần 25
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-25-vi
+  ✅ Sự thay đổi của bà bầu tuần 14
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-14-vi
+  ✅ Sự thay đổi của bà bầu tuần 26
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-26-vi
+  ✅ Sự thay đổi của bà bầu tuần 20
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-20-vi
+  ✅ Sự thay đổi của bà bầu tuần 18
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-18-vi
+  📍 Trang 11: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 11
+  ✅ Sự thay đổi của bà bầu tuần 13
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-13-vi
+  ✅ Sự thay đổi của bà bầu tuần 11
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-11-vi
+  ✅ Sự thay đổi của bà bầu tuần 12
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-12-vi
+  ✅ Sự thay đổi của bà bầu tuần 21
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-21-vi
+  ✅ Sự thay đổi của bà bầu tuần 8
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-8-vi
+  ✅ Sự thay đổi của bà bầu tuần 9
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-9-vi
+  ✅ Sự thay đổi của bà bầu tuần 10
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-10-vi
+  ✅ Sự thay đổi của bà bầu tuần 5
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-5-vi
+  ✅ Sự thay đổi của bà bầu tuần 6
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-6-vi
+  📍 Trang 12: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 12
+  ✅ Sự thay đổi của bà bầu tuần 32
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-32-vi
+  ✅ Sự thay đổi của bà bầu tuần 33
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-33-vi
+  ✅ Sự thay đổi của bà bầu tuần 39
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-39-vi
+  ✅ Sự thay đổi của bà bầu tuần 40
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-40-vi
+  ✅ Sự thay đổi của bà bầu tuần 34
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-34-vi
+  ✅ Sự thay đổi của bà bầu tuần 37
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-37-vi
+  ✅ Sự thay đổi của bà bầu tuần 36
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-36-vi
+  ✅ Sự thay đổi của bà bầu tuần 35
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-35-vi
+  ✅ Sự thay đổi của bà bầu tuần 38
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-38-vi
+  📍 Trang 13: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 13
+  ✅ Bầu ivf có tiêm được vắc xin cúm?
+     🔗 https://www.vinmec.com/vie/bai-viet/bau-ivf-co-tiem-duoc-vac-xin-cum-vi
+  ✅ 03 thực phẩm nhuận tràng cho bà bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/03-thuc-pham-nhuan-trang-cho-ba-bau-vi
+  ✅ Bà bầu bị mất ngủ 3 tháng đầu có nguy hiểm không?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-bi-mat-ngu-3-thang-dau-vi
+  ✅ Bà bầu uống được nước rau má không?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-uong-duoc-nuoc-rau-ma-khong-vi
+  ✅ Bà bầu có nên bổ sung canxi không?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-co-nen-bo-sung-canxi-khong-vi
+  ✅ Nhổ răng khi đang bầu có sao không?
+     🔗 https://www.vinmec.com/vie/bai-viet/nho-rang-khi-dang-bau-co-sao-khong-vi
+  ✅ Ăn hồng xiêm có tốt cho bà bầu không?
+     🔗 https://www.vinmec.com/vie/bai-viet/hong-xiem-co-tot-cho-ba-bau-khong-vi
+  ✅ Cách nấu cháo cá chép cho bà bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/cach-nau-chao-ca-chep-cho-ba-bau-vi
+  ✅ Có bầu ăn đu đủ chín được không?
+     🔗 https://www.vinmec.com/vie/bai-viet/co-bau-an-du-du-chin-duoc-khong-vi
+  📍 Trang 14: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 14
+  ✅ Bà bầu thiếu máu nên uống thuốc gì?
+     🔗 https://www.vinmec.com/vie/bai-viet/ba-bau-thieu-mau-nen-uong-thuoc-gi-vi
+  ✅ Triệu chứng cao huyết áp ở bà bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/trieu-chung-cao-huyet-ap-o-ba-bau-vi
+  ✅ Lưu ý hạ sốt an toàn cho bà bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/luu-y-ha-sot-toan-cho-ba-bau-vi
+  ✅ Sự thay đổi của bà bầu tuần 19
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-19-vi
+  ✅ Sự thay đổi của bà bầu tuần 16
+     🔗 https://www.vinmec.com/vie/bai-viet/su-thay-doi-cua-ba-bau-tuan-16-vi
+  ✅ Cải thiện chứng mất ngủ ở bà bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/cai-thien-chung-mat-ngu-o-ba-bau-vi
+  ✅ Khó thở khi mang bầu có đáng ngại?
+     🔗 https://www.vinmec.com/vie/bai-viet/kho-tho-khi-mang-bau-co-dang-ngai-vi
+  ✅ Một số bài tập yoga cho bà bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/mot-so-bai-tap-yoga-cho-ba-bau-vi
+  ✅ Quả nhãn có tốt cho bà bầu không?
+     🔗 https://www.vinmec.com/vie/bai-viet/qua-nhan-co-tot-cho-ba-bau-khong-vi
+  📍 Trang 15: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 15
+  ✅ 5 lợi ích của việc massage bầu ngực
+     🔗 https://www.vinmec.com/vie/bai-viet/5-loi-ich-cua-viec-massage-bau-nguc-vi
+  ✅ Có thể sử dụng thuốc nội tiết cho bà bầu?
+     🔗 https://www.vinmec.com/vie/bai-viet/co-su-dung-thuoc-noi-tiet-cho-ba-bau-vi
+  ✅ Thực phẩm đẹp da, bổ dưỡng cho mẹ bầu
+     🔗 https://www.vinmec.com/vie/bai-viet/thuc-pham-dep-da-bo-duong-cho-me-bau-vi
+  ✅ Có bầu: Khi nào nên bắt đầu tập Yoga?
+     🔗 https://www.vinmec.com/vie/bai-viet/co-bau-khi-nao-nen-bat-dau-tap-yoga-vi
+  ✅ Mẹ bầu bị nhau bám mặt sau là sao?
+     🔗 https://www.vinmec.com/vie/bai-viet/me-bau-bi-nhau-bam-mat-sau-la-sao-vi
+  ✅ Có nên dùng thuốc chống nôn cho bà bầu?
+     🔗 https://www.vinmec.com/vie/bai-viet/co-nen-dung-thuoc-chong-non-cho-ba-bau-vi
+  ✅ Có nên dùng thuốc tẩy giun cho bà bầu?
+     🔗 https://www.vinmec.com/vie/bai-viet/co-nen-dung-thuoc-tay-giun-cho-ba-bau-vi
+
+📄 Đang crawl: Bà bầu bị sốt, phải làm sao?
+
+📄 Đang crawl: Hướng dẫn massage bụng bầu đúng cách
+
+📄 Đang crawl: Tháp dinh dưỡng dành cho bà bầu
+
+📄 Đang crawl: Khi bà bầu bị viêm gan B
+
+📄 Đang crawl: Bà bầu ăn rau húng quế được không?
+
+📄 Đang crawl: Lá tía tô bà bầu có ăn được không?
+
+📄 Đang crawl: Bà bầu ăn giá đỗ có tốt không?
+
+📄 Đang crawl: Đang có bầu ăn khoai tây được không?
+
+📄 Đang crawl: Các đồ ăn nhẹ tốt cho bà bầu
+
+📄 Đang crawl: Bà bầu có ăn rau ngót được không?
+
+📄 Đang crawl: Bà bầu nên kiêng ăn những món gì?
+
+📄 Đang crawl: Dấu hiệu cảm cúm ở bà bầu
+
+📄 Đang crawl: Bà bầu tập thể dục thế nào cho tốt?
+
+📄 Đang crawl: Ăn giá đỗ có tốt cho bà bầu?
+
+📄 Đang crawl: Nắng nóng bà bầu ăn gì cho mát
+
+📄 Đang crawl: Bà bầu có ăn được hàu biển không?
+
+📄 Đang crawl: Củ dền bà bầu có ăn được không?
+
+📄 Đang crawl: Các loại hạt ăn vặt cho bà bầu
+
+📄 Đang crawl: Các món cháo tốt cho bà bầu
+
+📄 Đang crawl: Khắc phục đau khớp ở bà bầu
+
+📄 Đang crawl: Các thuốc nhỏ mũi an toàn cho bà bầu
+
+📄 Đang crawl: Đang có bầu đặt thuốc viêm được không?
+
+📄 Đang crawl: Bà bầu ăn nhiều sinh con thông minh?
+
+📄 Đang crawl: Mẹ bầu vỡ ối bao lâu thì đẻ?
+
+📄 Đang crawl: Bà bầu muốn giảm cân, có nên không?
+
+📄 Đang crawl: Bà bầu ăn gì để con tăng cân nhanh?
+
+📄 Đang crawl: Bà bầu cần xét nghiệm máu khi nào?
+
+📄 Đang crawl: Bà bầu cần bao nhiêu calo mỗi ngày?
+
+📄 Đang crawl: Bà bầu cần bao nhiêu vitamin A mỗi ngày?
+
+📄 Đang crawl: Bà bầu có nên đi dép cao gót?
+
+📄 Đang crawl: Làm gì khi mẹ bầu bị thiếu ối?
+
+📄 Đang crawl: Aspirin khuyên dùng cho một số bà bầu
+
+📄 Đang crawl: Có bầu dùng lăn khử mùi được không?
+
+📄 Đang crawl: Uống nước chanh có tốt cho bà bầu?
+
+📄 Đang crawl: Gel bôi trĩ cho bà bầu có an toàn?
+
+📄 Đang crawl: Bà bầu ăn quất hồng bì có được không?
+
+📄 Đang crawl: Cách chữa đau mắt đỏ cho bà bầu
+
+📄 Đang crawl: Bà bầu có được dùng dầu gió không?
+
+📄 Đang crawl: Thuốc Pymenospain cho bà bầu có được không?
+
+📄 Đang crawl: Những bài tập thể dục cho bà bầu
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 29
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 4
+
+📄 Đang crawl: Những cách hạ đường huyết cho bà bầu
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 17
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 3
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 27
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 2
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 28
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 22
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 31
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 24
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 23
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 25
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 14
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 26
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 20
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 18
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 13
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 11
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 12
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 21
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 8
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 9
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 10
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 5
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 6
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 32
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 33
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 39
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 40
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 34
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 37
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 36
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 35
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 38
+
+📄 Đang crawl: Bầu ivf có tiêm được vắc xin cúm?
+
+📄 Đang crawl: 03 thực phẩm nhuận tràng cho bà bầu
+
+📄 Đang crawl: Bà bầu bị mất ngủ 3 tháng đầu có nguy hiểm không?
+
+📄 Đang crawl: Bà bầu uống được nước rau má không?
+
+📄 Đang crawl: Bà bầu có nên bổ sung canxi không?
+
+📄 Đang crawl: Nhổ răng khi đang bầu có sao không?
+
+📄 Đang crawl: Ăn hồng xiêm có tốt cho bà bầu không?
+
+📄 Đang crawl: Cách nấu cháo cá chép cho bà bầu
+
+📄 Đang crawl: Có bầu ăn đu đủ chín được không?
+
+📄 Đang crawl: Bà bầu thiếu máu nên uống thuốc gì?
+
+📄 Đang crawl: Triệu chứng cao huyết áp ở bà bầu
+
+📄 Đang crawl: Lưu ý hạ sốt an toàn cho bà bầu
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 19
+
+📄 Đang crawl: Sự thay đổi của bà bầu tuần 16
+
+📄 Đang crawl: Cải thiện chứng mất ngủ ở bà bầu
+
+📄 Đang crawl: Khó thở khi mang bầu có đáng ngại?
+
+📄 Đang crawl: Một số bài tập yoga cho bà bầu
+
+📄 Đang crawl: Quả nhãn có tốt cho bà bầu không?
+
+📄 Đang crawl: 5 lợi ích của việc massage bầu ngực
+
+📄 Đang crawl: Có thể sử dụng thuốc nội tiết cho bà bầu?
+
+📄 Đang crawl: Thực phẩm đẹp da, bổ dưỡng cho mẹ bầu
+
+📄 Đang crawl: Có bầu: Khi nào nên bắt đầu tập Yoga?
+
+📄 Đang crawl: Mẹ bầu bị nhau bám mặt sau là sao?
+
+📄 Đang crawl: Có nên dùng thuốc chống nôn cho bà bầu?
+
+📄 Đang crawl: Có nên dùng thuốc tẩy giun cho bà bầu?
+
+🔍 Tìm keyword: bé
+  📍 Trang 1: https://www.vinmec.com/vie/ket-qua-tim-kiem/?q=bé
+  📊 Tìm thấy 12 bài viết trên trang 1
+  📍 Trang 2: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 2
+  📍 Trang 3: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 3
+  📍 Trang 4: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 4
+  📍 Trang 5: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 5
+  ✅ Dấu hiệu bé sắp rụng rốn
+     🔗 https://www.vinmec.com/vie/bai-viet/dau-hieu-be-sap-rung-ron-vi
+  ✅ Chọn thực phẩm cho bé ăn dặm
+     🔗 https://www.vinmec.com/vie/bai-viet/chon-thuc-pham-cho-be-dam-vi
+  ✅ Bữa phụ nên cho bé ăn gì?
+     🔗 https://www.vinmec.com/vie/bai-viet/bua-phu-nen-cho-be-gi-vi
+  ✅ Thực phẩm cho bé ăn mùa đông
+     🔗 https://www.vinmec.com/vie/bai-viet/thuc-pham-cho-be-mua-dong-vi
+  ✅ Cho bé ăn khuya có tốt không?
+     🔗 https://www.vinmec.com/vie/bai-viet/cho-be-khuya-co-tot-khong-vi
+  ✅ Bé bị bỏng bôi thuốc gì?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-bi-bong-boi-thuoc-gi-vi
+  📍 Trang 6: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 6
+  ✅ Bé mọc răng bỏ ăn bao lâu?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-moc-rang-bo-bao-lau-vi
+  ✅ Bé 19 tháng ăn cơm được chưa?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-19-thang-com-duoc-chua-vi
+  ✅ Vì sao bé lười ăn dặm?
+     🔗 https://www.vinmec.com/vie/bai-viet/vi-sao-be-luoi-an-dam-vi
+  ✅ Bé 16 tháng nặng bao nhiêu?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-16-thang-nang-bao-nhieu-vi
+  ✅ Bé lớn bị thủy đậu bé thứ 2 tiêm vắc-xin thủy đậu có tác dụn
+     🔗 https://www.vinmec.com/vie/bai-viet/be-lon-bi-thuy-dau-be-thu-2-tiem-vac-xin-thuy-dau-co-tac-dung-khong-vi
+  ✅ Tiểu không hết và không thành dòng do dính môi bé có tách mô
+     🔗 https://www.vinmec.com/vie/bai-viet/tieu-khong-het-va-khong-thanh-dong-do-dinh-moi-be-co-tach-moi-be-duoc-khong-vi
+  ✅ Quên không cho bé uống vitamin K lần 2 khi bé 30 ngày tuổi n
+     🔗 https://www.vinmec.com/vie/bai-viet/quen-khong-cho-be-uong-vitamin-k-lan-2-khi-be-30-ngay-tuoi-nen-lam-gi-vi
+  ✅ Bé có nguy cơ mắc bệnh tan máu, bé kiểm tra trước 6 tháng tu
+     🔗 https://www.vinmec.com/vie/bai-viet/be-co-nguy-co-mac-benh-tan-mau-be-kiem-tra-truoc-6-thang-tuoi-duoc-khong-vi
+  ✅ Cho bé bú chung với bé bị viêm gan CMV có khả năng bị lây nh
+     🔗 https://www.vinmec.com/vie/bai-viet/cho-be-bu-chung-voi-be-bi-viem-gan-cmv-co-kha-nang-bi-lay-nhiem-khong-vi
+  📍 Trang 7: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 7
+  ✅ Bé ăn kem đánh răng có sao không?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-kem-danh-rang-co-sao-khong-vi
+  ✅ "Cô bé khô hạn" tuổi mãn kinh
+     🔗 https://www.vinmec.com/vie/bai-viet/co-be-kho-han-tuoi-man-kinh-vi
+  ✅ Các dấu hiệu em bé quay đầu
+     🔗 https://www.vinmec.com/vie/bai-viet/cac-dau-hieu-em-be-quay-dau-vi
+  ✅ Vì sao bé chỉ bú 1 bên?
+     🔗 https://www.vinmec.com/vie/bai-viet/vi-sao-be-chi-bu-1-ben-vi
+  ✅ Nuôi dưỡng một em bé độc lập
+     🔗 https://www.vinmec.com/vie/bai-viet/nuoi-duong-mot-em-be-doc-lap-vi
+  ✅ Bé chậm tăng cân có sao không?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-cham-tang-can-co-sao-khong-vi
+  ✅ Nguyên nhân bé không chịu bú mẹ?
+     🔗 https://www.vinmec.com/vie/bai-viet/nguyen-nhan-be-khong-chiu-bu-me-vi
+  ✅ Bé 4 tháng tuổi ăn dặm được không?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-4-thang-tuoi-dam-duoc-khong-vi
+  ✅ Chế độ ăn dặm cho bé như thế nào?
+     🔗 https://www.vinmec.com/vie/bai-viet/che-do-dam-cho-be-nhu-nao-vi
+  📍 Trang 8: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 8
+  ✅ Bé dậy thì sớm dùng thuốc gì?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-day-thi-som-dung-thuoc-gi-vi
+  ✅ Nguyên nhân bé ho lâu dai dẳng?
+     🔗 https://www.vinmec.com/vie/bai-viet/nguyen-nhan-be-ho-lau-dai-dang-vi
+  ✅ Bé tiêu chảy có thể bị bệnh gì?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-tieu-chay-co-bi-benh-gi-vi
+  ✅ Làm thế nào để bé đỡ vàng da?
+     🔗 https://www.vinmec.com/vie/bai-viet/lam-nao-de-be-do-vang-da-vi
+  ✅ Làm sao để kích thích bé ăn rau?
+     🔗 https://www.vinmec.com/vie/bai-viet/lam-sao-de-kich-thich-be-rau-vi
+  ✅ Các loại hạt dinh dưỡng cho bé
+     🔗 https://www.vinmec.com/vie/bai-viet/cac-loai-hat-dinh-duong-cho-be-vi
+  ✅ Giúp bé làm quen với thức ăn rắn
+     🔗 https://www.vinmec.com/vie/bai-viet/giup-be-lam-quen-voi-thuc-ran-vi
+  ✅ Làm thế nào khi bé bị chậm nói?
+     🔗 https://www.vinmec.com/vie/bai-viet/lam-nao-khi-be-bi-cham-noi-vi
+  📍 Trang 9: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 9
+  ✅ Làm thế nào nếu răng bé bị ăn mòn?
+     🔗 https://www.vinmec.com/vie/bai-viet/lam-nao-neu-rang-be-bi-mon-vi
+  ✅ Có nên cho bé ăn nhiều thịt bò?
+     🔗 https://www.vinmec.com/vie/bai-viet/co-nen-cho-be-nhieu-thit-bo-vi
+  ✅ Có nên cho bé ăn mỡ lợn không?
+     🔗 https://www.vinmec.com/vie/bai-viet/co-nen-cho-be-mo-lon-khong-vi
+  ✅ Bé thường phải bú trong bao lâu?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-thuong-phai-bu-trong-bao-lau-vi
+  ✅ Đồ ngủ nào tốt nhất cho bé?
+     🔗 https://www.vinmec.com/vie/bai-viet/do-ngu-nao-tot-nhat-cho-be-vi
+  ✅ Khi nào nên cai sữa cho bé?
+     🔗 https://www.vinmec.com/vie/bai-viet/khi-nao-nen-cai-sua-cho-be-vi
+  ✅ Mẹo cho bé gái tập ngồi bô
+     🔗 https://www.vinmec.com/vie/bai-viet/meo-cho-be-gai-tap-ngoi-bo-vi
+  ✅ Mẹo cho bé trai tập ngồi bô
+     🔗 https://www.vinmec.com/vie/bai-viet/meo-cho-be-trai-tap-ngoi-bo-vi
+  ✅ Giúp bé làm quen với bú bình
+     🔗 https://www.vinmec.com/vie/bai-viet/giup-be-lam-quen-voi-bu-binh-vi
+  📍 Trang 10: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 10
+  ✅ Bé đánh răng nhiều có tốt không?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-danh-rang-nhieu-co-tot-khong-vi
+  ✅ Cách nào kích thích ăn cho bé?
+     🔗 https://www.vinmec.com/vie/bai-viet/cach-nao-kich-thich-an-cho-be-vi
+  ✅ Bé không ăn rau, mẹ phải làm sao?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-khong-rau-me-phai-lam-sao-vi
+  ✅ Cách chế biến món ăn cho bé biếng ăn
+     🔗 https://www.vinmec.com/vie/bai-viet/cach-che-bien-mon-cho-be-bieng-vi
+  ✅ Bé 16 tháng cao bao nhiêu cm?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-16-thang-cao-bao-nhieu-cm-vi
+  ✅ Bé 8 tháng biếng ăn sinh lý
+     🔗 https://www.vinmec.com/vie/bai-viet/be-8-thang-bieng-an-sinh-ly-vi
+  ✅ Bé bị đau họng nên uống gì?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-bi-dau-hong-nen-uong-gi-vi
+  ✅ Nên cho bé ăn gì vào bữa sáng?
+     🔗 https://www.vinmec.com/vie/bai-viet/nen-cho-be-gi-vao-bua-sang-vi
+  ✅ Có nên cho bé ăn dặm măng tây?
+     🔗 https://www.vinmec.com/vie/bai-viet/co-nen-cho-be-dam-mang-tay-vi
+  📍 Trang 11: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 11
+  ✅ Bé bị rôm sảy bôi thuốc gì?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-bi-rom-say-boi-thuoc-gi-vi
+  ✅ Biến chứng khi bé bị chốc lở
+     🔗 https://www.vinmec.com/vie/bai-viet/bien-chung-khi-be-bi-choc-lo-vi
+  ✅ Có nên giải độc gan cho bé?
+     🔗 https://www.vinmec.com/vie/bai-viet/co-nen-giai-doc-gan-cho-be-vi
+  ✅ Vì sao bé đi ngoài phân nhầy?
+     🔗 https://www.vinmec.com/vie/bai-viet/vi-sao-be-di-ngoai-phan-nhay-vi
+  ✅ Hậu quả khi bé biếng ăn kéo dài
+     🔗 https://www.vinmec.com/vie/bai-viet/hau-qua-khi-be-bieng-keo-dai-vi
+  ✅ Bé 16 tháng ăn cơm được chưa?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-16-thang-an-com-duoc-chua-vi
+  ✅ Bé trai 27 tháng nặng bao nhiêu?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-trai-27-thang-nang-bao-nhieu-vi
+  ✅ Cân nặng bé gái 8 tháng tuổi
+     🔗 https://www.vinmec.com/vie/bai-viet/can-nang-be-gai-8-thang-tuoi-vi
+  ✅ Bé trai 20 tháng cao bao nhiêu?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-trai-20-thang-cao-bao-nhieu-vi
+  📍 Trang 12: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 12
+  ✅ Có nên kích thích ăn cho bé?
+     🔗 https://www.vinmec.com/vie/bai-viet/co-nen-kich-thich-an-cho-be-vi
+  ✅ Bé 21 tháng tuổi ăn gì thì tốt?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-21-thang-tuoi-gi-thi-tot-vi
+  ✅ Khi nào nên cho bé ăn cháo?
+     🔗 https://www.vinmec.com/vie/bai-viet/khi-nao-nen-cho-be-an-chao-vi
+  ✅ Bé 10 tháng cao bao nhiêu cm?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-10-thang-cao-bao-nhieu-cm-vi
+  ✅ Cân nặng bé trai 21 tháng tuổi
+     🔗 https://www.vinmec.com/vie/bai-viet/can-nang-be-trai-21-thang-tuoi-vi
+  ✅ Có nên dùng dầu ăn cho bé ăn dặm?
+     🔗 https://www.vinmec.com/vie/bai-viet/co-nen-dung-dau-cho-be-dam-vi
+  ✅ Cân nặng bé trai 15 tháng tuổi?
+     🔗 https://www.vinmec.com/vie/bai-viet/can-nang-be-trai-15-thang-tuoi-vi
+  ✅ Cách tập phản xạ nhai cho bé
+     🔗 https://www.vinmec.com/vie/bai-viet/cach-tap-phan-xa-nhai-cho-be-vi
+  ✅ Làm thế nào để bé không gắt ngủ?
+     🔗 https://www.vinmec.com/vie/bai-viet/lam-nao-de-be-khong-gat-ngu-vi
+  📍 Trang 13: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 13
+  ✅ Cách nào trị đái dầm cho bé?
+     🔗 https://www.vinmec.com/vie/bai-viet/cach-nao-tri-dai-dam-cho-be-vi
+  ✅ Dinh dưỡng cho bé 9 tháng tuổi
+     🔗 https://www.vinmec.com/vie/bai-viet/dinh-duong-cho-be-9-thang-tuoi-vi
+  ✅ Các món cháo cho bé bị sốt
+     🔗 https://www.vinmec.com/vie/bai-viet/cac-mon-chao-cho-be-bi-sot-vi
+  ✅ Hướng dẫn cách nấu bột cho bé
+     🔗 https://www.vinmec.com/vie/bai-viet/huong-dan-cach-nau-bot-cho-be-vi
+  ✅ Bé ăn rau dền có tốt không?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-an-rau-den-co-tot-khong-vi
+  ✅ Bé sơ sinh bị giãn đài bể thận trái 6mm có nguy hiểm không?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-so-sinh-bi-gian-dai-be-than-trai-6mm-co-nguy-hiem-khong-chua-tri-nhu-the-nao-vi
+  📍 Trang 14: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 14
+  ✅ Bé 2 tháng ngửa cổ ra sau và cứng cổ khi bế có phải dấu hiệu
+     🔗 https://www.vinmec.com/vie/bai-viet/be-2-thang-ngua-co-ra-sau-va-cung-co-khi-be-co-phai-dau-hieu-cua-benh-gi-khong-vi
+  ✅ Tác dụng thuốc nhuận tràng Peginpol cho bé
+     🔗 https://www.vinmec.com/vie/bai-viet/tac-dung-thuoc-nhuan-trang-peginpol-cho-be-vi
+  ✅ Lưu ý khi chụp X-quang cho bé
+     🔗 https://www.vinmec.com/vie/bai-viet/luu-y-khi-chup-x-quang-cho-be-vi
+  ✅ LÙNG“ÔNG NGOẠI SAGE” - ĐÓN BÉ YÊU VỀ NHÀ
+     🔗 https://www.vinmec.com/vie/bai-viet/lungong-ngoai-sage-don-be-yeu-ve-nha-vi
+  ✅ Thực đơn dinh dưỡng cho bé 4 tuổi
+     🔗 https://www.vinmec.com/vie/bai-viet/thuc-don-dinh-duong-cho-be-4-tuoi-vi
+  📍 Trang 15: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 15
+  ✅ Giãn bể lớn hố sau ở thai nhi
+     🔗 https://www.vinmec.com/vie/bai-viet/gian-be-lon-ho-sau-o-thai-nhi-vi
+  ✅ Hướng dẫn massage lưng đúng cách cho bé
+     🔗 https://www.vinmec.com/vie/bai-viet/huong-dan-massage-lung-dung-cach-cho-be-vi
+  ✅ Tuần thứ 2 sau khi bé chào đời
+     🔗 https://www.vinmec.com/vie/bai-viet/tuan-thu-2-sau-khi-be-chao-doi-vi
+  ✅ Bé ho vào buổi sáng là do đâu?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-ho-vao-buoi-sang-la-do-dau-vi
+  ✅ Bé 36 tháng tiêm mũi vắc xin gì?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-36-thang-tiem-mui-vac-xin-gi-vi
+  ✅ Bé 5 tháng giờ nhỏ Rota được không?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-5-thang-gio-nho-rota-duoc-khong-vi
+  ✅ Bảng chiều cao cân nặng chuẩn của bé
+     🔗 https://www.vinmec.com/vie/bai-viet/bang-chieu-cao-can-nang-chuan-cua-be-vi
+  ✅ Thai phụ giãn bể thận có nguy hiểm không?
+     🔗 https://www.vinmec.com/vie/bai-viet/thai-phu-gian-be-co-nguy-hiem-khong-vi
+  📍 Trang 16: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 16
+  ✅ Cần làm gì để giúp bé tăng cân?
+     🔗 https://www.vinmec.com/vie/bai-viet/can-lam-gi-de-giup-be-tang-can-vi
+  ✅ Bé sơ sinh ngủ ít phải làm gì?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-so-sinh-ngu-it-phai-lam-gi-vi
+  ✅ Em bé sinh non cần chăm như thế nào?
+     🔗 https://www.vinmec.com/vie/bai-viet/em-be-sinh-non-can-cham-nhu-nao-vi
+  ✅ Bé gái 18 tháng cai sữa được không?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-gai-18-thang-cai-sua-duoc-khong-vi
+  ✅ Bé 6 tháng thừa cân có sao không?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-6-thang-thua-can-co-sao-khong-vi
+  ✅ Có nên xin sữa mẹ cho bé bú?
+     🔗 https://www.vinmec.com/vie/bai-viet/co-nen-xin-sua-me-cho-be-bu-vi
+  ✅ Thụt phân nhiều cho bé có sao không?
+     🔗 https://www.vinmec.com/vie/bai-viet/thut-phan-nhieu-cho-be-co-sao-khong-vi
+  ✅ Cách theo dõi thói quen ngủ của bé
+     🔗 https://www.vinmec.com/vie/bai-viet/cach-theo-doi-thoi-quen-ngu-cua-be-vi
+  ✅ Lõm ở ngực bé có đáng lo không?
+     🔗 https://www.vinmec.com/vie/bai-viet/lom-o-nguc-be-co-dang-lo-khong-vi
+  📍 Trang 17: Click next button
+  📊 Tìm thấy 12 bài viết trên trang 17
+  ✅ Thi thoảng bé ho, không sốt là sao?
+     🔗 https://www.vinmec.com/vie/bai-viet/thi-thoang-be-ho-khong-sot-la-sao-vi
+  ✅ U máu ở bé có nguy hiểm không?
+     🔗 https://www.vinmec.com/vie/bai-viet/u-mau-o-be-co-nguy-hiem-khong-vi
+  ✅ Bé đau bụng, són phân phải làm sao?
+     🔗 https://www.vinmec.com/vie/bai-viet/be-dau-bung-son-phan-phai-lam-sao-vi
+  ✅ Có thể cho bé ăn hoa quả chưa hấp không?
+     🔗 https://www.vinmec.com/vie/bai-viet/co-cho-be-hoa-qua-chua-hap-khong-vi
+
+📄 Đang crawl: Dấu hiệu bé sắp rụng rốn
+
+📄 Đang crawl: Chọn thực phẩm cho bé ăn dặm
+
+📄 Đang crawl: Bữa phụ nên cho bé ăn gì?
+
+📄 Đang crawl: Thực phẩm cho bé ăn mùa đông
+
+📄 Đang crawl: Cho bé ăn khuya có tốt không?
+
+📄 Đang crawl: Bé bị bỏng bôi thuốc gì?
+
+📄 Đang crawl: Bé mọc răng bỏ ăn bao lâu?
+
+📄 Đang crawl: Bé 19 tháng ăn cơm được chưa?
+
+📄 Đang crawl: Vì sao bé lười ăn dặm?
+
+📄 Đang crawl: Bé 16 tháng nặng bao nhiêu?
+
+📄 Đang crawl: Bé lớn bị thủy đậu bé thứ 2 tiêm vắc-xin thủy đậu có tác dụn
+
+📄 Đang crawl: Tiểu không hết và không thành dòng do dính môi bé có tách mô
+
+📄 Đang crawl: Quên không cho bé uống vitamin K lần 2 khi bé 30 ngày tuổi n
+
+📄 Đang crawl: Bé có nguy cơ mắc bệnh tan máu, bé kiểm tra trước 6 tháng tu
+
+📄 Đang crawl: Cho bé bú chung với bé bị viêm gan CMV có khả năng bị lây nh
+
+📄 Đang crawl: Bé ăn kem đánh răng có sao không?
+
+📄 Đang crawl: "Cô bé khô hạn" tuổi mãn kinh
+
+📄 Đang crawl: Các dấu hiệu em bé quay đầu
+
+📄 Đang crawl: Vì sao bé chỉ bú 1 bên?
+
+📄 Đang crawl: Nuôi dưỡng một em bé độc lập
+
+📄 Đang crawl: Bé chậm tăng cân có sao không?
+
+📄 Đang crawl: Nguyên nhân bé không chịu bú mẹ?
+
+📄 Đang crawl: Bé 4 tháng tuổi ăn dặm được không?
+
+📄 Đang crawl: Chế độ ăn dặm cho bé như thế nào?
+
+📄 Đang crawl: Bé dậy thì sớm dùng thuốc gì?
+
+📄 Đang crawl: Nguyên nhân bé ho lâu dai dẳng?
+
+📄 Đang crawl: Bé tiêu chảy có thể bị bệnh gì?
+
+📄 Đang crawl: Làm thế nào để bé đỡ vàng da?
+
+📄 Đang crawl: Làm sao để kích thích bé ăn rau?
+
+📄 Đang crawl: Các loại hạt dinh dưỡng cho bé
+
+📄 Đang crawl: Giúp bé làm quen với thức ăn rắn
+
+📄 Đang crawl: Làm thế nào khi bé bị chậm nói?
+
+📄 Đang crawl: Làm thế nào nếu răng bé bị ăn mòn?
+
+📄 Đang crawl: Có nên cho bé ăn nhiều thịt bò?
+
+📄 Đang crawl: Có nên cho bé ăn mỡ lợn không?
+
+📄 Đang crawl: Bé thường phải bú trong bao lâu?
+
+📄 Đang crawl: Đồ ngủ nào tốt nhất cho bé?
+
+📄 Đang crawl: Khi nào nên cai sữa cho bé?
+
+📄 Đang crawl: Mẹo cho bé gái tập ngồi bô
+
+📄 Đang crawl: Mẹo cho bé trai tập ngồi bô
+
+📄 Đang crawl: Giúp bé làm quen với bú bình
+
+📄 Đang crawl: Bé đánh răng nhiều có tốt không?
+
+📄 Đang crawl: Cách nào kích thích ăn cho bé?
+
+📄 Đang crawl: Bé không ăn rau, mẹ phải làm sao?
+
+📄 Đang crawl: Cách chế biến món ăn cho bé biếng ăn
+
+📄 Đang crawl: Bé 16 tháng cao bao nhiêu cm?
+
+📄 Đang crawl: Bé 8 tháng biếng ăn sinh lý
+
+📄 Đang crawl: Bé bị đau họng nên uống gì?
+
+📄 Đang crawl: Nên cho bé ăn gì vào bữa sáng?
+
+📄 Đang crawl: Có nên cho bé ăn dặm măng tây?
+
+📄 Đang crawl: Bé bị rôm sảy bôi thuốc gì?
+
+📄 Đang crawl: Biến chứng khi bé bị chốc lở
+
+📄 Đang crawl: Có nên giải độc gan cho bé?
+
+📄 Đang crawl: Vì sao bé đi ngoài phân nhầy?
+
+📄 Đang crawl: Hậu quả khi bé biếng ăn kéo dài
+
+📄 Đang crawl: Bé 16 tháng ăn cơm được chưa?
+
+📄 Đang crawl: Bé trai 27 tháng nặng bao nhiêu?
+
+📄 Đang crawl: Cân nặng bé gái 8 tháng tuổi
+
+📄 Đang crawl: Bé trai 20 tháng cao bao nhiêu?
+
+📄 Đang crawl: Có nên kích thích ăn cho bé?
+
+📄 Đang crawl: Bé 21 tháng tuổi ăn gì thì tốt?
+
+📄 Đang crawl: Khi nào nên cho bé ăn cháo?
+
+📄 Đang crawl: Bé 10 tháng cao bao nhiêu cm?
+
+📄 Đang crawl: Cân nặng bé trai 21 tháng tuổi
+
+📄 Đang crawl: Có nên dùng dầu ăn cho bé ăn dặm?
+
+📄 Đang crawl: Cân nặng bé trai 15 tháng tuổi?
+
+📄 Đang crawl: Cách tập phản xạ nhai cho bé
+
+📄 Đang crawl: Làm thế nào để bé không gắt ngủ?
+
+📄 Đang crawl: Cách nào trị đái dầm cho bé?
+
+📄 Đang crawl: Dinh dưỡng cho bé 9 tháng tuổi
+
+📄 Đang crawl: Các món cháo cho bé bị sốt
+
+📄 Đang crawl: Hướng dẫn cách nấu bột cho bé
+
+📄 Đang crawl: Bé ăn rau dền có tốt không?
+
+📄 Đang crawl: Bé sơ sinh bị giãn đài bể thận trái 6mm có nguy hiểm không?
+
+📄 Đang crawl: Bé 2 tháng ngửa cổ ra sau và cứng cổ khi bế có phải dấu hiệu
+
+📄 Đang crawl: Tác dụng thuốc nhuận tràng Peginpol cho bé
+
+📄 Đang crawl: Lưu ý khi chụp X-quang cho bé
+
+📄 Đang crawl: LÙNG“ÔNG NGOẠI SAGE” - ĐÓN BÉ YÊU VỀ NHÀ
+
+📄 Đang crawl: Thực đơn dinh dưỡng cho bé 4 tuổi
+
+📄 Đang crawl: Giãn bể lớn hố sau ở thai nhi
+
+📄 Đang crawl: Hướng dẫn massage lưng đúng cách cho bé
+
+📄 Đang crawl: Tuần thứ 2 sau khi bé chào đời
+
+📄 Đang crawl: Bé ho vào buổi sáng là do đâu?
+
+📄 Đang crawl: Bé 36 tháng tiêm mũi vắc xin gì?
+
+📄 Đang crawl: Bé 5 tháng giờ nhỏ Rota được không?
+
+📄 Đang crawl: Bảng chiều cao cân nặng chuẩn của bé
+
+📄 Đang crawl: Thai phụ giãn bể thận có nguy hiểm không?
+
+📄 Đang crawl: Cần làm gì để giúp bé tăng cân?
+
+📄 Đang crawl: Bé sơ sinh ngủ ít phải làm gì?
+
+📄 Đang crawl: Em bé sinh non cần chăm như thế nào?
+
+📄 Đang crawl: Bé gái 18 tháng cai sữa được không?
+
+📄 Đang crawl: Bé 6 tháng thừa cân có sao không?
+
+📄 Đang crawl: Có nên xin sữa mẹ cho bé bú?
+
+📄 Đang crawl: Thụt phân nhiều cho bé có sao không?
+
+📄 Đang crawl: Cách theo dõi thói quen ngủ của bé
+
+📄 Đang crawl: Lõm ở ngực bé có đáng lo không?
+
+📄 Đang crawl: Thi thoảng bé ho, không sốt là sao?
+
+📄 Đang crawl: U máu ở bé có nguy hiểm không?
+
+📄 Đang crawl: Bé đau bụng, són phân phải làm sao?
+
+📄 Đang crawl: Có thể cho bé ăn hoa quả chưa hấp không?
+✅ Lưu full articles: data\raw\vinmec\vinmec_full.xlsx
+✅ Lưu chunks: data\raw\vinmec\vinmec_chunked.xlsx
+
+✅ DONE!
+- Full articles: 200
+- Chunks: 1136
+
+(python3.11) D:\Vin\projects\A20-App-005\src\agents\bot-pregnant>python -m src.ingestion.cleaner
+=======================================================
+  Bắt đầu xử lý dữ liệu thô → Markdown
+=======================================================
+
+[PDF] Đang xử lý: reproductive_health_care.pdf
+  Tổng số trang: 487
+  Bìa:           trang 1 → 2
+  Mục lục:       trang 2
+  Chữ viết tắt:  trang 2
+  Nội dung:      trang 2
+[PDF] ✅ Lưu: data\processed\health_care\reproductive_health_care.md
+
+[XLSX] Đang xử lý: vinmec_full.xlsx + vinmec_chunked.xlsx
+[XLSX] Loaded metadata: 59 items
+[XLSX] ✅ Đã lưu 200 file .md → data\processed\vinmec
+
+✅  Hoàn thành!

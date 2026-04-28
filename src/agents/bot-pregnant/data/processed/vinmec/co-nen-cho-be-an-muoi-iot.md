@@ -1,12 +1,15 @@
 ---
-title: "Có nên cho bé ăn muối iot?"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/co-nen-cho-be-muoi-iot-vi
 category: Dinh dưỡng
-stage: [6_12_thang, 1_3_tuoi]
+keyword: bé
 safety_level: Cân nhắc
+source: vinmec
+stage:
+- 6_12_thang
+- 1_3_tuoi
+title: Có nên cho bé ăn muối iot?
+url: https://www.vinmec.com/vie/bai-viet/co-nen-cho-be-muoi-iot-vi
 ---
+
 
 # Có nên cho bé ăn muối iot?
 

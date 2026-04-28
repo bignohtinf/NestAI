@@ -1,12 +1,15 @@
 ---
-title: "Huấn luyện giấc ngủ cho bé"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/huan-luyen-giac-ngu-cho-be-vi
 category: Sinh hoạt
-stage: [6_12_thang, 1_3_tuoi]
+keyword: bé
 safety_level: Cân nhắc
+source: vinmec
+stage:
+- 6_12_thang
+- 1_3_tuoi
+title: Huấn luyện giấc ngủ cho bé
+url: https://www.vinmec.com/vie/bai-viet/huan-luyen-giac-ngu-cho-be-vi
 ---
+
 
 # Huấn luyện giấc ngủ cho bé
 
