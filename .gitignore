@@ -45,3 +45,11 @@ ehthumbs.db
 
 data/
 
+migrations/
+
+raw_food_data/
+
+# Local bot-pregnant embedding model cache
+src/agents/bot-pregnant/models/
+src/backend/models
+scripts/init-ollama.sh

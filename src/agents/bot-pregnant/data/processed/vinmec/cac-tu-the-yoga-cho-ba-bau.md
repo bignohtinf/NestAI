@@ -1,12 +1,16 @@
 ---
-title: "Các tư thế yoga cho bà bầu"
-keyword: bầu
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/cac-tu-yoga-cho-ba-bau-vi
 category: Sinh hoạt
-stage: [3_thang_dau, 3_thang_giua, 3_thang_cuoi]
+keyword: bầu
 safety_level: An toàn
+source: vinmec
+stage:
+- 3_thang_dau
+- 3_thang_giua
+- 3_thang_cuoi
+title: Các tư thế yoga cho bà bầu
+url: https://www.vinmec.com/vie/bai-viet/cac-tu-yoga-cho-ba-bau-vi
 ---
+
 
 # Các tư thế yoga cho bà bầu
 

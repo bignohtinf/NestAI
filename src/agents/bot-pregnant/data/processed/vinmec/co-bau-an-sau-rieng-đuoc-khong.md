@@ -1,12 +1,16 @@
 ---
-title: "Có bầu ăn sầu riêng được không?"
-keyword: bầu
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/co-bau-sau-rieng-duoc-khong-vi
 category: Dinh dưỡng
-stage: [3_thang_dau, 3_thang_giua, 3_thang_cuoi]
+keyword: bầu
 safety_level: Cân nhắc
+source: vinmec
+stage:
+- 3_thang_dau
+- 3_thang_giua
+- 3_thang_cuoi
+title: Có bầu ăn sầu riêng được không?
+url: https://www.vinmec.com/vie/bai-viet/co-bau-sau-rieng-duoc-khong-vi
 ---
+
 
 # Có bầu ăn sầu riêng được không?
 

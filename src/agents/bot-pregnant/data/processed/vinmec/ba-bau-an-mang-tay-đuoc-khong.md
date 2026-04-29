@@ -1,12 +1,16 @@
 ---
-title: "Bà bầu ăn măng tây được không?"
-keyword: bầu
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/ba-bau-mang-tay-duoc-khong-vi
 category: Dinh dưỡng
-stage: [3_thang_dau, 3_thang_giua, 3_thang_cuoi]
+keyword: bầu
 safety_level: An toàn
+source: vinmec
+stage:
+- 3_thang_dau
+- 3_thang_giua
+- 3_thang_cuoi
+title: Bà bầu ăn măng tây được không?
+url: https://www.vinmec.com/vie/bai-viet/ba-bau-mang-tay-duoc-khong-vi
 ---
+
 
 # Bà bầu ăn măng tây được không?
 

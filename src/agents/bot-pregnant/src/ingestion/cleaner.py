@@ -49,7 +49,6 @@ _RE_CHAPTER_HEADING = re.compile(r"^(CHƯƠNG|BÀI|PHẦN)\s+[\dIVXivx]+", re.IG
 # TEXT UTILITIES
 # ─────────────────────────────────────────
 def clean_text(text: str) -> str:
-    """Chuẩn hoá text: bỏ soft-hyphen, nối từ bị gãy dòng, thu gọn khoảng trắng."""
     text = text.replace("\xad", "")           # soft hyphen
     text = re.sub(r"-\n(\w)", r"\1", text)    # nối từ bị gãy
     text = re.sub(r"\n{3,}", "\n\n", text)    # nhiều dòng trống → 2
@@ -58,7 +57,6 @@ def clean_text(text: str) -> str:
 
 
 def slugify(text: str) -> str:
-    """Tạo tên file an toàn từ tiêu đề tiếng Việt."""
     text = unicodedata.normalize("NFD", text)
     text = "".join(c for c in text if unicodedata.category(c) != "Mn")
     text = re.sub(r"[^\w\s-]", "", text.lower())
@@ -67,7 +65,6 @@ def slugify(text: str) -> str:
 
 
 def is_all_caps_vn(line: str) -> bool:
-    """Kiểm tra dòng có phải tiêu đề viết hoa toàn bộ (tiếng Việt)."""
     stripped = line.strip()
     if len(stripped) < 5 or len(stripped) > 80:
         return False
@@ -99,7 +96,7 @@ def get_heading_level(line: str) -> int | None:
     match = re.match(r"^(\d+(?:\.\d+){0,3})\.?\s+", s)
     if match:
         depth = match.group(1).count(".")
-        return 3 + depth  # 1. -> 3, 1.1 -> 4, 1.1.1 -> 5, 1.1.1.1 -> 6
+        return 2 + depth  # 1. -> 2, 1.1 -> 3, 1.1.1 -> 4, 1.1.1.1 -> 5
     
     return None
 
@@ -274,7 +271,7 @@ def process_pdf(pdf_path: Path, out_dir: Path) -> Path:
         parts += ["---", "", "# DANH MỤC CHỮ VIẾT TẮT", "", sections["abbrev"], ""]
 
     if sections["content"]:
-        parts += ["---", "", "# NỘI DUNG", "", _lines_to_markdown(sections["content"]), ""]
+        parts += ["---", "", "# NỘI DUNG", "", _lines_to_markdown_enhanced(sections["content"]), ""]
 
     out_path.write_text("\n".join(parts), encoding="utf-8")
     print(f"[PDF] ✅ Lưu: {out_path.relative_to(BASE_DIR)}")

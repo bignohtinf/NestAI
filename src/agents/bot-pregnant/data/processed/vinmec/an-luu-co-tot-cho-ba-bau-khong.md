@@ -1,12 +1,16 @@
 ---
-title: "Ăn lựu có tốt cho bà bầu không?"
-keyword: bầu
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/luu-co-tot-cho-ba-bau-khong-vi
 category: Dinh dưỡng
-stage: [3_thang_dau, 3_thang_giua, 3_thang_cuoi]
+keyword: bầu
 safety_level: An toàn
+source: vinmec
+stage:
+- 3_thang_dau
+- 3_thang_giua
+- 3_thang_cuoi
+title: Ăn lựu có tốt cho bà bầu không?
+url: https://www.vinmec.com/vie/bai-viet/luu-co-tot-cho-ba-bau-khong-vi
 ---
+
 
 # Ăn lựu có tốt cho bà bầu không?
 

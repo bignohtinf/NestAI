@@ -1,0 +1,262 @@
+[
+  {
+    "question": "Mục đích của việc tư vấn chăm sóc sức khỏe sinh sản là gì?",
+    "answer": "Mục đích của tư vấn sức khỏe sinh sản là giúp cá nhân hoặc cặp vợ chồng nhận được thông tin về sức khỏe sinh sản và kế hoạch hóa gia đình, nhận thức được tầm quan trọng của sức khỏe sinh sản để tự bảo vệ sức khỏe. Ngoài ra, tư vấn còn giúp giải quyết những băn khoăn lo lắng và đưa ra những quyết định hay hành vi sức khỏe có lợi cho bản thân, gia đình hoặc cộng đồng."
+  },
+  {
+    "question": "Phụ nữ mang thai cần được quản lý và khám thai ít nhất bao nhiêu lần trong suốt thai kỳ?",
+    "answer": "Mỗi phụ nữ mang thai phải được quản lý thai và khám thai ít nhất 4 lần trong thai kỳ. Lịch khám bao gồm: 1 lần trong 3 tháng đầu, 1 lần trong 3 tháng giữa và 2 lần trong 3 tháng cuối."
+  },
+  {
+    "question": "Theo tiêu chuẩn của ADA (2011), đái tháo đường thai kỳ được chẩn đoán dựa trên các giá trị đường huyết nào?",
+    "answer": "Chẩn đoán đái tháo đường thai kỳ khi có 1 trong 3 giá trị đường huyết bằng hoặc vượt các ngưỡng sau: lúc đói là 5,1 mmol/l (92 mg/dl), sau 1 giờ là 10,0 mmol/l (180 mg/dl), và sau 2 giờ là 8,5 mmol/l (153 mg/dl)."
+  },
+  {
+    "question": "Khi tiệt khuẩn dụng cụ bằng phương pháp sấy khô, cần duy trì nhiệt độ và thời gian như thế nào?",
+    "answer": "Khi tiệt khuẩn dụng cụ y tế bằng kim loại qua tủ sấy khô, nếu nhiệt độ là 170oC thì phải duy trì trong 60 phút. Nếu nhiệt độ là 160oC thì phải duy trì trong 120 phút."
+  },
+  {
+    "question": "Phương pháp phá thai bằng thuốc đến hết 9 tuần tuổi sử dụng sự phối hợp của những loại thuốc nào?",
+    "answer": "Phương pháp này sử dụng phối hợp giữa Mifepriston (uống 200 mg) và Misoprostol (ngậm dưới lưỡi hoặc ngậm bên má 800 mcg sau khi dùng Mifepriston từ 24 đến 48 giờ)."
+  },
+  {
+    "question": "Chảy máu sau đẻ được định nghĩa như thế nào và nguyên nhân phổ biến nhất gây ra tình trạng này là gì?",
+    "answer": "Chảy máu sau đẻ là tình trạng chảy máu âm đạo quá 500 ml sau khi sinh. Nguyên nhân phổ biến nhất là đờ tử cung, thể hiện qua việc tử cung giãn to, mềm nhão, co hồi kém hoặc không co hồi và không có khối an toàn."
+  },
+  {
+    "question": "Những trường hợp nào được coi là chống chỉ định tuyệt đối của việc đặt dụng cụ tử cung (DCTC)?",
+    "answer": "Các chống chỉ định tuyệt đối bao gồm: đang có thai, nhiễm khuẩn hậu sản, ngay sau sẩy thai nhiễm khuẩn, ra máu âm đạo chưa rõ nguyên nhân, bệnh nguyên bào nuôi ác tính, ung thư cổ tử cung hoặc ung thư niêm mạc tử cung. Ngoài ra còn cấm đặt khi đang viêm tiểu khung, viêm mủ cổ tử cung, nhiễm Chlamydia/lậu cầu, lao vùng chậu, u xơ tử cung hoặc có các dị dạng làm biến dạng buồng tử cung. Đối với loại DCTC giải phóng levonorgestrel, đang bị ung thư vú cũng là chống chỉ định tuyệt đối."
+  },
+  {
+    "question": "Lứa tuổi vị thành niên được quy định từ bao nhiêu tuổi và được chia làm những giai đoạn nào?",
+    "answer": "Lứa tuổi vị thành niên là từ 10 đến 18 tuổi và được chia ra làm 3 giai đoạn. Cụ thể: vị thành niên sớm từ 10 đến 13 tuổi, vị thành niên giữa từ 14 đến 16 tuổi và vị thành niên muộn từ 17 đến 18 tuổi."
+  },
+  {
+    "question": "Tiêu chuẩn xuất viện đối với trẻ đẻ non/nhẹ cân là gì?",
+    "answer": "Trẻ đẻ non được xuất viện khi hồng hào, có khả năng bú mẹ hoặc ăn đủ lượng sữa mà không bị suy hô hấp. Trẻ phải tăng cân 10-15 g/kg trọng lượng cơ thể mỗi ngày trong 3 ngày liên tục, thân nhiệt ổn định với nhiệt độ phòng, và không có cơn ngừng thở nặng hay nhịp tim chậm trong 5 ngày."
+  },
+  {
+    "question": "Khi nào thì trẻ sơ sinh có chỉ định được hỗ trợ hô hấp bằng cách bóp bóng qua mặt nạ?",
+    "answer": "Chỉ định bóp bóng qua mặt nạ khi trẻ không thở hoặc thở nấc, tím tái kéo dài dù đã thở oxy với FiO2 100%, hoặc có cơn ngưng thở kéo dài kèm tím tái."
+  },
+  {
+    "question": "Viêm âm đạo do trùng roi có đặc điểm khí hư như thế nào và phác đồ điều trị ra sao?",
+    "answer": "Khí hư do trùng roi âm đạo thường có màu xanh, loãng, có bọt, số lượng nhiều và có mùi hôi. Phác đồ điều trị là dùng Metronidazol 2g hoặc Tinidazol 2g uống liều duy nhất, hoặc Metronidazol 500mg uống 2 lần/ngày trong 7 ngày, và phải điều trị cho cả bạn tình."
+  },
+  {
+    "question": "Tiêu chuẩn vàng để chẩn đoán hội chứng mãn dục nam giới là gì?",
+    "answer": "Tiêu chuẩn vàng để xác định mãn dục nam giới là lượng testosterone trong máu hạ thấp dưới mức bình thường (mức bình thường là 10-35 nmol/lít) và nên tiến hành xét nghiệm này vào buổi sáng."
+  },
+  {
+    "question": "Tân sản nội biểu mô cổ tử cung (CIN) là gì và nguyên nhân chính gây ra bệnh này là do đâu?",
+    "answer": "Tân sản nội biểu mô cổ tử cung (CIN) là tổn thương tiền ung thư cổ tử cung, hình thành ở biểu mô lát cổ tử cung. Nguyên nhân chính là do người bệnh bị nhiễm ít nhất 1 typ HPV nguy cơ cao ở đường sinh dục."
+  },
+  {
+    "question": "Thuốc chống co giật nào được ưu tiên sử dụng để điều trị tiền sản giật nặng và sản giật, và cần theo dõi dấu hiệu gì khi dùng?",
+    "answer": "Magnesi sulfat 15% là thuốc được sử dụng để chống co giật cho thai phụ bị tiền sản giật nặng và sản giật. Khi sử dụng, thầy thuốc phải theo dõi phản xạ gân xương hàng ngày để đề phòng tình trạng dùng quá liều gây ngộ độc làm giảm hoặc mất phản xạ gân xương."
+  },
+  {
+    "question": "Triệt sản nam bằng phương pháp thắt và cắt ống dẫn tinh có tác dụng phòng tránh các bệnh lây truyền qua đường tình dục và HIV/AIDS không?",
+    "answer": "Không, triệt sản nam là một biện pháp tránh thai vĩnh viễn có hiệu quả rất cao, nhưng không phòng tránh được các bệnh lây truyền qua đường tình dục (NKLTQĐTD) và HIV/AIDS. Khách hàng mang HIV(+) vẫn phải được yêu cầu sử dụng bao cao su kèm theo để ngăn ngừa lây nhiễm."
+  },
+  {
+    "question": "Năng lượng cần bổ sung thêm cho phụ nữ có thai và bà mẹ cho con bú trong từng giai đoạn là bao nhiêu?",
+    "answer": "Phụ nữ có thai 3 tháng đầu cần cộng thêm 50 kcal/ngày, 3 tháng giữa cộng thêm 250 kcal/ngày, 3 tháng cuối cộng thêm 450 kcal/ngày. Bà mẹ cho con bú cần cung cấp thêm 500 kcal/ngày [1]."
+  },
+  {
+    "question": "Mức tăng cân khuyến nghị cho phụ nữ mang thai có tình trạng dinh dưỡng bình thường (BMI từ 18,5-24,9) là bao nhiêu?",
+    "answer": "Mức tăng cân của người mẹ có tình trạng dinh dưỡng bình thường nên đạt là 10-12kg [2]. Cụ thể: 3 tháng đầu tăng 1kg, 3 tháng giữa tăng 4-5kg, 3 tháng cuối tăng 5-6kg [3]."
+  },
+  {
+    "question": "Việc thiếu hụt axit folic trong thai kỳ có thể gây ra hậu quả gì cho thai nhi?",
+    "answer": "Thiếu axit folic là nguyên nhân chính gây dị tật ống thần kinh ở trẻ sơ sinh. Việc cung cấp đủ axit folic trước và trong thời gian mang thai sẽ làm giảm được khoảng 50% khuyết tật này ở trẻ [4]."
+  },
+  {
+    "question": "Phụ nữ có thai và bà mẹ cho con bú được khuyến nghị sử dụng bao nhiêu đơn vị sữa và chế phẩm sữa mỗi ngày?",
+    "answer": "Phụ nữ có thai mỗi ngày nên sử dụng 6 đơn vị ăn sữa và chế phẩm sữa. Bà mẹ cho con bú mỗi ngày nên sử dụng 6,5 đơn vị ăn sữa và chế phẩm sữa [5]."
+  },
+  {
+    "question": "Một đơn vị ăn của sữa và chế phẩm sữa (cung cấp 100mg canxi) tương đương với lượng thực phẩm thực tế nào?",
+    "answer": "Một đơn vị ăn của sữa tương đương: 1 miếng phô mai trọng lượng 15g, 1 hộp sữa chua 100g, hoặc 1 cốc sữa dạng lỏng 100ml [5]."
+  },
+  {
+    "question": "Nhu cầu canxi khuyến nghị hàng ngày cho thai phụ và bà mẹ cho con bú là bao nhiêu?",
+    "answer": "Nhu cầu canxi khuyến nghị đối với phụ nữ có thai là 1200 mg/ngày và đối với bà mẹ cho con bú là 1300 mg/ngày [6]."
+  },
+  {
+    "question": "Thai phụ bị tiểu đường thai kỳ cần xử trí thế nào khi có triệu chứng hạ đường huyết?",
+    "answer": "Khi có triệu chứng hạ đường huyết, thai phụ nên uống 3 thìa cà phê đường, hoặc 3 thìa cà phê mật ong, hoặc ăn vài viên kẹo ngọt, vài cái bánh ngọt, uống 1 hộp sữa [7]."
+  },
+  {
+    "question": "Chế độ dinh dưỡng cho thai phụ bị tiền sản giật cần đảm bảo những nguyên tắc gì?",
+    "answer": "Cần đảm bảo Glucid 55-60%, Protein 15-20% (protein động vật >50%), Lipid 20-25% (axit béo không no chiếm 2/3), tăng cường chất xơ 28g/ngày và đặc biệt lượng muối phải <5g/ngày [8]."
+  },
+  {
+    "question": "Thai phụ bị bệnh gan (như viêm gan B) cần kiêng khem và lưu ý gì trong chế biến thức ăn?",
+    "answer": "Thai phụ nên chế biến các món luộc, hạn chế các món nướng cháy, chiên xào nhiều dầu mỡ và nội tạng động vật vì đồ ăn nhiều dầu mỡ khiến gan phải làm việc vất vả hơn. Ngoài ra, cần hạn chế đồ ăn nhanh, đồ bày bán sẵn để tránh chất phụ gia, chất bảo quản [9]."
+  },
+  {
+    "question": "DHA đóng vai trò quan trọng như thế nào đối với thai nhi?",
+    "answer": "DHA tham gia hình thành tế bào não (cấu tạo não, cần thiết cho quá trình Myelin hóa, tác động đến màng xináp) và hình thành tế bào thị giác (cấu tạo tế bào võng mạc mắt và tế bào tiếp nhận hình ảnh) [10, 11]."
+  },
+  {
+    "question": "Chất xơ có tác dụng gì đối với phụ nữ có thai và nhu cầu khuyến nghị là bao nhiêu?",
+    "answer": "Đối với phụ nữ có thai, chất xơ giúp giảm táo bón, làm nhẹ các dấu hiệu nghén và giúp ăn ngon miệng hơn. Nhu cầu chất xơ khuyến nghị cho phụ nữ có thai là 28 g/ngày và bà mẹ cho con bú là 29 g/ngày [12, 13]."
+  },
+  {
+    "question": "Thai phụ bị thiếu máu nên chọn lựa thực phẩm như thế nào để tăng cường hấp thu sắt?",
+    "answer": "Nên ăn các thực phẩm có nhiều sắt heme như thịt, cá, gia cầm và ăn các thực phẩm giàu vitamin C (rau xanh non, quả chín) để tăng cường hấp thu sắt. Đồng thời, không nên uống trà, cà phê, rượu bia cùng bữa ăn vì chúng ức chế hấp thu sắt [14]."
+  },
+  {
+    "question": "Vitamin A có vai trò gì và nhu cầu khuyến nghị cho phụ nữ mang thai là bao nhiêu?",
+    "answer": "Vitamin A có tác dụng bảo vệ mắt, phòng khô mắt, tạo xương cho trẻ, bảo vệ niêm mạc da và tăng cường sức đề kháng chống nhiễm khuẩn [15]. Phụ nữ có thai 3 tháng cuối cần bổ sung thêm 80 μg/ngày so với mức bình thường là 650-700 μg/ngày [16, 17]."
+  },
+  {
+    "question": "Tỷ lệ lipid (chất béo) được khuyến nghị trong khẩu phần ăn của phụ nữ có thai là bao nhiêu?",
+    "answer": "Nhu cầu lipid cho phụ nữ có thai được khuyến nghị từ 20-30% năng lượng tổng số của khẩu phần [18]. Các axit béo no không được vượt quá 10% năng lượng, trong khi axit béo không no cần đảm bảo cung cấp 11-15% năng lượng [18, 19]."
+  },
+  {
+    "question": "Quy trình tư vấn dinh dưỡng trực tiếp cho bà mẹ gồm các bước nhận định và lượng giá như thế nào?",
+    "answer": "Bước nhận định cần tìm hiểu kiến thức, kỹ năng của bà mẹ về vấn đề hiện tại, xem xét những gì bà mẹ đã biết, chưa biết hoặc biết chưa đúng/đủ [20]. Bước lượng giá gồm việc hỏi lại những gì đã tư vấn, quan sát thay đổi ý thức, yêu cầu bà mẹ thực hiện lại kỹ thuật/thực đơn và hướng dẫn lại nếu thực hiện chưa đúng [20, 21]."
+  },
+  {
+    "question": "Đái tháo đường thai kỳ được định nghĩa như thế nào theo Hội Nội tiết Hoa Kỳ?",
+    "answer": "Theo Hội Nội tiết Hoa Kỳ, đái tháo đường thai kỳ là tình trạng liên quan đến tăng glucose huyết tương của mẹ với mức độ thấp hơn đái tháo đường mang thai (đái tháo đường rõ) và làm tăng nguy cơ các kết cục sản khoa bất lợi cho cả thai phụ và thai nhi [1, 2]."
+  },
+  {
+    "question": "Quyết định số 1470/QĐ-BYT năm 2024 về đái tháo đường thai kỳ thay thế cho văn bản nào?",
+    "answer": "Quyết định số 1470/QĐ-BYT thay thế cho Quyết định số 6173/QĐ-BYT ngày 12 tháng 10 năm 2018 của Bộ trưởng Bộ Y tế về việc phê duyệt Hướng dẫn quốc gia dự phòng và kiểm soát đái tháo đường thai kỳ [3]."
+  },
+  {
+    "question": "Những yếu tố nguy cơ nào làm thai phụ dễ mắc đái tháo đường thai kỳ?",
+    "answer": "Các thai phụ có yếu tố nguy cơ dễ mắc bệnh bao gồm: thừa cân hay béo phì, tiền sử gia đình có người đái tháo đường thế hệ thứ nhất, tiền sử sinh con to ≥ 4000 gam, tiền sử bất thường về dung nạp glucose, lớn hơn 35 tuổi mang thai, tiền sử sản khoa bất thường, hội chứng buồng trứng đa nang, tăng huyết áp, và rối loạn lipid máu [4, 5]."
+  },
+  {
+    "question": "Bao nhiêu phần trăm phụ nữ mắc đái tháo đường thai kỳ sẽ tiến triển thành đái tháo đường týp 2 sau sinh?",
+    "answer": "Khoảng 50% phụ nữ mắc đái tháo đường thai kỳ sẽ tiến triển thành đái tháo đường týp 2 trong vòng 5 đến 10 năm sau sinh [6]."
+  },
+  {
+    "question": "Đối với thai phụ, đái tháo đường thai kỳ có thể dẫn đến những biến chứng, tai biến gì?",
+    "answer": "Thai phụ mắc bệnh có thể bị gia tăng tỷ lệ sẩy thai, thai lưu, sinh non, tăng huyết áp (tiền sản giật, sản giật), đa ối, nhiễm khuẩn niệu, biến chứng cấp như hôn mê, và tăng nguy cơ tiến triển thành đái tháo đường týp 2 về sau [7, 8]."
+  },
+  {
+    "question": "Khi nào là thời điểm chuẩn và tốt nhất để tầm soát đái tháo đường thai kỳ cho mọi thai phụ?",
+    "answer": "Thời điểm chuẩn và tốt nhất để thực hiện tầm soát bằng nghiệm pháp dung nạp 75 gram glucose cho mọi thai phụ là từ tuần thứ 24 đến 28 của tuổi thai [9]."
+  },
+  {
+    "question": "Thai phụ cần chuẩn bị gì trước khi thực hiện nghiệm pháp dung nạp 75 gram glucose?",
+    "answer": "Ba ngày trước nghiệm pháp, thai phụ không được ăn quá nhiều glucid cũng như không được ăn kiêng [10]. Thai phụ cần nhịn đói ít nhất 8 giờ (có thể uống nước lọc) trước khi làm nghiệm pháp [10]."
+  },
+  {
+    "question": "Tiêu chuẩn chẩn đoán đái tháo đường thai kỳ qua nghiệm pháp dung nạp 75 gram glucose 2 giờ là gì?",
+    "answer": "Được chẩn đoán mắc bệnh nếu có từ 1 giá trị trở lên lớn hơn hoặc bằng các mức: lúc đói ≥ 92 mg/dl (5,1 mmol/l), sau 1 giờ ≥ 180 mg/dl (10,0 mmol/l), sau 2 giờ ≥ 153 mg/dl (8,5 mmol/l) [11]."
+  },
+  {
+    "question": "Theo hướng dẫn, mức glucose huyết tương mao mạch mục tiêu đối với thai phụ lúc đói và 2 giờ sau ăn là bao nhiêu?",
+    "answer": "Mức glucose mục tiêu lúc đói là ≤ 95 mg/dL (5,3 mmol/l) và 2 giờ sau ăn là ≤ 120 mg/dL (6,7 mmol/l) [12]."
+  },
+  {
+    "question": "Thai phụ bị đái tháo đường thai kỳ được khuyến cáo hoạt động thể chất như thế nào?",
+    "answer": "Khuyến cáo thai phụ hoạt động thể chất ở mức vừa phải ít nhất 30 phút/ngày, ví dụ như đi bộ hoặc tập tay lúc ngồi trong 10 phút sau ăn [13, 14]."
+  },
+  {
+    "question": "Chế độ dinh dưỡng đối với lượng Glucid và lượng rau xanh cho thai phụ có nguy cơ mắc bệnh là bao nhiêu?",
+    "answer": "Chế độ ăn Glucid nên chiếm khoảng 55% - 60% năng lượng khẩu phần và thai phụ cần sử dụng trên 400g rau/ngày [15]."
+  },
+  {
+    "question": "Mức năng lượng ăn vào được khuyến cáo cho thai phụ bị thừa cân, béo phì trước khi mang thai là bao nhiêu?",
+    "answer": "Năng lượng khuyến cáo là từ 20 - 30 kcal/kg cân nặng/ngày đối với thai phụ bị thừa cân, béo phì trước khi mang thai [16]."
+  },
+  {
+    "question": "Phác đồ điều trị khởi đầu cho thai phụ đái tháo đường thai kỳ chỉ bị tăng glucose huyết tương buổi sáng lúc đói là gì?",
+    "answer": "Trường hợp này nên sử dụng insulin nền (NPH hoặc Detemir) với liều khởi đầu 0,1 IU/kg/ngày dựa trên trọng lượng thực [17]."
+  },
+  {
+    "question": "Sau khi sinh, phụ nữ từng mắc đái tháo đường thai kỳ cần được đánh giá lại chuyển hóa glucose vào thời điểm nào?",
+    "answer": "Cần đánh giá lại chuyển hóa glucose ở thời điểm sau sinh 4 đến 12 tuần bằng nghiệm pháp uống 75 gram glucose trong 2 giờ [18, 19]."
+  },
+  {
+    "question": "Đối với thai phụ mắc đái tháo đường thai kỳ, việc sử dụng insulin cần thay đổi thế nào ngay sau khi sinh?",
+    "answer": "Ngay sau sinh không cần dùng insulin vì mức glucose huyết tương thường về bình thường [20]. Nếu đang dùng insulin thì ngưng tiêm, theo dõi trong 24 giờ và chỉ dùng lại với liều giảm 50% nếu glucose bất kỳ ≥ 11,1 mmol/L [20]."
+  },
+  {
+    "question": "Phụ nữ mang thai ăn chuối trong 3 tháng đầu thai kỳ có tác dụng gì?",
+    "answer": "Theo các chuyên gia dinh dưỡng, ăn chuối trong quá trình mang thai đặc biệt là trong 3 tháng đầu thai kỳ giúp đảm bảo nguồn dinh dưỡng và sức khỏe cho cả mẹ và thai nhi [1]."
+  },
+  {
+    "question": "Mẹ bầu ăn chuối quá nhiều có sao không?",
+    "answer": "Mặc dù chuối mang lại rất nhiều lợi ích cho sức khỏe, nhưng nếu mẹ bầu ăn chuối quá nhiều cũng sẽ gây ra một số tác dụng không mong muốn [2]."
+  },
+  {
+    "question": "Bà bầu tiêu thụ gừng với liều lượng bao nhiêu thì được coi là an toàn?",
+    "answer": "Các chuyên gia cho rằng việc tiêu thụ tối đa 1 gam (1.000 mg) gừng mỗi ngày là an toàn đối với mẹ bầu, giúp làm giảm các cảm giác buồn nôn trong thai kỳ [3]."
+  },
+  {
+    "question": "Tại sao phụ nữ mang thai không nên uống trà gừng hay ăn gừng gần lúc chuyển dạ?",
+    "answer": "Một số bằng chứng cho thấy thai phụ không nên uống trà gừng hay ăn gừng gần lúc chuyển dạ vì gừng có thể làm tăng nguy cơ chảy máu [3]."
+  },
+  {
+    "question": "Bà bầu cần thực hiện xét nghiệm máu vào những thời điểm nào trong thai kỳ?",
+    "answer": "Bà bầu cần xét nghiệm máu đặc biệt trong giai đoạn 3 tháng đầu thai kỳ và vào khoảng từ tuần thứ 28 của thai kỳ trở đi (khi đăng ký sinh ở một số bệnh viện) [4]."
+  },
+  {
+    "question": "Thai phụ có cần nhịn ăn trước khi xét nghiệm máu không?",
+    "answer": "Có, trước khi tiến hành xét nghiệm máu (thời điểm thực hiện thường vào buổi sáng), thai phụ cần nhịn ăn để đảm bảo thu được kết quả chính xác nhất [5]."
+  },
+  {
+    "question": "Thời gian ngủ hợp lý mỗi ngày cho phụ nữ mang thai là bao nhiêu?",
+    "answer": "Theo khuyến cáo từ các chuyên gia, thời gian ngủ hợp lý cho phụ nữ mang thai là khoảng từ 7 – 9 tiếng vào buổi tối, trung bình khoảng 8 tiếng mỗi ngày [6, 7]."
+  },
+  {
+    "question": "Việc mẹ bầu ngủ ít hơn 6 tiếng mỗi ngày có thể mang lại hậu quả gì?",
+    "answer": "Nếu mẹ bầu có giấc ngủ ít hơn 6 tiếng mỗi ngày sẽ dẫn đến tình trạng mệt mỏi, không tỉnh táo, thậm chí kiệt sức, gây ảnh hưởng xấu đến sức khỏe của mẹ và sự phát triển của thai nhi [8]."
+  },
+  {
+    "question": "Trẻ 16 tháng tuổi đã có thể ăn cơm được chưa? Vì sao?",
+    "answer": "Trẻ 16 tháng tuổi chưa nên ăn cơm vì hệ tiêu hóa của trẻ vẫn còn yếu ớt, nếu cho ăn cơm quá sớm có thể gây khó tiêu, rối loạn tiêu hóa, viêm dạ dày và khiến trẻ trở nên biếng ăn [9, 10]."
+  },
+  {
+    "question": "Đến khi nào thì trẻ em có thể bắt đầu làm quen với cơm nhão?",
+    "answer": "Trẻ có thể bắt đầu làm quen với cơm nhão, được tán nhuyễn sau khi trẻ được 19 tháng tuổi và có tối thiểu 16 chiếc răng sữa [10]."
+  },
+  {
+    "question": "Trẻ 16 tháng tuổi cần bổ sung bao nhiêu kẽm mỗi ngày để phát triển tốt?",
+    "answer": "Trẻ 16 tháng tuổi cần được bổ sung 5mg kẽm nguyên tố/ngày để trẻ ăn ngon, đạt chiều cao và cân nặng đúng chuẩn và vượt chuẩn [11]."
+  },
+  {
+    "question": "Bỏng ở trẻ em được chia thành bao nhiêu mức độ?",
+    "answer": "Dựa vào độ nặng của tổn thương, bỏng được chia thành 3 mức độ: bỏng độ 1, bỏng độ 2 (bỏng dày khu trú) và bỏng độ 3 [12]."
+  },
+  {
+    "question": "Khi bé bị bỏng độ 1, cha mẹ có thể dùng nguyên liệu tự nhiên nào bôi lên vết bỏng cho bé?",
+    "answer": "Đối với bỏng độ 1, cha mẹ có thể bôi gel lô hội (loại chứa 100% lô hội) hoặc sử dụng trực tiếp lá lô hội cắt mỏng lấy phần nhựa cây áp lên vùng bỏng vài lần mỗi ngày [13]."
+  },
+  {
+    "question": "Dậy thì sớm được định nghĩa ở độ tuổi nào đối với bé gái và bé trai?",
+    "answer": "Dậy thì sớm được xác định là quá trình dậy thì khởi phát trước 8 tuổi ở bé gái và trước 9 tuổi ở bé trai [14]."
+  },
+  {
+    "question": "Trẻ bị dậy thì sớm có dùng thuốc để điều trị được không?",
+    "answer": "Có thuốc tiêm để ức chế dậy thì sớm ở trẻ. Tuy nhiên, cha mẹ cần đưa bé đi khám với bác sĩ Nội tiết nhi để chẩn đoán chính xác xem bé có bị dậy thì sớm hay không trước khi dùng thuốc [14]."
+  },
+  {
+    "question": "Bé lớn 2 tuổi và bé thứ hai cách nhau 2 tuổi có thể bú chung sữa mẹ được không?",
+    "answer": "Hoàn toàn được, nếu người mẹ có nguồn sữa đủ và dư cho bé thứ 2 thì việc cho bé lớn 2 tuổi tiếp tục uống sữa mẹ là rất tốt [15]."
+  },
+  {
+    "question": "Kết quả xét nghiệm phân của trẻ có xuất hiện kén Amip thì có biểu hiện cho tình trạng bệnh bất thường không?",
+    "answer": "Kén Amip có trong xét nghiệm phân là bình thường, nó chỉ biểu hiện sự bất thường khi có Amip thể hoạt động [16]."
+  },
+  {
+    "question": "Bé bị tiêu chảy đi cầu phân lỏng 5 ngày liên tục và xét nghiệm phân có Bạch cầu (++) thì có thể bị bệnh gì?",
+    "answer": "Tình trạng này có thể liên quan đến chứng tiêu chảy nhiễm trùng, cha mẹ nên đưa bé đến gặp bác sĩ để được thăm khám và điều trị [16]."
+  },
+  {
+    "question": "Mẹ bầu có thể dùng hỗn hợp chanh tươi và mật ong để làm giảm cơn ho như thế nào?",
+    "answer": "Mẹ bầu có thể pha nước chanh ấm cùng một chút mật ong và uống từ 1 – 2 lần mỗi ngày (chỉ lưu ý không uống lúc bụng đói) để giảm ho hiệu quả nhờ tính kháng khuẩn và lượng vitamin C dồi dào [17]."
+  },
+  {
+    "question": "Dầu khuynh diệp được sử dụng như thế nào để trị ho ngứa cổ cho phụ nữ mang thai?",
+    "answer": "Mỗi ngày, mẹ bầu chỉ cần nhỏ vài giọt dầu khuynh diệp vào nồi nước ấm, sau đó tiến hành xông hơi giúp làm sạch đường mũi, cổ họng và nhanh chóng cắt cơn ho [17]."
+  }
+]

@@ -1,12 +1,15 @@
 ---
-title: "Cách nấu cháo trứng cho bé"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/cach-nau-chao-trung-cho-be-vi
 category: Dinh dưỡng
-stage: [6_12_thang, 1_3_tuoi]
+keyword: bé
 safety_level: An toàn
+source: vinmec
+stage:
+- 6_12_thang
+- 1_3_tuoi
+title: Cách nấu cháo trứng cho bé
+url: https://www.vinmec.com/vie/bai-viet/cach-nau-chao-trung-cho-be-vi
 ---
+
 
 # Cách nấu cháo trứng cho bé
 

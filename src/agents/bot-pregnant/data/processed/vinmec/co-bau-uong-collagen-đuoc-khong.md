@@ -1,12 +1,16 @@
 ---
-title: "Có bầu uống collagen được không?"
-keyword: bầu
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/co-bau-uong-collagen-duoc-khong-vi
 category: Y tế
-stage: [3_thang_dau, 3_thang_giua, 3_thang_cuoi]
+keyword: bầu
 safety_level: Cân nhắc
+source: vinmec
+stage:
+- 3_thang_dau
+- 3_thang_giua
+- 3_thang_cuoi
+title: Có bầu uống collagen được không?
+url: https://www.vinmec.com/vie/bai-viet/co-bau-uong-collagen-duoc-khong-vi
 ---
+
 
 # Có bầu uống collagen được không?
 

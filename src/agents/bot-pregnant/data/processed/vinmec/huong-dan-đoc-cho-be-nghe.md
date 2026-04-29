@@ -1,12 +1,15 @@
 ---
-title: "Hướng dẫn đọc cho bé nghe"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/huong-dan-doc-cho-be-nghe-vi
 category: Phát triển
-stage: [6_12_thang, 1_3_tuoi]
+keyword: bé
 safety_level: An toàn
+source: vinmec
+stage:
+- 6_12_thang
+- 1_3_tuoi
+title: Hướng dẫn đọc cho bé nghe
+url: https://www.vinmec.com/vie/bai-viet/huong-dan-doc-cho-be-nghe-vi
 ---
+
 
 # Hướng dẫn đọc cho bé nghe
 

@@ -1,12 +1,14 @@
 ---
-title: "Bệnh quai bị ở bé trai có khác gì bệnh quai bị ở bé gái?"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/benh-quai-bi-o-be-trai-co-khac-gi-benh-quai-bi-o-be-gai-vi
 category: Y tế
-stage: [1_3_tuoi]
+keyword: bé
 safety_level: Cân nhắc
+source: vinmec
+stage:
+- 1_3_tuoi
+title: Bệnh quai bị ở bé trai có khác gì bệnh quai bị ở bé gái?
+url: https://www.vinmec.com/vie/bai-viet/benh-quai-bi-o-be-trai-co-khac-gi-benh-quai-bi-o-be-gai-vi
 ---
+
 
 # Bệnh quai bị ở bé trai có khác gì bệnh quai bị ở bé gái?
 

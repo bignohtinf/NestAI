@@ -550,5 +550,1782 @@
             "6_12_thang"
         ],
         "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bà bầu bị sốt, phải làm sao?",
+        "category": "Sức khỏe thai kỳ",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Hướng dẫn massage bụng bầu đúng cách",
+        "category": "Chăm sóc thai kỳ",
+        "stage": [
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Tháp dinh dưỡng dành cho bà bầu",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Khi bà bầu bị viêm gan B",
+        "category": "Sức khỏe thai kỳ",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bà bầu ăn rau húng quế được không?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Lá tía tô bà bầu có ăn được không?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bà bầu ăn giá đỗ có tốt không?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Đang có bầu ăn khoai tây được không?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Các đồ ăn nhẹ tốt cho bà bầu",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bà bầu có ăn rau ngót được không?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bà bầu nên kiêng ăn những món gì?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Dấu hiệu cảm cúm ở bà bầu",
+        "category": "Sức khỏe thai kỳ",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Bà bầu tập thể dục thế nào cho tốt?",
+        "category": "Vận động",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Ăn giá đỗ có tốt cho bà bầu?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Nắng nóng bà bầu ăn gì cho mát",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bà bầu có ăn được hàu biển không?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Củ dền bà bầu có ăn được không?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Các loại hạt ăn vặt cho bà bầu",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Các món cháo tốt cho bà bầu",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Khắc phục đau khớp ở bà bầu",
+        "category": "Sức khỏe thai kỳ",
+        "stage": [
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Các thuốc nhỏ mũi an toàn cho bà bầu",
+        "category": "Thuốc",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Đang có bầu đặt thuốc viêm được không?",
+        "category": "Thuốc",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bà bầu ăn nhiều sinh con thông minh?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Mẹ bầu vỡ ối bao lâu thì đẻ?",
+        "category": "Chăm sóc thai kỳ",
+        "stage": [
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Bà bầu muốn giảm cân, có nên không?",
+        "category": "Chăm sóc thai kỳ",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bà bầu ăn gì để con tăng cân nhanh?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bà bầu cần xét nghiệm máu khi nào?",
+        "category": "Chăm sóc thai kỳ",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Bà bầu cần bao nhiêu calo mỗi ngày?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bà bầu cần bao nhiêu vitamin A mỗi ngày?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bà bầu có nên đi dép cao gót?",
+        "category": "Chăm sóc thai kỳ",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Làm gì khi mẹ bầu bị thiếu ối?",
+        "category": "Sức khỏe thai kỳ",
+        "stage": [
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Aspirin khuyên dùng cho một số bà bầu",
+        "category": "Thuốc",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Có bầu dùng lăn khử mùi được không?",
+        "category": "Chăm sóc thai kỳ",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Uống nước chanh có tốt cho bà bầu?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Gel bôi trĩ cho bà bầu có an toàn?",
+        "category": "Thuốc",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bà bầu ăn quất hồng bì có được không?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Cách chữa đau mắt đỏ cho bà bầu",
+        "category": "Sức khỏe thai kỳ",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bà bầu có được dùng dầu gió không?",
+        "category": "Chăm sóc thai kỳ",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Thuốc Pymenospain cho bà bầu có được không?",
+        "category": "Thuốc",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Những bài tập thể dục cho bà bầu",
+        "category": "Vận động",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 29",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 4",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Những cách hạ đường huyết cho bà bầu",
+        "category": "Sức khỏe thai kỳ",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 17",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 3",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 27",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 2",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 28",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 22",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 31",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 24",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 23",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 25",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 14",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 26",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 20",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 18",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 13",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 11",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 12",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 21",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 8",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 9",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 10",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 5",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 6",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 32",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 33",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 39",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 40",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 34",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 37",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 36",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 35",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 38",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Bầu ivf có tiêm được vắc xin cúm?",
+        "category": "Chăm sóc thai kỳ",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "03 thực phẩm nhuận tràng cho bà bầu",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bà bầu bị mất ngủ 3 tháng đầu có nguy hiểm không?",
+        "category": "Sức khỏe thai kỳ",
+        "stage": [
+            "3_thang_dau"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bà bầu uống được nước rau má không?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bà bầu có nên bổ sung canxi không?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Nhổ răng khi đang bầu có sao không?",
+        "category": "Sức khỏe thai kỳ",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Ăn hồng xiêm có tốt cho bà bầu không?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Cách nấu cháo cá chép cho bà bầu",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Có bầu ăn đu đủ chín được không?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bà bầu thiếu máu nên uống thuốc gì?",
+        "category": "Thuốc",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Triệu chứng cao huyết áp ở bà bầu",
+        "category": "Sức khỏe thai kỳ",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Lưu ý hạ sốt an toàn cho bà bầu",
+        "category": "Sức khỏe thai kỳ",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 19",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Sự thay đổi của bà bầu tuần 16",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "Theo_tuan"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Cải thiện chứng mất ngủ ở bà bầu",
+        "category": "Sức khỏe thai kỳ",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Khó thở khi mang bầu có đáng ngại?",
+        "category": "Sức khỏe thai kỳ",
+        "stage": [
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Một số bài tập yoga cho bà bầu",
+        "category": "Vận động",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Quả nhãn có tốt cho bà bầu không?",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "5 lợi ích của việc massage bầu ngực",
+        "category": "Chăm sóc thai kỳ",
+        "stage": [
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Có thể sử dụng thuốc nội tiết cho bà bầu?",
+        "category": "Thuốc",
+        "stage": [
+            "3_thang_dau"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Thực phẩm đẹp da, bổ dưỡng cho mẹ bầu",
+        "category": "Dinh dưỡng",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Có bầu: Khi nào nên bắt đầu tập Yoga?",
+        "category": "Vận động",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Mẹ bầu bị nhau bám mặt sau là sao?",
+        "category": "Sức khỏe thai kỳ",
+        "stage": [
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Có nên dùng thuốc chống nôn cho bà bầu?",
+        "category": "Thuốc",
+        "stage": [
+            "3_thang_dau"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Có nên dùng thuốc tẩy giun cho bà bầu?",
+        "category": "Thuốc",
+        "stage": [
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Dấu hiệu bé sắp rụng rốn",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "So_sinh"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Chọn thực phẩm cho bé ăn dặm",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bữa phụ nên cho bé ăn gì?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Thực phẩm cho bé ăn mùa đông",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Cho bé ăn khuya có tốt không?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bé bị bỏng bôi thuốc gì?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bé mọc răng bỏ ăn bao lâu?",
+        "category": "Sự phát triển của bé",
+        "stage": [
+            "An_dam"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Bé 19 tháng ăn cơm được chưa?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Vì sao bé lười ăn dặm?",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "An_dam"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Bé 16 tháng nặng bao nhiêu?",
+        "category": "Sự phát triển của bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Bé lớn bị thủy đậu bé thứ 2 tiêm vắc-xin thủy đậu có tác dụn",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Tiểu không hết và không thành dòng do dính môi bé có tách mô",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Quên không cho bé uống vitamin K lần 2 khi bé 30 ngày tuổi n",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bé có nguy cơ mắc bệnh tan máu, bé kiểm tra trước 6 tháng tu",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh",
+            "An_dam"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Cho bé bú chung với bé bị viêm gan CMV có khả năng bị lây nh",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh",
+            "An_dam"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bé ăn kem đánh răng có sao không?",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "\"Cô bé khô hạn\" tuổi mãn kinh",
+        "category": "Phụ khoa",
+        "stage": [
+            "Man_kinh"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Các dấu hiệu em bé quay đầu",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Vì sao bé chỉ bú 1 bên?",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "So_sinh",
+            "An_dam"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Nuôi dưỡng một em bé độc lập",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bé chậm tăng cân có sao không?",
+        "category": "Sự phát triển của bé",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Nguyên nhân bé không chịu bú mẹ?",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "So_sinh",
+            "An_dam"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Bé 4 tháng tuổi ăn dặm được không?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "So_sinh"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Chế độ ăn dặm cho bé như thế nào?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bé dậy thì sớm dùng thuốc gì?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Nguyên nhân bé ho lâu dai dẳng?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bé tiêu chảy có thể bị bệnh gì?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Làm thế nào để bé đỡ vàng da?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Làm sao để kích thích bé ăn rau?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Các loại hạt dinh dưỡng cho bé",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Giúp bé làm quen với thức ăn rắn",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Làm thế nào khi bé bị chậm nói?",
+        "category": "Sự phát triển của bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Làm thế nào nếu răng bé bị ăn mòn?",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Có nên cho bé ăn nhiều thịt bò?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Có nên cho bé ăn mỡ lợn không?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bé thường phải bú trong bao lâu?",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "So_sinh",
+            "An_dam"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Đồ ngủ nào tốt nhất cho bé?",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Khi nào nên cai sữa cho bé?",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Mẹo cho bé gái tập ngồi bô",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Mẹo cho bé trai tập ngồi bô",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Giúp bé làm quen với bú bình",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "So_sinh",
+            "An_dam"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bé đánh răng nhiều có tốt không?",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Cách nào kích thích ăn cho bé?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bé không ăn rau, mẹ phải làm sao?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Cách chế biến món ăn cho bé biếng ăn",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bé 16 tháng cao bao nhiêu cm?",
+        "category": "Sự phát triển của bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Bé 8 tháng biếng ăn sinh lý",
+        "category": "Sự phát triển của bé",
+        "stage": [
+            "An_dam"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Bé bị đau họng nên uống gì?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Nên cho bé ăn gì vào bữa sáng?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Có nên cho bé ăn dặm măng tây?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bé bị rôm sảy bôi thuốc gì?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Biến chứng khi bé bị chốc lở",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Có nên giải độc gan cho bé?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Vì sao bé đi ngoài phân nhầy?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Hậu quả khi bé biếng ăn kéo dài",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Bé 16 tháng ăn cơm được chưa?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bé trai 27 tháng nặng bao nhiêu?",
+        "category": "Sự phát triển của bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Cân nặng bé gái 8 tháng tuổi",
+        "category": "Sự phát triển của bé",
+        "stage": [
+            "An_dam"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Bé trai 20 tháng cao bao nhiêu?",
+        "category": "Sự phát triển của bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Có nên kích thích ăn cho bé?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bé 21 tháng tuổi ăn gì thì tốt?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Khi nào nên cho bé ăn cháo?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bé 10 tháng cao bao nhiêu cm?",
+        "category": "Sự phát triển của bé",
+        "stage": [
+            "An_dam"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Cân nặng bé trai 21 tháng tuổi",
+        "category": "Sự phát triển của bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Có nên dùng dầu ăn cho bé ăn dặm?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Cân nặng bé trai 15 tháng tuổi?",
+        "category": "Sự phát triển của bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Cách tập phản xạ nhai cho bé",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "An_dam"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Làm thế nào để bé không gắt ngủ?",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Cách nào trị đái dầm cho bé?",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Dinh dưỡng cho bé 9 tháng tuổi",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Các món cháo cho bé bị sốt",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Hướng dẫn cách nấu bột cho bé",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bé ăn rau dền có tốt không?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bé sơ sinh bị giãn đài bể thận trái 6mm có nguy hiểm không?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Bé 2 tháng ngửa cổ ra sau và cứng cổ khi bế có phải dấu hiệu",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Tác dụng thuốc nhuận tràng Peginpol cho bé",
+        "category": "Thuốc",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Lưu ý khi chụp X-quang cho bé",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "LÙNG“ÔNG NGOẠI SAGE” - ĐÓN BÉ YÊU VỀ NHÀ",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "So_sinh"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Thực đơn dinh dưỡng cho bé 4 tuổi",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Giãn bể lớn hố sau ở thai nhi",
+        "category": "Sự phát triển thai nhi",
+        "stage": [
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Hướng dẫn massage lưng đúng cách cho bé",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Tuần thứ 2 sau khi bé chào đời",
+        "category": "Sự phát triển của bé",
+        "stage": [
+            "So_sinh"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Bé ho vào buổi sáng là do đâu?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bé 36 tháng tiêm mũi vắc xin gì?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bé 5 tháng giờ nhỏ Rota được không?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "An_dam"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bảng chiều cao cân nặng chuẩn của bé",
+        "category": "Sự phát triển của bé",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Không áp dụng"
+    },
+    {
+        "title": "Thai phụ giãn bể thận có nguy hiểm không?",
+        "category": "Sức khỏe thai kỳ",
+        "stage": [
+            "3_thang_dau",
+            "3_thang_giua",
+            "3_thang_cuoi"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Cần làm gì để giúp bé tăng cân?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bé sơ sinh ngủ ít phải làm gì?",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "So_sinh"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Em bé sinh non cần chăm như thế nào?",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "So_sinh"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bé gái 18 tháng cai sữa được không?",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Bé 6 tháng thừa cân có sao không?",
+        "category": "Sự phát triển của bé",
+        "stage": [
+            "An_dam"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Có nên xin sữa mẹ cho bé bú?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "So_sinh",
+            "An_dam"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Thụt phân nhiều cho bé có sao không?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Cách theo dõi thói quen ngủ của bé",
+        "category": "Chăm sóc bé",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "An toàn"
+    },
+    {
+        "title": "Lõm ở ngực bé có đáng lo không?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Thi thoảng bé ho, không sốt là sao?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "U máu ở bé có nguy hiểm không?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Bé đau bụng, són phân phải làm sao?",
+        "category": "Sức khỏe trẻ em",
+        "stage": [
+            "So_sinh",
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
+    },
+    {
+        "title": "Có thể cho bé ăn hoa quả chưa hấp không?",
+        "category": "Dinh dưỡng cho bé",
+        "stage": [
+            "An_dam",
+            "Tre_nho"
+        ],
+        "safety_level": "Cân nhắc"
     }
 ]

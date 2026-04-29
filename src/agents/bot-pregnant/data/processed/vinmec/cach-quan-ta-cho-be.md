@@ -1,12 +1,15 @@
 ---
-title: "Cách quấn tã cho bé"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/cach-quan-ta-cho-be-vi
 category: Sinh hoạt
-stage: [so_sinh, duoi_6_thang]
+keyword: bé
 safety_level: An toàn
+source: vinmec
+stage:
+- so_sinh
+- duoi_6_thang
+title: Cách quấn tã cho bé
+url: https://www.vinmec.com/vie/bai-viet/cach-quan-ta-cho-be-vi
 ---
+
 
 # Cách quấn tã cho bé
 

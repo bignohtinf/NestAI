@@ -1,12 +1,16 @@
 ---
-title: "Mẹ bầu ăn không tiêu nên uống gì?"
-keyword: bầu
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/me-bau-khong-tieu-nen-uong-gi-vi
 category: Dinh dưỡng
-stage: [3_thang_dau, 3_thang_giua, 3_thang_cuoi]
+keyword: bầu
 safety_level: Cân nhắc
+source: vinmec
+stage:
+- 3_thang_dau
+- 3_thang_giua
+- 3_thang_cuoi
+title: Mẹ bầu ăn không tiêu nên uống gì?
+url: https://www.vinmec.com/vie/bai-viet/me-bau-khong-tieu-nen-uong-gi-vi
 ---
+
 
 # Mẹ bầu ăn không tiêu nên uống gì?
 

@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import { Send, Loader2, Sparkles, Apple, ChefHat, HeartPulse, Baby, Stethoscope, Phone, Star, Clock } from 'lucide-react';
+import { Send, Loader2, Sparkles, Apple, ChefHat, HeartPulse, Stethoscope, Phone, Star, Clock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { botPregnantApi } from '@/lib/bot-pregnant-api';
 
 interface Message {
   id: string;
@@ -117,6 +118,7 @@ export default function NoriPage() {
               ? '\n\n💊 Tôi biết bạn đang quản lý huyết áp — tôi sẽ ưu tiên gợi ý món ít muối.'
               : '';
 
+
       setMessages([
         {
           id: '1',
@@ -200,7 +202,8 @@ export default function NoriPage() {
           timestamp: new Date(),
         },
       ]);
-    } catch {
+    } catch (error) {
+      console.error('Error querying bot:', error);
       setMessages(prev => [
         ...prev,
         {
@@ -268,7 +271,8 @@ export default function NoriPage() {
               <DialogTrigger asChild>
                 <Button style={{ backgroundColor: '#dcfce7', borderColor: '#dcfce7', color: '#166534' }}
                   size="sm" 
-                  className="h-7 text-xs px-3 rounded-full shadow-sm bg-primary hover:bg-primary/90">
+                  className="h-7 text-xs px-3 rounded-full shadow-sm bg-primary hover:bg-primary/90"
+                >
                   <Phone className="h-3 w-3 mr-1.5" /> Gặp chuyên gia
                 </Button>
               </DialogTrigger>

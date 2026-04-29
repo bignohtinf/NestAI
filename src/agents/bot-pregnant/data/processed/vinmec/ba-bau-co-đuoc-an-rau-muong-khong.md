@@ -1,9 +1,13 @@
 ---
-title: "Bà bầu có được ăn rau muống không?"
+category: Không rõ
 keyword: bầu
+safety_level: Không áp dụng
 source: vinmec
+stage: []
+title: Bà bầu có được ăn rau muống không?
 url: https://www.vinmec.com/vie/bai-viet/ba-bau-co-duoc-rau-muong-khong-vi
 ---
+
 
 # Bà bầu có được ăn rau muống không?
 

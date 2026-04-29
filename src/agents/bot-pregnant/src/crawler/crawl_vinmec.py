@@ -156,9 +156,10 @@ def get_article_chunks(url: str) -> List[Dict]:
 # =========================
 # LẤY DANH SÁCH BÀI VIẾT (dùng click pagination)
 # =========================
-def search_articles(keyword: str, max_results=30) -> List[Dict]:
+def search_articles(keyword: str, max_results=30, start_from=0) -> List[Dict]:
     results = []
     seen_links = set()
+    skipped = 0
     page = 1
     driver = None
 
@@ -221,6 +222,11 @@ def search_articles(keyword: str, max_results=30) -> List[Dict]:
                 if link in seen_links:
                     continue
 
+                # ✅ SKIP bài trước đó
+                if skipped < start_from:
+                    skipped += 1
+                    continue
+
                 seen_links.add(link)
 
                 results.append({
@@ -275,7 +281,7 @@ def search_articles(keyword: str, max_results=30) -> List[Dict]:
 # =========================
 # MAIN CRAWL
 # =========================
-def crawl_vinmec(keywords: List[str], limit_each=30, output_dir="data/raw/vinmec"):
+def crawl_vinmec(keywords: List[str], limit_each=100, output_dir="data/raw/vinmec", start_from=31):
     full_data = []
     chunk_data = []
 
@@ -284,7 +290,7 @@ def crawl_vinmec(keywords: List[str], limit_each=30, output_dir="data/raw/vinmec
     output_path.mkdir(parents=True, exist_ok=True)
 
     for kw in keywords:
-        articles = search_articles(kw, limit_each)
+        articles = search_articles(kw, limit_each, start_from=start_from)
 
         for art in articles:
             print(f"\n📄 Đang crawl: {art['title'][:60]}")
@@ -343,4 +349,4 @@ def crawl_vinmec(keywords: List[str], limit_each=30, output_dir="data/raw/vinmec
 # RUN
 # =========================
 if __name__ == "__main__":
-    crawl_vinmec(["bầu", "bé"], limit_each=30)
+    crawl_vinmec(["bầu", "bé"], limit_each=100)

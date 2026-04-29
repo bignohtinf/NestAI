@@ -1,12 +1,16 @@
 ---
-title: "Cho bé ăn bữa phụ lúc nào? Những lưu ý khi cho bé ăn bữa phụ"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/cho-be-bua-phu-luc-nao-nhung-luu-y-khi-cho-be-bua-phu-vi
 category: Dinh dưỡng
-stage: [3_thang_dau, 3_thang_giua, 3_thang_cuoi]
+keyword: bé
 safety_level: An toàn
+source: vinmec
+stage:
+- 3_thang_dau
+- 3_thang_giua
+- 3_thang_cuoi
+title: Cho bé ăn bữa phụ lúc nào? Những lưu ý khi cho bé ăn bữa phụ
+url: https://www.vinmec.com/vie/bai-viet/cho-be-bua-phu-luc-nao-nhung-luu-y-khi-cho-be-bua-phu-vi
 ---
+
 
 # Cho bé ăn bữa phụ lúc nào? Những lưu ý khi cho bé ăn bữa phụ
 

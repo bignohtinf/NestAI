@@ -1,12 +1,16 @@
 ---
-title: "Mẹo ngủ cho bé yêu"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/meo-ngu-cho-be-yeu-vi
 category: Sinh hoạt
-stage: [so_sinh, duoi_6_thang, 6_12_thang]
+keyword: bé
 safety_level: An toàn
+source: vinmec
+stage:
+- so_sinh
+- duoi_6_thang
+- 6_12_thang
+title: Mẹo ngủ cho bé yêu
+url: https://www.vinmec.com/vie/bai-viet/meo-ngu-cho-be-yeu-vi
 ---
+
 
 # Mẹo ngủ cho bé yêu
 

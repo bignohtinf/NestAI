@@ -1,12 +1,16 @@
 ---
-title: "Bà bầu có nên tập yoga?"
-keyword: bầu
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/ba-bau-co-nen-tap-yoga-vi
 category: Sinh hoạt
-stage: [3_thang_dau, 3_thang_giua, 3_thang_cuoi]
+keyword: bầu
 safety_level: An toàn
+source: vinmec
+stage:
+- 3_thang_dau
+- 3_thang_giua
+- 3_thang_cuoi
+title: Bà bầu có nên tập yoga?
+url: https://www.vinmec.com/vie/bai-viet/ba-bau-co-nen-tap-yoga-vi
 ---
+
 
 # Bà bầu có nên tập yoga?
 

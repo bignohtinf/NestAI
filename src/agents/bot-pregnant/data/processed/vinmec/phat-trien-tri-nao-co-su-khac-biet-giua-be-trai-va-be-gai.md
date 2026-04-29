@@ -1,12 +1,15 @@
 ---
-title: "Phát triển trí não có sự khác biệt giữa bé trai và bé gái?"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/phat-trien-tri-nao-co-su-khac-biet-giua-be-trai-va-be-gai-vi
 category: Phát triển
-stage: [6_12_thang, 1_3_tuoi]
+keyword: bé
 safety_level: An toàn
+source: vinmec
+stage:
+- 6_12_thang
+- 1_3_tuoi
+title: Phát triển trí não có sự khác biệt giữa bé trai và bé gái?
+url: https://www.vinmec.com/vie/bai-viet/phat-trien-tri-nao-co-su-khac-biet-giua-be-trai-va-be-gai-vi
 ---
+
 
 # Phát triển trí não có sự khác biệt giữa bé trai và bé gái?
 

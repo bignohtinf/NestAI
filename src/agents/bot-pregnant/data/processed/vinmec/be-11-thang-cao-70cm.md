@@ -1,12 +1,14 @@
 ---
-title: "Bé 11 tháng cao 70cm"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/be-11-thang-cao-70cm-vi
 category: Phát triển
-stage: [6_12_thang]
+keyword: bé
 safety_level: Cân nhắc
+source: vinmec
+stage:
+- 6_12_thang
+title: Bé 11 tháng cao 70cm
+url: https://www.vinmec.com/vie/bai-viet/be-11-thang-cao-70cm-vi
 ---
+
 
 # Bé 11 tháng cao 70cm
 

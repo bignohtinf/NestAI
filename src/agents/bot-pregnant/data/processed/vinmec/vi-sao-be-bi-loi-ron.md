@@ -1,12 +1,15 @@
 ---
-title: "Vì sao bé bị lồi rốn?"
-keyword: bé
-source: vinmec
-url: https://www.vinmec.com/vie/bai-viet/vi-sao-be-bi-loi-ron-vi
 category: Y tế
-stage: [so_sinh, duoi_6_thang]
+keyword: bé
 safety_level: Cân nhắc
+source: vinmec
+stage:
+- so_sinh
+- duoi_6_thang
+title: Vì sao bé bị lồi rốn?
+url: https://www.vinmec.com/vie/bai-viet/vi-sao-be-bi-loi-ron-vi
 ---
+
 
 # Vì sao bé bị lồi rốn?
 
