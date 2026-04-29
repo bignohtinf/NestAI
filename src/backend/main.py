@@ -2,12 +2,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.config import settings
-from app.api.routes import auth, users, partnerships, nutrition, health, missions, admin, baby, tasks, food_recommendations
+from app.api.routes import auth, users, partnerships, nutrition, health, missions, admin, baby, tasks, food_recommendations, bot_pregnant
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     print(" Backend starting...")
+    try:
+        await bot_pregnant.warm_up_llm()
+    except Exception as exc:
+        print(f"[BOT] Warning: Ollama warm-up did not complete at startup: {exc}")
     yield
     # Shutdown
     print(" Backend shutting down...")
@@ -39,6 +43,7 @@ app.include_router(missions.router, prefix="/api/missions", tags=["missions"])
 app.include_router(tasks.router, prefix="/api/tasks", tags=["tasks"])
 app.include_router(baby.router, prefix="/api/babies", tags=["babies"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
+app.include_router(bot_pregnant.router)
 
 @app.get("/health")
 async def health_check():
