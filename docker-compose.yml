@@ -3,7 +3,7 @@
 # ============================================================================
 #
 # Usage:
-#   docker compose up -d          # Start backend
+#   docker compose up -d          # Start backend + ollama
 #   docker compose logs -f        # Follow logs
 #   docker compose down           # Stop
 #
@@ -11,10 +11,33 @@
 #   1. Apply migration: 004_nutrition_optimization.sql on Supabase
 #   2. Seed data: cd src/backend && python -m scripts.seed_nutrition_data
 #   3. Frontend: cd src/frontend && npm run dev  (no Docker)
+#   4. Vector DB: cd src/agents/bot-pregnant && python -m src.ingestion.embedder
 #
 # ============================================================================
 
 services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: nestai-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+      - ./src/agents/bot-pregnant/data/vectordb:/app/vectordb:ro
+      - ./scripts/init-ollama.sh:/init-ollama.sh:ro
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+      - CUDA_VISIBLE_DEVICES=0
+      - OLLAMA_GPU_OVERHEAD=0
+    runtime: nvidia
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
   backend:
     build:
       context: .
@@ -24,8 +47,18 @@ services:
       - "8000:8000"
     env_file:
       - ./src/backend/.env
+      - ./.env
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - HF_TOKEN=${HF_TOKEN}
     volumes:
       # Hot-reload for development
       - ./src/backend:/app
       - ./src/agents:/app/agents
+    depends_on:
+      ollama:
+        condition: service_healthy
     restart: unless-stopped
+
+volumes:
+  ollama_data:

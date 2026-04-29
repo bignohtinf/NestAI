@@ -43,3 +43,17 @@ requests>=2.31.0
 # selenium>=4.18.0        # Only for local crawling
 # pdfplumber>=0.11.0      # Only for bot-pregnant local processing
 # beautifulsoup4>=4.12.0  # Only for local scraping
+
+pdfplumber>=0.11.0
+pandas>=2.0.0
+openpyxl>=3.1.0
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+selenium>=4.18.0
+litellm>=1.40.0
+langchain-huggingface
+sentence-transformers
+langchain-openai
+langchain-chroma
+langgraph
+langchain_ollama
