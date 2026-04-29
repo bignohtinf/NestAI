@@ -15,6 +15,15 @@ from src.engine.retriever import NoriRetriever
 from langchain_ollama import OllamaLLM
 
 
+def load_prompts() -> tuple[str, str]:
+    prompts_dir = Path(__file__).resolve().parents[1] / "prompts"
+    if not prompts_dir.exists():
+        prompts_dir = Path("/app") / "agents" / "bot-pregnant" / "prompts"
+    system_prompt = (prompts_dir / "system_prompt.txt").read_text(encoding="utf-8")
+    rag_template = (prompts_dir / "rag_template.txt").read_text(encoding="utf-8")
+    return system_prompt, rag_template
+
+
 def load_gold_questions(gold_path: Path) -> list[dict]:
     """Load questions from gold_answer.json"""
     with open(gold_path, 'r', encoding='utf-8') as f:
@@ -26,13 +35,8 @@ def generate_test_answers(gold_data: list[dict], db_path: str, output_path: Path
     """Generate answers for each question using RAG system with Ollama"""
     retriever = NoriRetriever(db_path=db_path)
     
-    # Initialize Ollama with Llama 3.2
+    # Initialize Ollama with Llama 3.1:8b
     llm = OllamaLLM(model="llama3.1:8b", temperature=0.2)
-    
-    # System prompt for RAG
-    system_prompt = """Bạn là một trợ lý y tế chuyên về sức khỏe bà bầu và trẻ em.
-Dựa trên thông tin được cung cấp, hãy trả lời câu hỏi một cách chính xác, chi tiết và hữu ích.
-Nếu thông tin không đủ, hãy nói rõ điều đó."""
     
     test_answers = []
     
@@ -41,34 +45,37 @@ Nếu thông tin không đủ, hãy nói rõ điều đó."""
         print(f"[{idx}/{len(gold_data)}] Processing: {question[:60]}...")
         
         try:
-            # Retrieve relevant documents
+            # Retrieve relevant documents from vector database
             docs = retriever.retrieve(question)
+            
+            if not docs:
+                print(f"  ⚠ No documents retrieved")
+                test_answers.append({
+                    "question": question,
+                    "answer": ""
+                })
+                continue
             
             # Combine retrieved documents as context
             context = "\n\n".join([doc.page_content for doc in docs])
             
-            # Build RAG prompt
-            rag_prompt = f"""Dựa trên thông tin sau:
+            # Load unified prompts and build the final RAG prompt
+            system_prompt, rag_template = load_prompts()
+            rag_prompt = f"{system_prompt}\n\n{rag_template.format(context=context, question=question)}"
 
-{context}
-
-Hãy trả lời câu hỏi này: {question}
-
-Trả lời:"""
-            
-            # Generate answer using Ollama
-            answer = llm.invoke(rag_prompt)
+            # Generate answer using Ollama with RAG context
+            raw_answer = llm.invoke(rag_prompt)
+            answer = raw_answer.content.strip() if hasattr(raw_answer, "content") else str(raw_answer).strip()
             
             test_answers.append({
                 "question": question,
-                "answer": answer.strip()
+                "answer": answer
             })
             
-            print(f"  ✓ Generated answer")
+            print(f"  ✓ Generated answer ({len(docs)} docs retrieved)")
             
         except Exception as e:
             print(f"  ✗ Error: {str(e)}")
-            # Use empty answer on error
             test_answers.append({
                 "question": question,
                 "answer": ""
