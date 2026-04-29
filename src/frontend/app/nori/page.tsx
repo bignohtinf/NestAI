@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import { Send, Loader2, Sparkles, Apple, ChefHat, HeartPulse, Baby, Stethoscope, Phone, Star, Clock } from 'lucide-react';
+import { Send, Loader2, Sparkles, Apple, ChefHat, HeartPulse, Stethoscope, Phone, Star, Clock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { botPregnantApi } from '@/lib/bot-pregnant-api';
 
 interface Message {
   id: string;
@@ -87,7 +88,6 @@ export default function NoriPage() {
   const { user } = useApp();
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
@@ -98,7 +98,7 @@ export default function NoriPage() {
     else if (user.role === 'admin') router.push('/');
   }, [user, router]);
 
-  // Build a personalised opening message based on pregnancy week + condition
+  // Build a personalised opening message based on pregnancy week
   useEffect(() => {
     if (messages.length === 0 && user) {
       const weekLabel =
@@ -108,21 +108,12 @@ export default function NoriPage() {
             ? `Tuần ${user.weeksPostpartum} sau sinh`
             : null;
 
-      const conditionNote =
-        user.condition === 'gdm'
-          ? '\n\n⚠️ Tôi biết bạn đang theo dõi tiểu đường thai kỳ — tôi sẽ ưu tiên gợi ý món GI thấp cho bạn.'
-          : user.condition === 'anemia'
-            ? '\n\n🩸 Tôi biết bạn cần tăng cường sắt — tôi sẽ ưu tiên gợi ý thực phẩm giàu sắt.'
-            : user.condition === 'hypertension'
-              ? '\n\n💊 Tôi biết bạn đang quản lý huyết áp — tôi sẽ ưu tiên gợi ý món ít muối.'
-              : '';
-
       setMessages([
         {
           id: '1',
           type: 'bot',
           content:
-            `Xin chào ${user?.name}! 🌸\n\nTôi là Nori — trợ lý dinh dưỡng AI của bạn.${weekLabel ? ` Đang theo dõi ${weekLabel}.` : ''}${conditionNote}\n\nTôi có thể giúp bạn:\n\n• 🍚 Gợi ý món Việt phù hợp tuần thai và bệnh lý\n• 📊 Kiểm tra vi chất còn thiếu sau bữa ăn\n• ✅ Danh sách thực phẩm được/không được khi mang thai\n• 📋 Giải thích kết quả xét nghiệm (sắt, glucose)\n\nHôm nay mẹ cần tôi giúp gì? 🌿`,
+            `Xin chào ${user?.name}! 🌸\n\nTôi là Nori — trợ lý dinh dưỡng AI của bạn.${weekLabel ? ` Đang theo dõi ${weekLabel}.` : ''}\n\nTôi có thể giúp bạn:\n\n• 🍚 Gợi ý món Việt phù hợp tuần thai\n• 📊 Kiểm tra vi chất còn thiếu sau bữa ăn\n• ✅ Danh sách thực phẩm được/không được khi mang thai\n• 📋 Giải thích kết quả xét nghiệm (sắt, glucose)\n\nHôm nay mẹ cần tôi giúp gì? 🌿`,
           timestamp: new Date(),
         },
       ]);
@@ -148,49 +139,21 @@ export default function NoriPage() {
     setLoading(true);
     setShowSuggestions(false);
 
-    const newHistory: ChatHistory[] = [
-      ...chatHistory,
-      { role: 'user', content: msg },
-    ];
-
     try {
-      // Build rich context: pregnancy week + condition + food preference per PRD
-      const weekContext =
+      // Get pregnancy stage for context
+      const stage =
         user?.babyStatus === 'pregnant' && user.gestationWeeks
-          ? `tuần ${user.gestationWeeks} thai kỳ`
+          ? `week_${user.gestationWeeks}`
           : user?.babyStatus === 'born' && user.weeksPostpartum
-            ? `tuần ${user.weeksPostpartum} sau sinh`
-            : 'chưa rõ giai đoạn';
+            ? `postpartum_${user.weeksPostpartum}`
+            : undefined;
 
-      const conditionMap: Record<string, string> = {
-        gdm: 'tiểu đường thai kỳ',
-        anemia: 'thiếu máu/thiếu sắt',
-        hypertension: 'cao huyết áp thai kỳ',
-      };
-      const conditionContext =
-        user?.condition && user.condition !== 'none'
-          ? `; Bệnh lý: ${conditionMap[user.condition] || user.condition}`
-          : '';
+      // Query bot-pregnant API
+      const botAnswer = await botPregnantApi.query(msg, user?.id || 'anonymous', stage);
 
-      const foodCtx =
-        user?.foodPreference && user.foodPreference !== 'no_pref'
-          ? `; Hạn chế ăn: ${user.foodPreference}`
-          : '';
+      // Use bot answer if available, otherwise use fallback
+      const botContent = botAnswer || generateFallback(msg);
 
-      const userContext = user
-        ? `[Người dùng: mẹ bầu Việt Nam. ${weekContext}${conditionContext}${foodCtx}. Trả lời tiếng Việt, ưu tiên gợi ý món Việt phù hợp.]`
-        : '';
-
-      const res = await fetch('/api/nori', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newHistory, userContext }),
-      });
-
-      const data = await res.json();
-      const botContent = data.response || generateFallback(msg);
-
-      setChatHistory(newHistory);
       setMessages(prev => [
         ...prev,
         {
@@ -200,7 +163,8 @@ export default function NoriPage() {
           timestamp: new Date(),
         },
       ]);
-    } catch {
+    } catch (error) {
+      console.error('Error querying bot:', error);
       setMessages(prev => [
         ...prev,
         {
@@ -267,9 +231,8 @@ export default function NoriPage() {
             <Dialog>
               <DialogTrigger asChild>
                 <Button 
-                  variant="default" 
                   size="sm" 
-                  className="h-7 text-xs px-3 rounded-full shadow-sm bg-primary hover:bg-primary/90"
+                  className="h-7 text-xs px-3 rounded-full shadow-sm bg-primary hover:bg-primary/90 text-white"
                 >
                   <Phone className="h-3 w-3 mr-1.5" /> Gặp chuyên gia
                 </Button>
@@ -300,7 +263,7 @@ export default function NoriPage() {
                             </span>
                           </div>
                         </div>
-                        <Button size="sm" variant="outline" className="h-7 text-xs px-2.5 shrink-0 border-primary/30 text-primary hover:bg-primary hover:text-white" onClick={(e) => { e.stopPropagation(); alert('Đã ghi nhận lịch hẹn mô phỏng.'); }}>
+                        <Button size="sm" className="h-7 text-xs px-2.5 shrink-0 bg-primary text-white hover:bg-primary/90" onClick={(e) => { e.stopPropagation(); alert('Đã ghi nhận lịch hẹn mô phỏng.'); }}>
                           Chọn
                         </Button>
                       </div>
