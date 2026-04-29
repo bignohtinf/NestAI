@@ -230,18 +230,18 @@ export default function NoriPage() {
             </div>
             <Dialog>
               <DialogTrigger asChild>
-                <Button 
+                <Button style={{ backgroundColor: '#dcfce7', borderColor: '#dcfce7', color: '#166534' }}
                   size="sm" 
-                  className="h-7 text-xs px-3 rounded-full shadow-sm bg-primary hover:bg-primary/90 text-white"
+                  className="h-7 text-xs px-3 rounded-full shadow-sm bg-primary hover:bg-primary/90"
                 >
                   <Phone className="h-3 w-3 mr-1.5" /> Gặp chuyên gia
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+              <DialogContent className="sm:max-w-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                 <DialogHeader>
-                  <DialogTitle className="text-slate-900 dark:text-slate-100">Đặt khám chuyên gia / phòng khám</DialogTitle>
+                  <DialogTitle className="text-slate-900 dark:text-slate-100">Đặt lịch chuyên gia / phòng khám</DialogTitle>
                   <DialogDescription className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed text-left">
-                    Chọn chuyên gia hoặc phòng khám phù hợp với nhu cầu của bạn để được tư vấn trực tiếp (Chức năng đang phát triển).
+                    Chọn chuyên gia hoặc phòng khám phù hợp với nhu cầu của bạn để được tư vấn trực tiếp.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-2">
@@ -263,7 +263,7 @@ export default function NoriPage() {
                             </span>
                           </div>
                         </div>
-                        <Button size="sm" className="h-7 text-xs px-2.5 shrink-0 bg-primary text-white hover:bg-primary/90" onClick={(e) => { e.stopPropagation(); alert('Đã ghi nhận lịch hẹn mô phỏng.'); }}>
+                        <Button size="sm" variant="outline" className="h-7 text-xs px-2.5 shrink-0 border-primary/30 text-primary hover:bg-primary hover:text-white" onClick={(e) => { e.stopPropagation(); alert('Đã ghi nhận lịch hẹn mô phỏng.'); }}>
                           Chọn
                         </Button>
                       </div>
