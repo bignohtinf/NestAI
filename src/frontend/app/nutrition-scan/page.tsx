@@ -2,6 +2,7 @@
 
 import { MainLayout } from '@/components/layouts/main-layout';
 import { NutritionRecommendations } from '@/components/metrics/nutrition-recommendations';
+import { SmartScan } from '@/components/metrics/smart-scan';
 import { useApp } from '@/lib/context';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -30,7 +31,14 @@ export default function NutritionScanPage() {
           <p className="text-muted-foreground">AI sinh thực đơn món Việt cá nhân hóa theo tuần thai và bệnh lý</p>
         </div>
 
-        <NutritionRecommendations />
+        <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+          <div className="space-y-6">
+            <SmartScan />
+          </div>
+          <div className="space-y-6">
+            <NutritionRecommendations />
+          </div>
+        </div>
       </div>
     </MainLayout>
   );

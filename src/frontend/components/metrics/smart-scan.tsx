@@ -3,18 +3,27 @@
 import React, { useState, useRef } from 'react';
 import { Camera, Upload, X, Check, Zap, Info, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useApp } from '@/lib/context';
 
-interface FoodAnalysis {
-  name: string;
+interface SmartScanResponse {
+  dish_name: string;
+  estimated_grams: number;
+  confidence: number;
+  meal_context: string | null;
+  matched_food: {
+    dish_name_vi?: string;
+    dish_name_en?: string;
+    dish_type?: string;
+  } | null;
+  match_score: number;
+  suggestions: string[];
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
   iron?: number;
-  folate?: number;
   calcium?: number;
-  pregnancyBenefit: string;
-  timestamp: Date;
+  pregnancy_benefit: string;
 }
 
 const nutritionColors = [
@@ -30,9 +39,12 @@ const microNutrients = [
   { key: 'calcium', label: 'Canxi', unit: 'mg', color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
 ];
 
+const BASE_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export function SmartScan() {
+  const { user } = useApp();
   const [image, setImage] = useState<string | null>(null);
-  const [analysis, setAnalysis] = useState<FoodAnalysis | null>(null);
+  const [analysis, setAnalysis] = useState<SmartScanResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -43,8 +55,9 @@ export function SmartScan() {
     setError(null);
     const reader = new FileReader();
     reader.onload = (e) => {
-      setImage(e.target?.result as string);
-      analyzeFood(e.target?.result as string);
+      const result = e.target?.result as string;
+      setImage(result);
+      analyzeFood(result);
     };
     reader.readAsDataURL(file);
   };
@@ -55,21 +68,74 @@ export function SmartScan() {
     setError(null);
 
     try {
-      // TODO: Replace with real API call to /api/nutrition/analyze-photo
-      // const response = await fetch('/api/nutrition/analyze-photo', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ image: imageData }),
-      // });
-      // if (!response.ok) throw new Error('Không thể phân tích ảnh');
-      // const data = await response.json();
-      // setAnalysis(data);
+      const response = await fetch(`${BASE_API_URL}/api/nutrition/analyze-photo`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image: imageData,
+          user_id: user?.id,
+        }),
+      });
 
-      // UI is ready — AI integration coming soon
-      // Leave analysis null to show the "coming soon" state
-      await new Promise((r) => setTimeout(r, 1000)); // Simulate network
+      if (!response.ok) {
+        let message = 'Không thể phân tích ảnh';
+        try {
+          const errorJson = await response.json();
+          const detail = errorJson?.detail;
+          if (typeof detail === 'string' && detail.trim()) {
+            if (detail.includes('model_not_found') || detail.includes('model') && detail.includes('not found')) {
+              message = 'Cấu hình AI vision chưa hợp lệ trên server. Vui lòng thử lại sau hoặc liên hệ quản trị viên.';
+            } else {
+              message = detail;
+            }
+          }
+        } catch {
+          const body = await response.text();
+          if (body) message = body;
+        }
+        throw new Error(message);
+      }
+
+      const data = (await response.json()) as SmartScanResponse;
+      setAnalysis(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveToLog = async () => {
+    if (!analysis || !user?.id) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${BASE_API_URL}/api/nutrition/logs?user_id=${encodeURIComponent(user.id)}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          meal_name: analysis.matched_food?.dish_name_vi || analysis.dish_name,
+          calories: analysis.calories,
+          protein: analysis.protein,
+          carbs: analysis.carbs,
+          fat: analysis.fat,
+          notes: analysis.meal_context ? `Bữa ${analysis.meal_context}` : 'Quét bữa ăn AI',
+        }),
+      });
+
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(body || 'Không thể lưu nhật ký');
+      }
+
+      resetScan();
+      alert('Đã lưu vào nhật ký dinh dưỡng!');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi khi lưu nhật ký');
     } finally {
       setLoading(false);
     }
@@ -82,12 +148,6 @@ export function SmartScan() {
     if (file && file.type.startsWith('image/')) handleImageUpload(file);
   };
 
-  const handleSaveToLog = () => {
-    // TODO: Call /api/nutrition/log to save meal
-    alert('Đã lưu vào nhật ký dinh dưỡng!');
-    resetScan();
-  };
-
   const resetScan = () => {
     setImage(null);
     setAnalysis(null);
@@ -98,7 +158,6 @@ export function SmartScan() {
     <div className="space-y-4">
       {!image ? (
         <>
-          {/* Main drop zone */}
           <div
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={() => setIsDragging(false)}
@@ -167,7 +226,6 @@ export function SmartScan() {
             </div>
           </div>
 
-          {/* Tip */}
           <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-100 px-4 py-3">
             <Info className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
             <p className="text-sm text-amber-800">
@@ -177,7 +235,6 @@ export function SmartScan() {
         </>
       ) : (
         <div className="space-y-4">
-          {/* Image Preview */}
           <div className="relative rounded-2xl overflow-hidden shadow-card">
             <img
               src={image}
@@ -196,7 +253,6 @@ export function SmartScan() {
             </div>
           </div>
 
-          {/* Loading */}
           {loading && (
             <div className="rounded-2xl border border-border/50 bg-card p-8 text-center">
               <div className="w-12 h-12 rounded-full border-3 border-primary/30 border-t-primary animate-spin mx-auto mb-3" />
@@ -205,7 +261,6 @@ export function SmartScan() {
             </div>
           )}
 
-          {/* Error state */}
           {!loading && error && (
             <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-5">
               <div className="flex items-center gap-2 text-destructive mb-2">
@@ -222,19 +277,17 @@ export function SmartScan() {
             </div>
           )}
 
-          {/* Analysis Result */}
           {!loading && analysis && (
             <div className="rounded-2xl border border-border/50 bg-card overflow-hidden shadow-card">
               <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold text-foreground">{analysis.name}</h3>
+                  <h3 className="font-semibold text-foreground">{analysis.matched_food?.dish_name_vi || analysis.dish_name}</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">Phân tích dinh dưỡng thai kỳ</p>
                 </div>
                 <span className="text-xs bg-primary/10 text-primary rounded-full px-2.5 py-1 font-medium">AI</span>
               </div>
 
               <div className="p-5 space-y-4">
-                {/* Macro Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {nutritionColors.map((n) => (
                     <div key={n.key} className={`${n.bg} border ${n.border} rounded-xl p-3 text-center`}>
@@ -247,7 +300,6 @@ export function SmartScan() {
                   ))}
                 </div>
 
-                {/* Micronutrients */}
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Vi chất thai kỳ</p>
                   <div className="grid grid-cols-3 gap-3">
@@ -263,14 +315,33 @@ export function SmartScan() {
                   </div>
                 </div>
 
-                {/* Pregnancy Benefit */}
                 <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 rounded-xl p-3.5">
                   <span className="text-xl">🤰</span>
                   <div>
                     <p className="text-xs font-medium text-emerald-700 uppercase tracking-wide">Lợi ích thai kỳ</p>
-                    <p className="text-sm text-emerald-900 mt-0.5">{analysis.pregnancyBenefit}</p>
+                    <p className="text-sm text-emerald-900 mt-0.5">{analysis.pregnancy_benefit}</p>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-3 text-sm text-muted-foreground">
+                  <div className="rounded-xl border border-border/70 bg-secondary/60 p-3">
+                    <p className="font-medium">Phát hiện</p>
+                    <p>{analysis.dish_name}</p>
+                    <p>Gram: {analysis.estimated_grams}g</p>
+                  </div>
+                  <div className="rounded-xl border border-border/70 bg-secondary/60 p-3">
+                    <p className="font-medium">Khớp DB</p>
+                    <p>{analysis.matched_food?.dish_name_vi || analysis.matched_food?.dish_name_en || 'Chưa rõ'}</p>
+                    <p>Score: {(analysis.match_score * 100).toFixed(0)}%</p>
+                  </div>
+                </div>
+
+                {analysis.suggestions.length > 0 && (
+                  <div className="rounded-xl border border-border/50 bg-secondary/70 p-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Gợi ý khớp khác</p>
+                    <p className="text-sm text-foreground">{analysis.suggestions.join(' • ')}</p>
+                  </div>
+                )}
 
                 <Button onClick={handleSaveToLog} className="w-full rounded-xl h-11">
                   <Check className="h-4 w-4 mr-2" />
@@ -280,7 +351,6 @@ export function SmartScan() {
             </div>
           )}
 
-          {/* Coming soon state — image uploaded but AI not connected yet */}
           {!loading && !analysis && !error && (
             <div className="rounded-2xl border border-border/50 bg-card p-6">
               <div className="flex items-start gap-3">

@@ -11,7 +11,7 @@ async def lifespan(app: FastAPI):
     try:
         await bot_pregnant.warm_up_llm()
     except Exception as exc:
-        print(f"[BOT] Warning: Ollama warm-up did not complete at startup: {exc}")
+        print(f"[BOT] Warning: OpenAI warm-up did not complete at startup: {exc}")
     yield
     # Shutdown
     print(" Backend shutting down...")
