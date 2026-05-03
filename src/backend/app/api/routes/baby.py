@@ -34,37 +34,41 @@ class DailyEntryCreate(BaseModel):
 
 @router.get("/")
 async def get_babies(user_id: str, supabase = Depends(get_supabase)):
-    """Get all babies for a user's partnership"""
+    """Get babies by partnership (if connected) or by created_by (solo parent)"""
     try:
-        # Get partnership - user can be either mother or father
+        babies: list = []
+        seen_ids: set = set()
+
+        # 1. Babies from accepted partnership
         partnership_result = supabase.table("partnerships").select("id").eq("status", "accepted").or_(f"mother_id.eq.{user_id},father_id.eq.{user_id}").execute()
-        
-        if not partnership_result.data:
-            return {"babies": []}
-        
-        partnership_id = partnership_result.data[0]["id"]
-        
-        # Get babies
-        result = supabase.table("babies").select("*").eq("partnership_id", partnership_id).execute()
-        return {"babies": result.data or []}
+        if partnership_result.data:
+            partnership_id = partnership_result.data[0]["id"]
+            res = supabase.table("babies").select("*").eq("partnership_id", partnership_id).execute()
+            for b in (res.data or []):
+                babies.append(b)
+                seen_ids.add(b["id"])
+
+        # 2. Babies created directly by user (solo, before any partnership)
+        res2 = supabase.table("babies").select("*").eq("created_by", user_id).execute()
+        for b in (res2.data or []):
+            if b["id"] not in seen_ids:
+                babies.append(b)
+
+        return {"babies": babies}
     except Exception as e:
         print(f"Error in get_babies: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @router.post("/")
 async def create_baby(user_id: str, baby: BabyCreate, supabase = Depends(get_supabase)):
-    """Create a new baby record"""
+    """Create a baby. Links to partnership if accepted, otherwise stores as solo (created_by only)."""
     try:
-        # Get partnership
+        # Check for accepted partnership
         partnership_result = supabase.table("partnerships").select("id").eq("status", "accepted").or_(f"mother_id.eq.{user_id},father_id.eq.{user_id}").execute()
-        
-        if not partnership_result.data:
-            raise HTTPException(status_code=404, detail="No active partnership found")
-        
-        partnership_id = partnership_result.data[0]["id"]
-        
+        partnership_id = partnership_result.data[0]["id"] if partnership_result.data else None
+
         insert_data = {
-            "partnership_id": partnership_id,
+            "created_by": user_id,
             "name": baby.name,
             "gender": baby.gender,
             "weight_at_birth": baby.weight_at_birth,
@@ -74,6 +78,8 @@ async def create_baby(user_id: str, baby: BabyCreate, supabase = Depends(get_sup
             "created_at": datetime.utcnow().isoformat(),
             "updated_at": datetime.utcnow().isoformat(),
         }
+        if partnership_id:
+            insert_data["partnership_id"] = partnership_id
         if baby.date_of_birth is not None:
             insert_data["date_of_birth"] = baby.date_of_birth
         if baby.status is not None:
@@ -82,10 +88,10 @@ async def create_baby(user_id: str, baby: BabyCreate, supabase = Depends(get_sup
             insert_data["gestation_weeks"] = baby.gestation_weeks
 
         result = supabase.table("babies").insert(insert_data).execute()
-        
+
         if not result.data:
             raise HTTPException(status_code=400, detail="Failed to create baby record")
-        
+
         return {"status": "created", "data": result.data[0]}
     except HTTPException:
         raise
