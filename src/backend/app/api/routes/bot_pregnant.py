@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 import asyncio
 import json
+import os
 import sys
 import time
 from collections import OrderedDict
@@ -12,7 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "agents" / "bot-pregnant"))
 
 from src.engine.retriever import NoriRetriever
-from langchain_ollama import OllamaLLM
+from openai import OpenAI
 
 _system_prompt: Optional[str] = None
 _rag_template: Optional[str] = None
@@ -84,13 +85,44 @@ def set_cached_answer(question: str, stage: Optional[str], payload: dict) -> Non
     _answer_cache[key] = (time.time(), payload)
 
 
-async def invoke_llm_with_timeout(llm: OllamaLLM, prompt: str, timeout_seconds: int = 60) -> str:
+async def invoke_llm_with_timeout(llm: dict, prompt: str, timeout_seconds: int = 60) -> str:
     try:
-        result = await asyncio.wait_for(asyncio.to_thread(llm.invoke, prompt), timeout_seconds)
-        if hasattr(result, "content"):
-            return str(result.content)
+        messages = [
+            {"role": "user", "content": prompt}
+        ]
+        result = await asyncio.wait_for(
+            asyncio.to_thread(
+                llm["client"].chat.completions.create,
+                model=llm["model"],
+                messages=messages,
+                temperature=llm["temperature"],
+                max_tokens=llm["max_tokens"],
+                timeout=timeout_seconds,
+            ),
+            timeout_seconds,
+        )
+
+        if result and getattr(result, "choices", None):
+            choice = result.choices[0]
+            if hasattr(choice, "message"):
+                message = choice.message
+                content = getattr(message, "content", None)
+                if content is not None:
+                    return str(content).strip()
+            text = getattr(choice, "text", None)
+            if text is not None:
+                return str(text).strip()
+
         if isinstance(result, dict):
-            return str(result.get("content") or result.get("text") or result)
+            choices = result.get("choices", [])
+            if choices:
+                first_choice = choices[0]
+                message = first_choice.get("message", {})
+                content = message.get("content") if isinstance(message, dict) else None
+                if content:
+                    return str(content).strip()
+                return str(first_choice.get("text", "")).strip()
+
         return str(result)
     except asyncio.TimeoutError as exc:
         raise TimeoutError(f"LLM request timed out after {timeout_seconds} seconds") from exc
@@ -114,39 +146,46 @@ _llm = None
 def get_retriever():
     global _retriever
     if _retriever is None:
-        # Use absolute path for Docker compatibility
-        db_path = "/app/agents/bot-pregnant/data/vectordb"
-        print(f"[BOT] Loading vector DB from: {db_path}")
-        try:
+        use_qdrant = os.getenv("USE_QDRANT", "0").strip().lower() in ("1", "true", "yes", "on")
+        if use_qdrant:
+            print("[BOT] Loading Qdrant retriever")
+            _retriever = NoriRetriever()
+        else:
+            # Use absolute path for Docker compatibility
+            db_path = "/app/agents/bot-pregnant/data/vectordb"
+            print(f"[BOT] Loading local Chroma retriever from: {db_path}")
             _retriever = NoriRetriever(db_path=db_path)
-            print(f"[BOT] Vector DB loaded successfully")
-        except Exception as e:
-            print(f"[BOT] Error loading vector DB: {str(e)}")
-            raise
+
+        print(f"[BOT] Retriever loaded successfully. Qdrant mode={use_qdrant}")
     return _retriever
 
 def get_llm():
     global _llm
     if _llm is None:
-        _llm = OllamaLLM(
-            model="llama3.1:8b",
-            temperature=0.2,
-            num_predict=1024  # Allow longer responses
-        )
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        if not openai_api_key:
+            raise ValueError("OPENAI_API_KEY is not configured")
+
+        client = OpenAI(api_key=openai_api_key)
+        _llm = {
+            "client": client,
+            "model": os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+            "temperature": float(os.getenv("OPENAI_TEMPERATURE", "0.2")),
+            "max_tokens": int(os.getenv("OPENAI_MAX_TOKENS", "1024")),
+        }
     return _llm
 
 async def warm_up_llm(timeout_seconds: int = 90) -> None:
     llm = get_llm()
-    if getattr(llm, "_warmup_done", False):
+    if llm is None:
         return
 
-    print("[BOT] Warming up Ollama model...")
+    print("[BOT] Warming up OpenAI model...")
     try:
         await invoke_llm_with_timeout(llm, "Xin chào MommyMate.", timeout_seconds=timeout_seconds)
-        setattr(llm, "_warmup_done", True)
-        print("[BOT] Ollama warm-up completed")
+        print("[BOT] OpenAI warm-up completed")
     except Exception as exc:
-        print(f"[BOT] Ollama warm-up failed: {exc}")
+        print(f"[BOT] OpenAI warm-up failed: {exc}")
 
 @router.post("/query", response_model=QueryResponse)
 async def query_bot(request: QueryRequest):

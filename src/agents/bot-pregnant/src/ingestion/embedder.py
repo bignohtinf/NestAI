@@ -1,10 +1,15 @@
 import os
 import json
+import uuid
+import time
 from pathlib import Path
 import frontmatter
 from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
+from qdrant_client import QdrantClient
+from qdrant_client.http import models as rest
+from tqdm import tqdm
 
 
 class NoriIngestion:
@@ -12,9 +17,12 @@ class NoriIngestion:
         self.base_dir = Path(__file__).resolve().parents[2]
         self.env_path = self.base_dir / ".env"
         self.load_env_file(self.env_path)
+        # Fallback to project root .env when running from repo root / backend container.
+        self.load_env_file(self.base_dir.parents[2] / ".env")
         self.db_path = str(Path(db_path)) if db_path else str(self.base_dir / "data" / "vectordb")
+        embedding_model = os.getenv("EMBEDDING_MODEL", "BAAI/bge-m3")
         self.embeddings = HuggingFaceEmbeddings(
-            model_name="BAAI/bge-m3",
+            model_name=embedding_model,
             model_kwargs={"device": "cpu"},
             encode_kwargs={"normalize_embeddings": True},
         )
@@ -23,6 +31,26 @@ class NoriIngestion:
             strip_headers=False,
         )
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+
+        self.use_qdrant = self._env_flag("USE_QDRANT")
+        self.qdrant_url = os.getenv("QDRANT_URL")
+        self.qdrant_api_key = os.getenv("QDRANT_API_KEY")
+        self.qdrant_collection = os.getenv("QDRANT_COLLECTION", "bot_pregnant")
+        # Default dimension for BAAI/bge-m3 embeddings.
+        self.qdrant_vector_size = int(os.getenv("QDRANT_VECTOR_SIZE", "1024"))
+        self.qdrant_batch_size = int(os.getenv("QDRANT_BATCH_SIZE", "64"))
+        self.embedding_batch_size = int(os.getenv("EMBEDDING_BATCH_SIZE", "64"))
+        self.qdrant_timeout = int(os.getenv("QDRANT_TIMEOUT_SECONDS", "180"))
+        self.qdrant_max_retries = int(os.getenv("QDRANT_MAX_RETRIES", "4"))
+        self.qdrant_recreate_collection = self._env_flag("QDRANT_RECREATE_COLLECTION")
+
+        if self.use_qdrant:
+            self._validate_qdrant_config()
+            self.qdrant_client = QdrantClient(
+                url=self.qdrant_url,
+                api_key=self.qdrant_api_key,
+                timeout=self.qdrant_timeout,
+            )
 
     def load_env_file(self, env_path: Path):
         """Load biến môi trường từ file .env của bot-pregnant."""
@@ -39,6 +67,125 @@ class NoriIngestion:
             value = value.strip().strip('"').strip("'")
             if key and key not in os.environ:
                 os.environ[key] = value
+
+    def _env_flag(self, key: str) -> bool:
+        return os.getenv(key, "").strip().lower() in ("1", "true", "yes", "on")
+
+    def _validate_qdrant_config(self):
+        if not self.qdrant_url:
+            raise ValueError("Missing QDRANT_URL for Qdrant ingestion")
+        if not self.qdrant_api_key:
+            raise ValueError("Missing QDRANT_API_KEY for Qdrant ingestion")
+
+    def _create_qdrant_collection(self):
+        exists = self.qdrant_client.collection_exists(self.qdrant_collection)
+        if not exists:
+            print(f"[QDRANT] Creating collection: {self.qdrant_collection}")
+            self.qdrant_client.create_collection(
+                collection_name=self.qdrant_collection,
+                vectors_config=rest.VectorParams(
+                    size=self.qdrant_vector_size,
+                    distance=rest.Distance.COSINE,
+                ),
+            )
+            return
+
+        info = self.qdrant_client.get_collection(self.qdrant_collection)
+        current_size = info.config.params.vectors.size
+        if current_size != self.qdrant_vector_size:
+            print(
+                f"[QDRANT] Vector size mismatch for '{self.qdrant_collection}': "
+                f"{current_size} != {self.qdrant_vector_size}, recreating..."
+            )
+            self.qdrant_client.delete_collection(self.qdrant_collection)
+            self.qdrant_client.create_collection(
+                collection_name=self.qdrant_collection,
+                vectors_config=rest.VectorParams(
+                    size=self.qdrant_vector_size,
+                    distance=rest.Distance.COSINE,
+                ),
+            )
+            return
+
+        if self.qdrant_recreate_collection:
+            print(f"[QDRANT] Recreating collection by config: {self.qdrant_collection}")
+            self.qdrant_client.delete_collection(self.qdrant_collection)
+            self.qdrant_client.create_collection(
+                collection_name=self.qdrant_collection,
+                vectors_config=rest.VectorParams(
+                    size=self.qdrant_vector_size,
+                    distance=rest.Distance.COSINE,
+                ),
+            )
+            return
+
+        print(f"[QDRANT] Using existing collection: {self.qdrant_collection}")
+
+    def _upsert_batch_with_retry(self, batch, start: int, end: int):
+        for attempt in range(1, self.qdrant_max_retries + 1):
+            try:
+                self.qdrant_client.upsert(
+                    collection_name=self.qdrant_collection,
+                    points=batch,
+                    wait=True,
+                )
+                return
+            except Exception as exc:
+                if attempt >= self.qdrant_max_retries:
+                    raise
+                sleep_seconds = min(20, 2 ** attempt)
+                print(
+                    f"[QDRANT] Upsert batch {start}-{end} failed (attempt {attempt}/"
+                    f"{self.qdrant_max_retries}): {exc}. Retrying in {sleep_seconds}s..."
+                )
+                time.sleep(sleep_seconds)
+
+    def _upsert_documents_to_qdrant(self, documents):
+        print(f"[QDRANT] Preparing {len(documents)} vectors for upsert")
+        texts = [doc.page_content for doc in documents]
+        vectors = []
+        total_embed_batches = (len(texts) + self.embedding_batch_size - 1) // self.embedding_batch_size
+        for start in tqdm(
+            range(0, len(texts), self.embedding_batch_size),
+            total=total_embed_batches,
+            desc="Embedding texts",
+            unit="batch",
+        ):
+            text_batch = texts[start:start + self.embedding_batch_size]
+            vectors.extend(self.embeddings.embed_documents(text_batch))
+
+        points = []
+        for doc, vector in tqdm(
+            zip(documents, vectors),
+            total=len(documents),
+            desc="Building points",
+            unit="point",
+        ):
+            payload = {
+                "content": doc.page_content,
+                "metadata": doc.metadata,
+                "source_file": doc.metadata.get("source_file"),
+                "stage": doc.metadata.get("stage"),
+                "safety_level": doc.metadata.get("safety_level"),
+            }
+            points.append(
+                rest.PointStruct(
+                    id=str(uuid.uuid4()),
+                    vector=vector,
+                    payload=payload,
+                )
+            )
+
+        total_batches = (len(points) + self.qdrant_batch_size - 1) // self.qdrant_batch_size
+        for start in tqdm(
+            range(0, len(points), self.qdrant_batch_size),
+            total=total_batches,
+            desc="Qdrant upsert",
+            unit="batch",
+        ):
+            batch = points[start:start + self.qdrant_batch_size]
+            print(f"[QDRANT] Upserting batch {start}-{start + len(batch)}")
+            self._upsert_batch_with_retry(batch, start, start + len(batch))
 
     def load_metadata(self, metadata_path):
         """Đọc file JSON metadata."""
@@ -131,7 +278,8 @@ class NoriIngestion:
                 vinmec_meta_path = self.base_dir / "data" / "processed" / "metadata" / "vinmec.json"
                 vinmec_meta_map = self.build_vinmec_metadata_map(str(vinmec_meta_path))
 
-            for filename in os.listdir(path):
+            md_files = sorted([name for name in os.listdir(path) if name.endswith(".md")])
+            for filename in tqdm(md_files, desc=f"Processing {category}", unit="file"):
                 if filename.endswith(".md"):
                     file_path = os.path.join(path, filename)
 
@@ -158,6 +306,13 @@ class NoriIngestion:
 
         if not all_documents:
             raise ValueError("Không có document nào để tạo vector DB.")
+
+        if self.use_qdrant:
+            print(f"\nĐang khởi tạo Qdrant collection: {self.qdrant_collection}...")
+            self._create_qdrant_collection()
+            self._upsert_documents_to_qdrant(all_documents)
+            print("Hoàn thành! Dữ liệu đã sẵn sàng trong Qdrant.")
+            return self.qdrant_client
 
         print(f"\nĐang khởi tạo Vector DB tại {self.db_path}...")
         vectorstore = Chroma.from_documents(

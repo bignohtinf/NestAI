@@ -12,3 +12,4 @@ dependencies:
       - requests>=2.31.0
       - beautifulsoup4>=4.12.0
       - selenium>=4.18.0
+      - qdrant-client[http]

@@ -1,18 +1,20 @@
 #!/usr/bin/env python
 """
 Script to generate test answers from gold questions using RAG system.
-Queries the vector database and generates answers using Ollama (Llama 3.2).
+Queries the vector database and generates answers using OpenAI.
 """
 
 import json
+import os
 import sys
 from pathlib import Path
+
+from openai import OpenAI
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.engine.retriever import NoriRetriever
-from langchain_ollama import OllamaLLM
 
 
 def load_prompts() -> tuple[str, str]:
@@ -32,11 +34,19 @@ def load_gold_questions(gold_path: Path) -> list[dict]:
 
 
 def generate_test_answers(gold_data: list[dict], db_path: str, output_path: Path):
-    """Generate answers for each question using RAG system with Ollama"""
+    """Generate answers for each question using RAG system with OpenAI."""
     retriever = NoriRetriever(db_path=db_path)
-    
-    # Initialize Ollama with Llama 3.1:8b
-    llm = OllamaLLM(model="llama3.1:8b", temperature=0.2)
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not openai_api_key:
+        raise ValueError("OPENAI_API_KEY is not configured")
+    client = OpenAI(api_key=openai_api_key)
+
+    llm = {
+        "client": client,
+        "model": os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+        "temperature": 0.2,
+        "max_tokens": 1024,
+    }
     
     test_answers = []
     
@@ -63,9 +73,17 @@ def generate_test_answers(gold_data: list[dict], db_path: str, output_path: Path
             system_prompt, rag_template = load_prompts()
             rag_prompt = f"{system_prompt}\n\n{rag_template.format(context=context, question=question)}"
 
-            # Generate answer using Ollama with RAG context
-            raw_answer = llm.invoke(rag_prompt)
-            answer = raw_answer.content.strip() if hasattr(raw_answer, "content") else str(raw_answer).strip()
+            # Generate answer using OpenAI with RAG context
+            response = llm["client"].chat.completions.create(
+                model=llm["model"],
+                temperature=llm["temperature"],
+                max_tokens=llm["max_tokens"],
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": rag_prompt},
+                ],
+            )
+            answer = response.choices[0].message.content.strip()
             
             test_answers.append({
                 "question": question,
@@ -100,7 +118,7 @@ def main():
     print(f"Loaded {len(gold_data)} questions\n")
     
     print(f"Generating test answers using vector database at {db_path}...")
-    print("Make sure Ollama is running with: ollama run llama3.1\n")
+    print("Make sure OPENAI_API_KEY is configured in your environment.\n")
     generate_test_answers(gold_data, db_path, output_path)
 
 
