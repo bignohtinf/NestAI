@@ -62,17 +62,29 @@ async def respond_partnership(partnership_id: str, action: str, supabase = Depen
     """Respond to a partnership request (accept or reject)"""
     if action not in ["accept", "reject"]:
         raise HTTPException(status_code=400, detail="Action must be 'accept' or 'reject'")
-    
+
     new_status = "accepted" if action == "accept" else "rejected"
-    
+
     result = supabase.table("partnerships").update({
         "status": new_status
     }).eq("id", partnership_id).execute()
-    
+
     if not result.data:
         raise HTTPException(status_code=404, detail="Partnership not found")
-    
-    return {"status": "updated", "data": result.data[0]}
+
+    partnership = result.data[0]
+
+    # When accepted: link any solo babies from both partners to this partnership
+    if new_status == "accepted":
+        mother_id = partnership.get("mother_id")
+        father_id = partnership.get("father_id")
+        user_ids = [uid for uid in [mother_id, father_id] if uid]
+        for uid in user_ids:
+            supabase.table("babies").update({
+                "partnership_id": partnership_id
+            }).eq("created_by", uid).is_("partnership_id", "null").execute()
+
+    return {"status": "updated", "data": partnership}
 
 @router.get("/{partnership_id}")
 async def get_partnership(partnership_id: str, supabase = Depends(get_supabase)):
