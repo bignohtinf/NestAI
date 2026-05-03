@@ -16,7 +16,10 @@ class NoriRetriever:
 
         self.embeddings = HuggingFaceEmbeddings(
             model_name=model_name,
-            model_kwargs={"device": "cpu"},
+            model_kwargs={
+                "device": "cpu",
+                "model_kwargs": {"use_safetensors": True},
+            },
             encode_kwargs={"normalize_embeddings": True},
             cache_folder="./models",
         )
