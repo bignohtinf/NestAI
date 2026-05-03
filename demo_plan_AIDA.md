@@ -34,10 +34,10 @@
 - **Demo Tính năng 3: Tạo thực đơn (Nutrition Planner) & Gắn kết gia đình**
   - Thao tác: Mẹ yêu cầu tạo thực đơn dinh dưỡng trong ngày, sau đó thao tác **chụp ảnh thực đơn gửi cho bố chuẩn bị** (hoặc chuyển trực tiếp thực đơn thành nhiệm vụ cho bố qua app).
   - Điểm nhấn: AI phân tích và đưa ra danh sách món ăn đầy đủ dinh dưỡng. Tính năng này giúp biến việc chuẩn bị bữa ăn thành hành trình chia sẻ, bố có thể nhận ngay danh sách đi chợ hoặc công thức nấu ăn.
-- **Demo Tính năng 4: Tác động đến Bé (Milk & Baby Impact)**
-  - Thao tác: Chuyển sang Tab "Sức khỏe Bé".
+- **Demo Tính năng 4: Theo dõi Sức khỏe Bé qua Trợ lý Nori**
+  - Thao tác: Trò chuyện với AI Nori: *"Nori ơi, em bé của mẹ tuần này phát triển ra sao rồi?"*
   - Điểm nhấn:
-    - Báo cáo trực quan việc mẹ ăn sẽ ảnh hưởng thế nào đến sự phát triển của thai nhi.
+    - Nori phản hồi trực tiếp tình trạng bé, mô tả sinh động quá trình phát triển của em bé theo từng tuần dựa trên dữ liệu thai kỳ của mẹ.
 
 ## 4. Action (Kêu gọi hành động)
 **Mục tiêu**: Kết thúc mạnh mẽ, đọng lại ấn tượng và hướng khán giả đến bước tiếp theo.
