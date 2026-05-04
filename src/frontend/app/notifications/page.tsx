@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Bell, Check, X, UserPlus, Utensils } from 'lucide-react';
+import { Bell, Check, X, UserPlus, Utensils, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
 import { nutritionApi } from '@/lib/api';
 
 interface PartnershipRequest {
@@ -161,17 +162,25 @@ export default function NotificationsPage() {
                       <p className="text-xs text-muted-foreground mt-1">
                         {formatTime(new Date(notif.created_at))}
                       </p>
-                      {!notif.is_read && (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => handleMarkAsRead(notif.id)}
-                          className="mt-3 gap-1"
-                        >
-                          <Check className="h-3.5 w-3.5" />
-                          Đánh dấu đã đọc
-                        </Button>
-                      )}
+                      <div className="flex gap-2 mt-3 flex-wrap">
+                        <Link href="/nutrition-scan">
+                          <Button size="sm" variant="outline" className="gap-1">
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            Xem thực đơn
+                          </Button>
+                        </Link>
+                        {!notif.is_read && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => handleMarkAsRead(notif.id)}
+                            className="gap-1"
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                            Đánh dấu đã đọc
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardContent>

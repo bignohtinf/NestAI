@@ -24,7 +24,7 @@ const MOTHER_NAV: BottomNavItem[] = [
 
 const FATHER_NAV: BottomNavItem[] = [
   { href: '/', label: 'Trang chủ', icon: Home, roles: ['father'] },
-  { href: '/nutrimart', label: 'NutriMart', icon: Utensils, roles: ['father'] },
+  { href: '/nutrition-scan', label: 'Thực đơn', icon: Utensils, roles: ['father'] },
   { href: '/nori', label: 'Nori AI', icon: MessageCircle, roles: ['father'] },
   { href: '/baby-journey', label: 'Hành trình', icon: Baby, roles: ['father'] },
   { href: '/profile', label: 'Hồ sơ', icon: User, roles: ['father'] },

@@ -3,7 +3,7 @@
 ## Thông tin chung
 - **Tên dự án**: NestAI (Trợ lý Dinh dưỡng AI cho Mẹ bầu & Sau sinh)
 - **Đối tượng Demo**: Ban giám khảo
-- **Thời lượng dự kiến**: 5 - 10 phút.
+- **Thời lượng dự kiến**: 10 phút.
 
 ---
 

@@ -35,23 +35,13 @@ interface NavItem {
 
 const navigationItems: NavItem[] = [
   { href: '/', label: 'Trang chủ', icon: Home, roles: ['mother', 'father', 'admin'] },
-  
-  // Mother
-  { href: '/nutrition-scan', label: 'Thực đơn AI', icon: Utensils, roles: ['mother'] },
-  
+  { href: '/nutrition-scan', label: 'Thực đơn AI', icon: Utensils, roles: ['mother', 'father'] },
   { href: '/nori', label: 'Nori AI', icon: MessageCircle, roles: ['mother', 'father'] },
   { href: '/baby-journey', label: 'Hành trình bé', icon: Baby, roles: ['mother', 'father'] },
-  
-  // Mother Health
   { href: '/wellness', label: 'Sức khỏe', icon: HeartPulse, roles: ['mother'] },
-  
-  { href: '/notifications', label: 'Thông báo', icon: Bell, roles: ['mother', 'father'] },
-  
-  // Father
-  { href: '/nutrimart', label: 'NutriMart', icon: ShoppingCart, roles: ['father'] },
   { href: '/planner', label: 'Kế Hoạch', icon: Calendar, roles: ['father'] },
-  
-  // Admin
+  { href: '/notifications', label: 'Thông báo', icon: Bell, roles: ['mother', 'father'] },
+  { href: '/nutrimart', label: 'NutriMart', icon: ShoppingCart, roles: ['father'] },
   { href: '/admin', label: 'Quản trị', icon: Settings, roles: ['admin'] },
 ];
 
