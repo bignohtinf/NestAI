@@ -54,6 +54,24 @@ function calculateAge(dob: string | undefined): number | undefined {
 
 export function NutritionRecommendations() {
   const { user } = useApp();
+  const isFather = user?.role === 'father';
+
+  // Partner (mother) ID for father's read-only view
+  const [partnerUserId, setPartnerUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isFather || !user?.id) return;
+    fetch(`/api/partnerships/active?user_id=${user.id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        const p = data?.partnership;
+        if (p) setPartnerUserId(p.mother_id !== user.id ? p.mother_id : p.father_id);
+      })
+      .catch(() => {});
+  }, [isFather, user?.id]);
+
+  // The user ID to use for loading meal plans
+  const planUserId = isFather ? partnerUserId : user?.id;
 
   // Week & date
   const [weekStart, setWeekStart] = useState(() => getMonday(new Date()));
@@ -158,9 +176,9 @@ export function NutritionRecommendations() {
 
   // ─── Load Weekly Plans ──────────────────────────────────────────────
   const loadWeekPlans = useCallback(async () => {
-    if (!user?.id) return;
+    if (!planUserId) return;
     try {
-      const res = await nutritionApi.getWeeklyMealPlans(user.id, weekStart);
+      const res = await nutritionApi.getWeeklyMealPlans(planUserId, weekStart);
       setWeekPlans(res.plans || {});
       const saved = new Set<string>();
       Object.entries(res.plans || {}).forEach(([date, plan]) => {
@@ -168,7 +186,7 @@ export function NutritionRecommendations() {
       });
       setSavedDates(saved);
     } catch { /* ignore */ }
-  }, [user?.id, weekStart]);
+  }, [planUserId, weekStart]);
 
   useEffect(() => { loadWeekPlans(); }, [loadWeekPlans]);
 
@@ -334,21 +352,23 @@ export function NutritionRecommendations() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Target Toggle */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setTarget('mother')}
-              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all border ${target === 'mother' ? 'bg-pink-50 border-pink-200 text-pink-700 shadow-sm' : 'bg-white border-border/50 text-muted-foreground hover:bg-muted/40'}`}
-            >
-              🤰 Mẹ
-            </button>
-            <button
-              onClick={() => setTarget('baby')}
-              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all border ${target === 'baby' ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm' : 'bg-white border-border/50 text-muted-foreground hover:bg-muted/40'}`}
-            >
-              👶 Bé
-            </button>
-          </div>
+          {/* Target Toggle — hidden for father (read-only view) */}
+          {!isFather && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setTarget('mother')}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all border ${target === 'mother' ? 'bg-pink-50 border-pink-200 text-pink-700 shadow-sm' : 'bg-white border-border/50 text-muted-foreground hover:bg-muted/40'}`}
+              >
+                🤰 Mẹ
+              </button>
+              <button
+                onClick={() => setTarget('baby')}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all border ${target === 'baby' ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm' : 'bg-white border-border/50 text-muted-foreground hover:bg-muted/40'}`}
+              >
+                👶 Bé
+              </button>
+            </div>
+          )}
 
           {/* Profile info */}
           <div className="flex items-center gap-2 flex-wrap">
@@ -368,57 +388,68 @@ export function NutritionRecommendations() {
             )}
           </div>
 
-          {/* Budget Input */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground shrink-0">💰 Ngân sách:</span>
-            <div className="relative flex-1 max-w-[200px]">
-              <input
-                type="text"
-                value={budgetInput}
-                onChange={(e) => setBudgetInput(formatBudget(e.target.value))}
-                placeholder="Không giới hạn"
-                className="w-full h-8 px-2.5 pr-12 text-sm border border-border/60 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-medium">VNĐ</span>
-            </div>
-          </div>
+          {/* Budget & action buttons — hidden for father */}
+          {!isFather && (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground shrink-0">💰 Ngân sách:</span>
+                <div className="relative flex-1 max-w-[200px]">
+                  <input
+                    type="text"
+                    value={budgetInput}
+                    onChange={(e) => setBudgetInput(formatBudget(e.target.value))}
+                    placeholder="Không giới hạn"
+                    className="w-full h-8 px-2.5 pr-12 text-sm border border-border/60 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-medium">VNĐ</span>
+                </div>
+              </div>
 
-          {/* Buttons */}
-          <div className="flex flex-col sm:flex-row items-center gap-3">
-            <Button 
-              onClick={hasSavedPlan ? handleReset : handleGenerate} 
-              disabled={isGenerating || isPastDate} 
-              className="w-full sm:flex-1 gap-2"
-            >
-              {isGenerating ? (
-                <><RefreshCw className="h-4 w-4 animate-spin" /> Đang tạo...</>
-              ) : hasSavedPlan ? (
-                <><RotateCcw className="h-4 w-4" /> Tạo lại</>
-              ) : (
-                <><Utensils className="h-4 w-4" /> Tạo thực đơn</>
-              )}
-            </Button>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="secondary" className="w-full sm:w-auto gap-2 shrink-0 border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10">
-                  <Camera className="h-4 w-4" /> Quét ảnh bữa ăn
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <Button
+                  onClick={hasSavedPlan ? handleReset : handleGenerate}
+                  disabled={isGenerating || isPastDate}
+                  className="w-full sm:flex-1 gap-2"
+                >
+                  {isGenerating ? (
+                    <><RefreshCw className="h-4 w-4 animate-spin" /> Đang tạo...</>
+                  ) : hasSavedPlan ? (
+                    <><RotateCcw className="h-4 w-4" /> Tạo lại</>
+                  ) : (
+                    <><Utensils className="h-4 w-4" /> Tạo thực đơn</>
+                  )}
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader><DialogTitle>Quét ảnh bữa ăn</DialogTitle></DialogHeader>
-                <div className="py-2"><SmartScan /></div>
-              </DialogContent>
-            </Dialog>
-          </div>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="secondary" className="w-full sm:w-auto gap-2 shrink-0 border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10">
+                      <Camera className="h-4 w-4" /> Quét ảnh bữa ăn
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader><DialogTitle>Quét ảnh bữa ăn</DialogTitle></DialogHeader>
+                    <div className="py-2"><SmartScan /></div>
+                  </DialogContent>
+                </Dialog>
+              </div>
 
-          {!activePlan && !isGenerating && !hasSavedPlan && (
+              {!activePlan && !isGenerating && !hasSavedPlan && (
+                <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                  <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-400" />
+                  <span>
+                    {isPastDate
+                      ? "Không thể tạo thực đơn cho ngày trong quá khứ."
+                      : "Bấm \"Tạo thực đơn\" để AI sinh thực đơn theo đúng hồ sơ dinh dưỡng."}
+                  </span>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Father: show info if no partner linked yet */}
+          {isFather && !partnerUserId && (
             <div className="flex items-start gap-2 text-xs text-muted-foreground">
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-400" />
-              <span>
-                {isPastDate 
-                  ? "Không thể tạo thực đơn cho ngày trong quá khứ." 
-                  : "Bấm \"Tạo thực đơn\" để AI sinh thực đơn theo đúng hồ sơ dinh dưỡng."}
-              </span>
+              <span>Chưa kết nối gia đình. Vào tab <strong>Quan hệ</strong> để ghép đôi với mẹ.</span>
             </div>
           )}
         </CardContent>
@@ -498,18 +529,20 @@ export function NutritionRecommendations() {
             </CardContent>
           </Card>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            {!hasSavedPlan && !isPastDate && (
-              <Button onClick={handleSave} disabled={isSaving} className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700">
-                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                {isSaving ? 'Đang lưu...' : 'Sử dụng thực đơn này'}
+          {/* Action Buttons — hidden for father (read-only) */}
+          {!isFather && (
+            <div className="flex gap-3">
+              {!hasSavedPlan && !isPastDate && (
+                <Button onClick={handleSave} disabled={isSaving} className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700">
+                  {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  {isSaving ? 'Đang lưu...' : 'Sử dụng thực đơn này'}
+                </Button>
+              )}
+              <Button onClick={handleReset} variant="secondary" className="gap-2" disabled={isGenerating || isPastDate}>
+                <RotateCcw className="h-4 w-4" /> Tạo lại
               </Button>
-            )}
-            <Button onClick={handleReset} variant="secondary" className="gap-2" disabled={isGenerating || isPastDate}>
-              <RotateCcw className="h-4 w-4" /> Tạo lại
-            </Button>
-          </div>
+            </div>
+          )}
 
           {/* Save message */}
           {saveMessage && (
@@ -521,8 +554,12 @@ export function NutritionRecommendations() {
       ) : !isGenerating && (
         <div className="py-16 flex flex-col items-center justify-center text-center opacity-60">
           <ChefHat className="h-12 w-12 text-muted-foreground mb-4" />
-          <h4 className="text-sm font-medium">{hasSavedPlan ? 'Đã có thực đơn cho ngày này' : 'Bấm "Tạo thực đơn" để bắt đầu'}</h4>
-          <p className="text-xs text-muted-foreground max-w-[240px] mt-1">Gợi ý chi tiết cho 3 bữa ăn chính trong ngày.</p>
+          <h4 className="text-sm font-medium">
+            {isFather ? 'Mẹ chưa lưu thực đơn cho ngày này' : hasSavedPlan ? 'Đã có thực đơn cho ngày này' : 'Bấm "Tạo thực đơn" để bắt đầu'}
+          </h4>
+          <p className="text-xs text-muted-foreground max-w-[240px] mt-1">
+            {isFather ? 'Thực đơn sẽ hiển thị khi mẹ tạo và lưu.' : 'Gợi ý chi tiết cho 3 bữa ăn chính trong ngày.'}
+          </p>
         </div>
       )}
 
