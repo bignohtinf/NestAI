@@ -1,19 +1,30 @@
 # ============================================================================
-# NestAI — Docker Compose (Development)
+# NestAI — Docker Compose (Development & Production Simulation)
 # ============================================================================
 #
 # Usage:
-#   docker compose up -d          # Start backend
+#   docker compose up -d          # Start backend, frontend, qdrant
 #   docker compose logs -f        # Follow logs
 #   docker compose down           # Stop
+#
+# Development Mode:
+#   The backend is configured to use hot-reload via the command override.
+#   The frontend runs the optimized standalone build. If you want Next.js
+#   hot-reload, you should run the frontend locally (cd src/frontend && npm run dev).
 #
 # Prerequisites:
 #   1. Apply migration: 004_nutrition_optimization.sql on Supabase
 #   2. Seed data: cd src/backend && python -m scripts.seed_nutrition_data
-#   3. Frontend: cd src/frontend && npm run dev  (no Docker)
-#   4. Vector DB: cd src/agents/bot-pregnant && python -m src.ingestion.embedder
+#   3. Vector DB: cd src/agents/bot-pregnant && python -m src.ingestion.embedder
 #
 # ============================================================================
+
+networks:
+  nestai-network:
+    driver: bridge
+
+volumes:
+  qdrant_storage:
 
 services:
   qdrant:
@@ -25,7 +36,42 @@ services:
       - QDRANT_API_KEY=${QDRANT_API_KEY:-}
     volumes:
       - qdrant_storage:/qdrant/storage
+    networks:
+      - nestai-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/localhost/6333' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  bot-pregnant:
+    build:
+      context: .
+      dockerfile: src/agents/bot-pregnant/Dockerfile
+    container_name: nestai-bot-pregnant
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./src/agents/bot-pregnant/.env
+      - ./.env
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+    volumes:
+      # Hot-reload: mount source for development
+      - ./src/agents/bot-pregnant:/app
+    networks:
+      - nestai-network
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8001/health')\" || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
 
   backend:
     build:
@@ -39,13 +85,21 @@ services:
       - ./.env
     environment:
       - HF_TOKEN=${HF_TOKEN}
+      - BOT_SERVICE_URL=http://bot-pregnant:8001
+    # Development override: Use --reload for hot reloading
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     volumes:
-      # Hot-reload for development
+      # Hot-reload for development. Note: if you want to test the pure
+      # production image without local mounts, comment out these lines.
       - ./src/backend:/app
       - ./src/agents:/app/agents
+    networks:
+      - nestai-network
     depends_on:
-      - qdrant
+      qdrant:
+        condition: service_healthy
+      bot-pregnant:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
-
-volumes:
-  qdrant_storage:
