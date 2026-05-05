@@ -40,7 +40,9 @@ function ProfilePageContent() {
   const [dob, setDob] = useState('');
   const [allergies, setAllergies] = useState<string[]>([]);
   const [dislikes, setDislikes] = useState<string[]>([]);
-  const [initialData, setInitialData] = useState({ phone: '', dob: '', allergies: [] as string[], dislikes: [] as string[] });
+  const [condition, setCondition] = useState('none');
+  const [foodPreference, setFoodPreference] = useState('no_pref');
+  const [initialData, setInitialData] = useState({ phone: '', dob: '', allergies: [] as string[], dislikes: [] as string[], condition: 'none', foodPreference: 'no_pref' });
 
   const [activePartnership, setActivePartnership] = useState<{
     id: string;
@@ -75,19 +77,23 @@ function ProfilePageContent() {
     if (!user?.id) return;
     fetch(`/api/users/me?user_id=${user.id}`)
       .then((r) => r.json())
-      .then((data) => { 
-        if (data.phone) setPhone(data.phone); 
+      .then((data) => {
+        if (data.phone) setPhone(data.phone);
         if (data.dob) setDob(data.dob);
         if (data.allergies) setAllergies(data.allergies);
         if (data.dislikes) setDislikes(data.dislikes);
+        if (data.condition) setCondition(data.condition);
+        if (data.food_preference) setFoodPreference(data.food_preference);
         setInitialData({
           phone: data.phone || '',
           dob: data.dob || '',
           allergies: data.allergies || [],
-          dislikes: data.dislikes || []
+          dislikes: data.dislikes || [],
+          condition: data.condition || 'none',
+          foodPreference: data.food_preference || 'no_pref'
         });
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [user?.id]);
 
   useEffect(() => {
@@ -148,9 +154,11 @@ function ProfilePageContent() {
     }));
   };
 
-  const isDirty = 
+  const isDirty =
     phone !== initialData.phone ||
     dob !== initialData.dob ||
+    condition !== initialData.condition ||
+    foodPreference !== initialData.foodPreference ||
     JSON.stringify([...allergies].sort()) !== JSON.stringify([...initialData.allergies].sort()) ||
     JSON.stringify([...dislikes].sort()) !== JSON.stringify([...initialData.dislikes].sort());
 
@@ -164,12 +172,12 @@ function ProfilePageContent() {
       const response = await fetch(`/api/users/me?user_id=${user?.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, dob, allergies, dislikes }),
+        body: JSON.stringify({ phone, dob, allergies, dislikes, condition, food_preference: foodPreference }),
       });
 
       if (response.ok) {
         setMessage({ type: 'success', text: 'Cập nhật thông tin thành công' });
-        setInitialData({ phone, dob, allergies, dislikes });
+        setInitialData({ phone, dob, allergies, dislikes, condition, foodPreference });
         fetchUserData(); // Refresh context so dashboard hides banner
         setTimeout(() => setMessage(null), 3000);
       } else {
@@ -321,11 +329,10 @@ function ProfilePageContent() {
         </div>
         {message && (
           <div
-            className={`flex items-center gap-2 p-3 rounded-lg text-sm ${
-              message.type === 'success'
+            className={`flex items-center gap-2 p-3 rounded-lg text-sm ${message.type === 'success'
                 ? 'bg-green-50 text-green-800 border border-green-200'
                 : 'bg-red-50 text-red-800 border border-red-200'
-            }`}
+              }`}
           >
             {message.type === 'success' ? (
               <CheckCircle className="h-4 w-4 shrink-0" />
@@ -423,6 +430,33 @@ function ProfilePageContent() {
                         </div>
                       ))}
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="condition">Tình trạng sức khỏe</Label>
+                    <select
+                      id="condition"
+                      value={condition}
+                      onChange={(e) => setCondition(e.target.value)}
+                      disabled={loading}
+                      className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm"
+                    >
+                      <option value="none">Bình thường</option>
+                      <option value="gdm">Tiểu đường thai kỳ</option>
+                      <option value="anemia">Thiếu máu / Thiếu sắt</option>
+                      <option value="hypertension">Cao huyết áp thai kỳ</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="foodPreference">Hạn chế ăn uống</Label>
+                    <Input
+                      id="foodPreference"
+                      value={foodPreference}
+                      onChange={(e) => setFoodPreference(e.target.value)}
+                      disabled={loading}
+                      placeholder="VD: Không ăn rau mầm, không ăn cá thu..."
+                    />
                   </div>
 
                   <Button type="submit" disabled={loading || !isDirty} className="w-full">
@@ -577,9 +611,9 @@ function ProfilePageContent() {
             )}
 
             {!isAddingBaby ? (
-              <Button 
-                onClick={() => setIsAddingBaby(true)} 
-                className="w-full border border-border/60" 
+              <Button
+                onClick={() => setIsAddingBaby(true)}
+                className="w-full border border-border/60"
                 variant="secondary"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -727,9 +761,9 @@ function ProfilePageContent() {
                     </div>
 
                     <div className="flex gap-3 pt-2">
-                      <Button 
-                        type="button" 
-                        variant="secondary" 
+                      <Button
+                        type="button"
+                        variant="secondary"
                         className="flex-1 border border-border/60"
                         onClick={() => setIsAddingBaby(false)}
                         disabled={loading}
