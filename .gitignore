@@ -53,3 +53,9 @@ raw_food_data/
 src/agents/bot-pregnant/models/
 src/backend/models
 scripts/init-ollama.sh
+.cache/
+**/.cache/
+huggingface/
+**/huggingface/
+*.pyc
+*.log
