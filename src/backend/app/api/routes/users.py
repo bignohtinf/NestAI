@@ -10,6 +10,8 @@ class UserUpdate(BaseModel):
     dob: Optional[str] = None
     allergies: Optional[list[str]] = None
     dislikes: Optional[list[str]] = None
+    condition: Optional[str] = None
+    food_preference: Optional[str] = None
 
 @router.get("/me")
 async def get_current_user(user_id: str, supabase = Depends(get_supabase)):
@@ -28,6 +30,8 @@ async def get_current_user(user_id: str, supabase = Depends(get_supabase)):
         "dob": user.get("dob"),
         "allergies": user.get("allergies", []),
         "dislikes": user.get("dislikes", []),
+        "condition": user.get("condition"),
+        "food_preference": user.get("food_preference"),
         "is_active": True
     }
 
@@ -43,6 +47,10 @@ async def update_current_user(user_id: str, user_data: UserUpdate, supabase = De
         update_data["allergies"] = user_data.allergies
     if user_data.dislikes is not None:
         update_data["dislikes"] = user_data.dislikes
+    if user_data.condition is not None:
+        update_data["condition"] = user_data.condition
+    if user_data.food_preference is not None:
+        update_data["food_preference"] = user_data.food_preference
 
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields to update")
@@ -64,6 +72,8 @@ async def update_current_user(user_id: str, user_data: UserUpdate, supabase = De
             "dob": user.get("dob"),
             "allergies": user.get("allergies", []),
             "dislikes": user.get("dislikes", []),
+            "condition": user.get("condition"),
+            "food_preference": user.get("food_preference"),
         }
     }
 

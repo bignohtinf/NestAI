@@ -23,26 +23,33 @@ RUN pip install --no-cache-dir -r requirements.txt
 # ─── Stage 2: Runtime ────────────────────────────────────────────────────────
 FROM python:3.11-slim AS runtime
 
+# Create a non-root user
+RUN groupadd -r appgroup && useradd -r -g appgroup -m appuser
+
 WORKDIR /app
 
-COPY --from=deps /opt/venv /opt/venv
+COPY --from=deps --chown=appuser:appgroup /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV HF_HOME=/app/.cache/huggingface
 
 # Copy backend source
-COPY src/backend/ ./
+COPY --chown=appuser:appgroup src/backend/ ./
 
 # Copy bot-pregnant agent
-COPY src/agents/bot-pregnant/ ./agents/bot-pregnant/
+COPY --chown=appuser:appgroup src/agents/bot-pregnant/ ./agents/bot-pregnant/
 
 # Copy optimization_food agent
-COPY src/agents/__init__.py ./agents/__init__.py
-COPY src/agents/optimization_food/ ./agents/optimization_food/
+COPY --chown=appuser:appgroup src/agents/__init__.py ./agents/__init__.py
+COPY --chown=appuser:appgroup src/agents/optimization_food/ ./agents/optimization_food/
 
 # Ensure vector database directory exists
-RUN mkdir -p ./agents/bot-pregnant/data/vectordb
+RUN mkdir -p ./agents/bot-pregnant/data/vectordb && \
+    chown -R appuser:appgroup ./agents/bot-pregnant/data
 
+# Switch to non-root user
+USER appuser
 
 EXPOSE 8000
 

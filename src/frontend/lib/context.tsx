@@ -21,6 +21,8 @@ export interface UserData {
   dob?: string;
   allergies?: string[];
   dislikes?: string[];
+  condition?: string;
+  foodPreference?: string;
 }
 
 
@@ -101,6 +103,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         dob: userData.dob,
         allergies: userData.allergies,
         dislikes: userData.dislikes,
+        condition: userData.condition,
+        foodPreference: userData.food_preference,
       });
 
       fetchBabyInfo(userData.id);
@@ -131,6 +135,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
             dob: userData.dob,
             allergies: userData.allergies,
             dislikes: userData.dislikes,
+            condition: userData.condition,
+            foodPreference: userData.food_preference,
           });
           fetchBabyInfo(userData.id);
         }
@@ -164,6 +170,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           dob: userData.dob,
           allergies: userData.allergies,
           dislikes: userData.dislikes,
+          condition: userData.condition,
+          foodPreference: userData.food_preference,
         });
       }
     } catch (error) {
