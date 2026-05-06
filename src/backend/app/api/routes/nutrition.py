@@ -278,6 +278,10 @@ async def analyze_photo(payload: PhotoAnalysisRequest, supabase = Depends(get_su
         fat = float(matched_food.get("fat") or 0)
         iron = matched_food.get("iron")
         calcium = matched_food.get("calcium")
+        
+        if energy <= 0:
+            energy = (protein * 4) + (carbs * 4) + (fat * 9)
+            
         calories = round((energy * estimated_grams) / 100.0, 1)
         protein = round((protein * estimated_grams) / 100.0, 1)
         carbs = round((carbs * estimated_grams) / 100.0, 1)
