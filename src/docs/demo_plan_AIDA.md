@@ -48,6 +48,10 @@
 ## 4. Action (Kêu gọi hành động)
 **Mục tiêu**: Kết thúc mạnh mẽ, đọng lại ấn tượng và hướng khán giả đến bước tiếp theo.
 
+- **Mô hình Kinh doanh (Go-to-Market)**:
+  - **B2B (Qua phòng khám/Bệnh viện)**: Hợp tác phân phối ứng dụng như một tiện ích giá trị gia tăng kèm theo các gói khám thai/chăm sóc sau sinh.
+  - **B2C (Qua mạng xã hội)**: Tiếp cận trực tiếp mẹ bầu qua các nội dung chia sẻ kiến thức trên mạng xã hội, cung cấp bản dùng thử miễn phí và chuyển đổi sang các gói đăng ký trả phí (Subscription) cho tính năng AI cá nhân hóa.
+
 - **Tổng kết Giá trị**:
   > *"Với NestAI, chúng tôi không chỉ cung cấp một ứng dụng đếm calo. Chúng tôi mang đến sự an tâm, sức khỏe cho cả mẹ và bé, cùng sự gắn kết gia đình trong suốt thai kỳ."*
 - **Call-to-Action (Kêu gọi hành động)**:
