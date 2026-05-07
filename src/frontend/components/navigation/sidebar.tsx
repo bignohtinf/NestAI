@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Home,
@@ -20,10 +20,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
 import Image from 'next/image';
+import { ChatHistoryTab } from '@/components/chat/chat-history-tab';
+import { nutritionApi } from '@/lib/api';
 
 interface SidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  activeChatId?: string | null;
+  onSelectChat?: (chatId: string) => void;
 }
 
 interface NavItem {
@@ -31,23 +35,90 @@ interface NavItem {
   label: string;
   icon?: any;
   roles: string[];
+  subItems?: { href: string; label: string; icon: any }[];
 }
 
 const navigationItems: NavItem[] = [
   { href: '/', label: 'Trang chủ', icon: Home, roles: ['mother', 'father', 'admin'] },
-  { href: '/nutrition-scan', label: 'Thực đơn AI', icon: Utensils, roles: ['mother', 'father'] },
+  
+  // Mother
+  { 
+    href: '/nutrition-scan', 
+    label: 'Thực đơn AI', 
+    icon: Utensils, 
+    roles: ['mother'],
+    subItems: [
+      { href: '/nutrition-scan/scan', label: 'Quét ảnh', icon: Camera },
+      { href: '/nutrition-scan/generate', label: 'Gen thực đơn', icon: Utensils }
+    ]
+  },
+  
   { href: '/nori', label: 'Nori AI', icon: MessageCircle, roles: ['mother', 'father'] },
   { href: '/baby-journey', label: 'Hành trình bé', icon: Baby, roles: ['mother', 'father'] },
+  
+  // Mother Health
   { href: '/wellness', label: 'Sức khỏe', icon: HeartPulse, roles: ['mother'] },
-  { href: '/planner', label: 'Kế Hoạch', icon: Calendar, roles: ['father'] },
+  
   { href: '/notifications', label: 'Thông báo', icon: Bell, roles: ['mother', 'father'] },
+  
+  // Father
   { href: '/nutrimart', label: 'NutriMart', icon: ShoppingCart, roles: ['father'] },
+  { href: '/planner', label: 'Kế Hoạch', icon: Calendar, roles: ['father'] },
+  
+  // Admin
   { href: '/admin', label: 'Quản trị', icon: Settings, roles: ['admin'] },
 ];
 
-export function Sidebar({ open, onOpenChange }: SidebarProps) {
+export function Sidebar({ open, onOpenChange, activeChatId, onSelectChat }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useApp();
+  const [showChatHistory, setShowChatHistory] = useState(true);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+
+  const fetchUnreadCount = React.useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const res = await nutritionApi.getNotifications(user.id, true, 1);
+      setUnreadCount(res.unread_count || 0);
+    } catch (error) {
+      console.error('Failed to fetch unread notifications:', error);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchUnreadCount();
+    
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchUnreadCount, 60000);
+    return () => clearInterval(interval);
+  }, [fetchUnreadCount]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('showChatHistory');
+    if (stored !== null) {
+      setShowChatHistory(JSON.parse(stored));
+    }
+
+    // Listen for custom event from toggle button
+    const handleToggleEvent = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      setShowChatHistory(customEvent.detail);
+    };
+
+    // Listen for notification updates
+    const handleNotificationUpdate = () => {
+      fetchUnreadCount();
+    };
+
+    window.addEventListener('chatHistoryToggle', handleToggleEvent);
+    window.addEventListener('notificationsUpdated', handleNotificationUpdate);
+    
+    return () => {
+      window.removeEventListener('chatHistoryToggle', handleToggleEvent);
+      window.removeEventListener('notificationsUpdated', handleNotificationUpdate);
+    };
+  }, [fetchUnreadCount]);
 
   const filteredItems = navigationItems.filter(item => item.roles.includes(user?.role || ''));
 
@@ -106,20 +177,71 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
               : pathWithoutQuery.startsWith(itemPathWithoutQuery || '');
 
             return (
-              <Link
+              <div 
                 key={item.label}
-                href={item.href!}
-                onClick={() => onOpenChange(false)}
-                className={cn(
-                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
-                  isActive
-                    ? 'bg-primary/10 text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]'
-                    : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-                )}
+                onMouseEnter={() => setHoveredItem(item.label)}
+                onMouseLeave={() => setHoveredItem(null)}
               >
-                {Icon && <Icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-muted-foreground")} />}
-                <span>{item.label}</span>
-              </Link>
+                <Link
+                  href={item.href!}
+                  onClick={() => onOpenChange(false)}
+                  className={cn(
+                    'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                    isActive
+                      ? 'bg-primary/10 text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]'
+                      : 'text-muted-foreground hover:bg-primary/5 hover:text-primary'
+                  )}
+                >
+                  {Icon && <Icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary")} />}
+                  <span className="flex-1">{item.label}</span>
+                  {item.label === 'Thông báo' && unreadCount > 0 && (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-background animate-in zoom-in duration-300">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </Link>
+
+                {/* Sub Items for Nutrition Scan */}
+                {item.subItems && (isActive || hoveredItem === item.label) && (
+                  <div className="mt-1 ml-6 flex flex-col gap-1 border-l border-border/30 pl-3">
+                    {item.subItems.map((sub) => {
+                      const isSubActive = pathname === sub.href;
+                      const SubIcon = sub.icon;
+                      return (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          onClick={() => onOpenChange(false)}
+                          className={cn(
+                            'flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200',
+                            isSubActive
+                              ? 'text-[#0075de] bg-[#0075de]/5'
+                              : 'text-muted-foreground hover:text-[#0075de] hover:bg-[#0075de]/5'
+                          )}
+                        >
+                          {SubIcon && <SubIcon className="h-3.5 w-3.5" />}
+                          <span>{sub.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Chat History Tab - Show under Nori */}
+                {item.label === 'Nori AI' && (isActive || hoveredItem === 'Nori AI') && (
+                    <div className="mt-2 ml-2 border-l border-border/30 pl-3">
+                      <ChatHistoryTab 
+                        activeChatId={activeChatId}
+                        onSelectChat={(chatId) => {
+                          console.log('Selected chat:', chatId);
+                          onSelectChat?.(chatId);
+                          onOpenChange(false);
+                        }} 
+                        isVisible={showChatHistory} 
+                      />
+                    </div>
+                )}
+              </div>
             );
           })}
         </nav>

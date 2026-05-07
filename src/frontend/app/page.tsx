@@ -31,11 +31,18 @@ export default function Home() {
     return <LandingPage />;
   }
 
+  // Admin users should be redirected to the admin section
+  if (user.role === 'admin') {
+    if (typeof window !== 'undefined') {
+      window.location.href = '/admin';
+    }
+    return null;
+  }
+
+  // Regular users (mother/father) use HomeLayout
   return (
     <HomeLayout>
-      {user.role === 'admin' ? (
-        <AdminDashboard />
-      ) : user.role === 'mother' ? (
+      {user.role === 'mother' ? (
         <MomDashboard />
       ) : (
         <DadDashboard />

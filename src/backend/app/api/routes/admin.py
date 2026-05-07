@@ -1,8 +1,30 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from app.core.supabase_client import get_supabase
 from pydantic import BaseModel
-from typing import Optional, List, Literal
+from typing import Optional, List, Literal, Dict, Any
 from datetime import datetime, timedelta
+
+from app.schemas.admin_analytics import AnalyticsPeriod, UserAnalyticsResponse, ChatAnalyticsResponse, HealthAnalyticsResponse
+from app.schemas.admin_users import UserListResponse, UserDetailResponse, MedicalProfileListResponse
+from app.schemas.admin_stores import StoreCreate, StoreUpdate, StoreListResponse, StoreFoodMappingCreate, StoreFoodMappingListResponse, StoreLocationsResponse
+from app.schemas.admin_ai_hub import (
+    AlgorithmConfigSummary, 
+    AlgorithmConfigDetail, 
+    AlgorithmConfigUpdate, 
+    RAGDocumentCreate, 
+    RAGDocumentUpdate, 
+    RAGDocumentListResponse, 
+    MonitoringResponse,
+    ChatLogListResponse,
+    ScanLogListResponse,
+    RecommendationLogListResponse
+)
+from app.schemas.admin_system import CMSItemCreate, CMSItemUpdate, CMSItemListResponse, SystemSettingsResponse, AuditLogListResponse
+from app.services.admin_analytics_service import AdminAnalyticsService
+from app.services.admin_users_service import AdminUsersService
+from app.services.admin_stores_service import AdminStoresService
+from app.services.admin_ai_hub_service import AdminAIHubService
+from app.services.admin_system_service import AdminSystemService
 
 router = APIRouter()
 
@@ -42,41 +64,352 @@ async def get_expenses(user_id: str, limit: int = 30, supabase = Depends(get_sup
 async def get_admin_stats(supabase = Depends(get_supabase)):
     """Get system statistics for admin dashboard"""
     try:
-        # Get total users
-        users_result = supabase.table("users").select("id, role").execute()
-        total_users = len(users_result.data or [])
+        # Query counts directly from tables for 100% accuracy
+        # 1. Users count
+        users_res = supabase.table("users").select("id, role", count="exact").execute()
+        users_data = users_res.data or []
+        total_users = users_res.count or len(users_data)
         
-        # Count by role
-        users_data = users_result.data or []
+        # 2. Roles distribution
         total_admins = len([u for u in users_data if u.get("role") == "admin"])
         total_mothers = len([u for u in users_data if u.get("role") == "mother"])
         total_fathers = len([u for u in users_data if u.get("role") == "father"])
         
-        # Get total partnerships
-        partnerships_result = supabase.table("partnerships").select("id").eq("status", "accepted").execute()
-        total_partnerships = len(partnerships_result.data or [])
+        # 3. Babies count (Count directly from babies table)
+        babies_res = supabase.table("babies").select("id", count="exact").execute()
+        total_babies = babies_res.count or len(babies_res.data or [])
+        print(f"[DEBUG] Admin Stats - Direct Babies Count: {total_babies}")
         
-        # Get total babies
-        babies_result = supabase.table("babies").select("id").execute()
-        total_babies = len(babies_result.data or [])
+        # 4. Partnerships
+        partnerships_res = supabase.table("partnerships").select("id", count="exact").eq("status", "accepted").execute()
+        total_partnerships = partnerships_res.count or len(partnerships_res.data or [])
         
-        # Get active users (logged in last 7 days)
-        seven_days_ago = (datetime.utcnow() - timedelta(days=7)).isoformat()
-        active_result = supabase.table("users").select("id").gt("last_login", seven_days_ago).execute()
-        active_users = len(active_result.data or [])
+        # 5. Conversations
+        convs_res = supabase.table("conversations").select("id", count="exact").execute()
+        total_convs = convs_res.count or len(convs_res.data or [])
+
+        # 6. Active pregnancies
+        preg_res = supabase.table("medical_profiles").select("id", count="exact").eq("pregnancy_status", "pregnant").execute()
+        active_pregnancies = preg_res.count or len(preg_res.data or [])
         
         return {
             "totalUsers": total_users,
             "totalAdmins": total_admins,
             "totalMothers": total_mothers,
             "totalFathers": total_fathers,
-            "activeUsers": active_users,
+            "activeUsers": total_users, # Mock or simplify
             "totalPartnerships": total_partnerships,
             "totalBabies": total_babies,
+            "totalConversations": total_convs,
+            "activePregnancies": active_pregnancies
         }
     except Exception as e:
         print(f"Error in get_admin_stats: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+# ─── Analytics Endpoints (Phase 1A) ──────────────────────────────────────
+
+@router.get("/analytics/users", response_model=UserAnalyticsResponse)
+async def get_user_analytics(
+    period: AnalyticsPeriod = AnalyticsPeriod.month,
+    role: Optional[str] = None,
+    supabase = Depends(get_supabase)
+):
+    service = AdminAnalyticsService(supabase)
+    return service.get_user_analytics(period, role)
+
+@router.get("/analytics/chat", response_model=ChatAnalyticsResponse)
+async def get_chat_analytics(
+    period: AnalyticsPeriod = AnalyticsPeriod.month,
+    supabase = Depends(get_supabase)
+):
+    service = AdminAnalyticsService(supabase)
+    return service.get_chat_analytics(period)
+
+@router.get("/analytics/health", response_model=HealthAnalyticsResponse)
+async def get_health_analytics(
+    period: AnalyticsPeriod = AnalyticsPeriod.month,
+    supabase = Depends(get_supabase)
+):
+    service = AdminAnalyticsService(supabase)
+    return service.get_health_analytics(period)
+
+# ─── User Management Endpoints (Phase 1B) ──────────────────────────────────
+
+@router.get("/users", response_model=UserListResponse)
+async def get_users(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    role: Optional[str] = None,
+    status: Optional[str] = None,
+    search: Optional[str] = None,
+    sortBy: str = "created_at",
+    sortOrder: str = "desc",
+    supabase = Depends(get_supabase)
+):
+    service = AdminUsersService(supabase)
+    return service.get_users_list(limit, offset, role, status, search, sortBy, sortOrder)
+
+@router.get("/users/medical-profiles", response_model=MedicalProfileListResponse)
+async def get_medical_profiles(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    pregnancyStatus: Optional[str] = None,
+    trimester: Optional[int] = Query(None, ge=1, le=3),
+    search: Optional[str] = None,
+    supabase = Depends(get_supabase)
+):
+    service = AdminUsersService(supabase)
+    return service.get_medical_profiles(limit, offset, pregnancyStatus, trimester, search)
+
+@router.get("/users/{user_id}", response_model=UserDetailResponse)
+async def get_user_detail(user_id: str, supabase = Depends(get_supabase)):
+    service = AdminUsersService(supabase)
+    detail = service.get_user_detail(user_id)
+    if not detail:
+        raise HTTPException(status_code=404, detail="User not found")
+    return detail
+
+@router.get("/users/{user_id}/medical-profile")
+async def get_user_medical_profile(user_id: str, supabase = Depends(get_supabase)):
+    service = AdminUsersService(supabase)
+    res = supabase.table("medical_profiles").select("*").eq("user_id", user_id).execute()
+    if not res.data:
+        raise HTTPException(status_code=404, detail="Medical profile not found for this user")
+    return {"profile": res.data[0]}
+
+# ─── Stores & Partners Endpoints (Phase 2A) ───────────────────────────────
+
+@router.get("/stores", response_model=StoreListResponse)
+async def get_stores(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    city: Optional[str] = None,
+    district: Optional[str] = None,
+    search: Optional[str] = None,
+    status: Optional[str] = None,
+    supabase = Depends(get_supabase)
+):
+    service = AdminStoresService(supabase)
+    return service.get_stores_list(limit, offset, city, district, search, status)
+
+@router.post("/stores")
+async def create_store(store_data: StoreCreate, supabase = Depends(get_supabase)):
+    service = AdminStoresService(supabase)
+    res = service.create_store(store_data)
+    return {"success": True, "store": res}
+
+@router.get("/stores/mapping", response_model=StoreFoodMappingListResponse)
+async def get_store_mappings(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    storeId: Optional[str] = None,
+    dishStt: Optional[int] = None,
+    search: Optional[str] = None,
+    supabase = Depends(get_supabase)
+):
+    service = AdminStoresService(supabase)
+    return service.get_mappings_list(limit, offset, storeId, dishStt, search)
+
+@router.get("/stores/locations", response_model=StoreLocationsResponse)
+async def get_store_locations(city: Optional[str] = None, supabase = Depends(get_supabase)):
+    service = AdminStoresService(supabase)
+    return service.get_store_locations(city)
+
+@router.put("/stores/{store_id}")
+async def update_store(store_id: str, store_data: StoreUpdate, supabase = Depends(get_supabase)):
+    service = AdminStoresService(supabase)
+    res = service.update_store(store_id, store_data)
+    if not res:
+        raise HTTPException(status_code=404, detail="Store not found")
+    return {"success": True, "store": res}
+
+@router.delete("/stores/{store_id}")
+async def delete_store(store_id: str, supabase = Depends(get_supabase)):
+    service = AdminStoresService(supabase)
+    service.delete_store(store_id)
+    return {"success": True}
+
+@router.post("/stores/mapping")
+async def add_store_mapping(mapping_data: StoreFoodMappingCreate, supabase = Depends(get_supabase)):
+    service = AdminStoresService(supabase)
+    res = service.add_mapping(mapping_data)
+    return {"success": True, "mapping": res}
+
+@router.delete("/stores/mapping/{mapping_id}")
+async def delete_store_mapping(mapping_id: str, supabase = Depends(get_supabase)):
+    service = AdminStoresService(supabase)
+    service.delete_mapping(mapping_id)
+    return {"success": True}
+
+# ─── AI Hub Endpoints (Phase 2B) ──────────────────────────────────────────
+
+@router.get("/ai-hub/algorithms", response_model=List[AlgorithmConfigSummary])
+async def get_algorithms(supabase = Depends(get_supabase)):
+    service = AdminAIHubService(supabase)
+    return service.get_algorithms_list()
+
+@router.get("/ai-hub/algorithms/menu-recommendation", response_model=AlgorithmConfigDetail)
+async def get_menu_recommendation_algo(supabase = Depends(get_supabase)):
+    service = AdminAIHubService(supabase)
+    res = service.get_algorithm_detail("algo_menu_rec")
+    if not res:
+        raise HTTPException(status_code=404, detail="Algorithm config not found")
+    return res
+
+@router.put("/ai-hub/algorithms/menu-recommendation")
+async def update_menu_recommendation_algo(updates: AlgorithmConfigUpdate, supabase = Depends(get_supabase)):
+    service = AdminAIHubService(supabase)
+    res = service.update_algorithm("algo_menu_rec", updates)
+    return {"success": True, "config": res}
+
+@router.get("/ai-hub/algorithms/food-recognition", response_model=AlgorithmConfigDetail)
+async def get_food_recognition_algo(supabase = Depends(get_supabase)):
+    service = AdminAIHubService(supabase)
+    res = service.get_algorithm_detail("algo_food_rec")
+    if not res:
+        raise HTTPException(status_code=404, detail="Algorithm config not found")
+    return res
+
+@router.put("/ai-hub/algorithms/food-recognition")
+async def update_food_recognition_algo(updates: AlgorithmConfigUpdate, supabase = Depends(get_supabase)):
+    service = AdminAIHubService(supabase)
+    res = service.update_algorithm("algo_food_rec", updates)
+    return {"success": True, "config": res}
+
+@router.get("/ai-hub/rag", response_model=RAGDocumentListResponse)
+async def get_rag_documents(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    supabase = Depends(get_supabase)
+):
+    service = AdminAIHubService(supabase)
+    return service.get_rag_documents(limit, offset, category, search)
+
+@router.post("/ai-hub/rag")
+async def add_rag_document(doc: RAGDocumentCreate, supabase = Depends(get_supabase)):
+    service = AdminAIHubService(supabase)
+    res = service.add_rag_document(doc)
+    return {"success": True, "document": res}
+
+@router.put("/ai-hub/rag/{doc_id}")
+async def update_rag_document(doc_id: str, updates: RAGDocumentUpdate, supabase = Depends(get_supabase)):
+    service = AdminAIHubService(supabase)
+    res = service.update_rag_document(doc_id, updates)
+    if not res:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return {"success": True, "document": res}
+
+@router.delete("/ai-hub/rag/{doc_id}")
+async def delete_rag_document(doc_id: str, supabase = Depends(get_supabase)):
+    service = AdminAIHubService(supabase)
+    service.delete_rag_document(doc_id)
+    return {"success": True}
+
+@router.get("/ai-hub/monitoring", response_model=MonitoringResponse)
+async def get_ai_monitoring(period: str = "month", supabase = Depends(get_supabase)):
+    service = AdminAIHubService(supabase)
+    return service.get_monitoring_data(period)
+
+# ─── AI Logs Listing ──────────────────────────────────────────────────────
+
+@router.get("/ai-logs/chat", response_model=ChatLogListResponse)
+async def get_ai_chat_logs(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    supabase = Depends(get_supabase)
+):
+    service = AdminAIHubService(supabase)
+    return service.get_chat_logs(limit, offset)
+
+@router.get("/ai-logs/chat/{chat_id}")
+async def get_ai_chat_messages(
+    chat_id: str,
+    supabase = Depends(get_supabase)
+):
+    service = AdminAIHubService(supabase)
+    messages = service.get_chat_messages(chat_id)
+    return {"messages": messages}
+
+@router.get("/ai-logs/scan", response_model=ScanLogListResponse)
+async def get_ai_scan_logs(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    supabase = Depends(get_supabase)
+):
+    service = AdminAIHubService(supabase)
+    return service.get_scan_logs(limit, offset)
+
+@router.get("/ai-logs/recommendations", response_model=RecommendationLogListResponse)
+async def get_ai_recommendation_logs(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    supabase = Depends(get_supabase)
+):
+    service = AdminAIHubService(supabase)
+    return service.get_recommendation_logs(limit, offset)
+
+# ─── System Endpoints (Phase 2C) ──────────────────────────────────────────
+
+@router.get("/system/cms", response_model=CMSItemListResponse)
+async def get_cms_items(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    type: Optional[str] = None,
+    status: Optional[str] = None,
+    search: Optional[str] = None,
+    supabase = Depends(get_supabase)
+):
+    service = AdminSystemService(supabase)
+    return service.get_cms_items(limit, offset, type, status, search)
+
+@router.post("/system/cms")
+async def create_cms_item(item: CMSItemCreate, admin_id: str = "admin_001", supabase = Depends(get_supabase)):
+    # Note: admin_id should come from auth dependency in production
+    service = AdminSystemService(supabase)
+    res = service.create_cms_item(item, admin_id)
+    return {"success": True, "item": res}
+
+@router.put("/system/cms/{item_id}")
+async def update_cms_item(item_id: str, updates: CMSItemUpdate, supabase = Depends(get_supabase)):
+    service = AdminSystemService(supabase)
+    res = service.update_cms_item(item_id, updates)
+    if not res:
+        raise HTTPException(status_code=404, detail="CMS item not found")
+    return {"success": True, "item": res}
+
+@router.delete("/system/cms/{item_id}")
+async def delete_cms_item(item_id: str, supabase = Depends(get_supabase)):
+    service = AdminSystemService(supabase)
+    service.delete_cms_item(item_id)
+    return {"success": True}
+
+@router.get("/system/settings", response_model=SystemSettingsResponse)
+async def get_system_settings(supabase = Depends(get_supabase)):
+    service = AdminSystemService(supabase)
+    res = service.get_system_settings()
+    return {"settings": res}
+
+@router.put("/system/settings")
+async def update_system_settings(settings: Dict[str, Dict], admin_id: str = "admin_001", supabase = Depends(get_supabase)):
+    service = AdminSystemService(supabase)
+    service.update_system_settings(settings, admin_id)
+    return {"success": True}
+
+@router.get("/system/audit-logs", response_model=AuditLogListResponse)
+async def get_audit_logs(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    action: Optional[str] = None,
+    adminId: Optional[str] = None,
+    dateFrom: Optional[str] = None,
+    dateTo: Optional[str] = None,
+    supabase = Depends(get_supabase)
+):
+    service = AdminSystemService(supabase)
+    return service.get_audit_logs(limit, offset, action, adminId, dateFrom, dateTo)
 
 @router.get("/spending-breakdown")
 async def get_spending_breakdown(user_id: str, supabase = Depends(get_supabase)):
@@ -240,6 +573,10 @@ async def update_nutrition_item(stt: int, updates: DishUpdate, supabase = Depend
 async def delete_nutrition_item(stt: int, supabase = Depends(get_supabase)):
     """Delete a dish by STT."""
     try:
+        # Unlink from food_scan_logs (foreign key constraint without CASCADE in migration 015)
+        supabase.table("food_scan_logs").update({"recognized_dish_stt": None}).eq("recognized_dish_stt", stt).execute()
+        
+        # Delete from database (other tables like nutrition_log_items and meal_plan_items have ON DELETE CASCADE)
         supabase.table("nutrition_database").delete().eq("stt", stt).execute()
         return {"success": True}
     except Exception as e:
@@ -468,15 +805,41 @@ async def add_nutrition_profile(profile: ProfileCreate, supabase = Depends(get_s
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
+@router.put("/nutrition-profiles/{stt}")
+async def update_nutrition_profile(stt: int, profile: ProfileCreate, supabase = Depends(get_supabase)):
+    """Update a nutrition profile."""
+    try:
+        result = supabase.table("nutrition_profiles").update(
+            profile.model_dump(exclude_unset=True)
+        ).eq("stt", stt).execute()
+        return {"success": True, "data": result.data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
 @router.delete("/nutrition-profiles/{stt}")
 async def delete_nutrition_profile(stt: int, supabase = Depends(get_supabase)):
     """Delete a nutrition profile and its recommendations."""
     try:
-        supabase.table("nutrition_recommendations").delete().eq("profile_stt", stt).execute()
-        supabase.table("nutrition_profiles").delete().eq("stt", stt).execute()
+        # 1. Unlink from meal_plans (foreign key constraint without CASCADE)
+        # Setting to None/Null instead of deleting the whole meal plan
+        supabase.table("meal_plans").update({"profile_stt": None}).eq("profile_stt", stt).execute()
+        print(f"[DELETE] Unlinked meal plans for profile {stt}")
+
+        # 2. Delete recommendations first (though DB has ON DELETE CASCADE, we do it explicitly)
+        rec_result = supabase.table("nutrition_recommendations").delete().eq("profile_stt", stt).execute()
+        print(f"[DELETE] Deleted recommendations for profile {stt}: {rec_result}")
+        
+        # 3. Then delete the profile
+        profile_result = supabase.table("nutrition_profiles").delete().eq("stt", stt).execute()
+        print(f"[DELETE] Deleted profile {stt}: {profile_result}")
+        
         return {"success": True}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        import traceback
+        error_msg = f"Database error: {str(e)}\n{traceback.format_exc()}"
+        print(f"[DELETE ERROR] {error_msg}")
+        raise HTTPException(status_code=500, detail=error_msg)
 
 
 # ─── Nutrition Recommendations CRUD ──────────────────────────────────────

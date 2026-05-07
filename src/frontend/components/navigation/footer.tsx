@@ -5,18 +5,21 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
+import { useApp } from '@/lib/context';
 
 export function Footer({ className }: { className?: string }) {
+  const { user } = useApp();
   const currentYear = new Date().getFullYear();
   const pathname = usePathname();
 
-  if (pathname !== '/') {
+  // Hide footer on nori page and for admin role
+  if (pathname.includes('/nori') || user?.role === 'admin' || pathname.startsWith('/admin')) {
     return null;
   }
 
   return (
     <footer className={cn('border-t border-border/50 bg-card/60 backdrop-blur', className)}>
-      <div className="w-full px-4 py-8 sm:px-6">
+      <div className="w-full px-4 pt-8 pb-4 sm:px-6">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
 
           {/* Brand */}
@@ -77,7 +80,7 @@ export function Footer({ className }: { className?: string }) {
           </div>
         </div>
 
-        <div className="mt-8 border-t border-border/40 pt-6 flex flex-col items-center justify-center gap-3 text-xs text-muted-foreground">
+        <div className="mt-6 border-t border-border/40 pt-6 flex flex-col items-center justify-center gap-3 text-xs text-muted-foreground">
           <p>© {currentYear} NestAI. All rights reserved.</p>
         </div>
       </div>

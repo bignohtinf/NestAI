@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, supabaseAdmin } from './supabase';
 
@@ -24,8 +24,6 @@ export interface UserData {
   condition?: string;
   foodPreference?: string;
 }
-
-
 
 export interface Quest {
   id: string;
@@ -58,6 +56,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null);
   const [quests, setQuests] = useState<Quest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const mountedRef = useRef(false);
 
   const fetchBabyInfo = async (userId: string) => {
     try {
@@ -72,12 +71,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const now = new Date();
         const birthDate = new Date(baby.date_of_birth);
         const weeks = Math.floor((now.getTime() - birthDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
-        setUser((prev) => prev ? { ...prev, babyStatus: 'born', weeksPostpartum: weeks, babyDob: baby.date_of_birth } : prev);
+        if (mountedRef.current) {
+          setUser((prev) => prev ? { ...prev, babyStatus: 'born', weeksPostpartum: weeks, babyDob: baby.date_of_birth } : prev);
+        }
       } else if (baby.gestation_weeks != null) {
-        setUser((prev) => prev ? { ...prev, babyStatus: 'pregnant', gestationWeeks: baby.gestation_weeks } : prev);
+        if (mountedRef.current) {
+          setUser((prev) => prev ? { ...prev, babyStatus: 'pregnant', gestationWeeks: baby.gestation_weeks } : prev);
+        }
       }
     } catch {
-      // baby info is optional, ignore errors
+      // baby info is optional
     }
   };
 
@@ -85,53 +88,65 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
-        setUser(null);
+        if (mountedRef.current) {
+          setUser(null);
+          setIsLoading(false);
+        }
         return;
       }
 
       const { data: userData, error: userError } = await supabaseAdmin.getUser(session.user.id);
+      
       if (userError || !userData) {
-        setUser(null);
+        if (mountedRef.current) {
+          setUser(null);
+          setIsLoading(false);
+        }
         return;
       }
 
-      setUser({
-        id: userData.id,
-        email: userData.email,
-        name: userData.full_name || 'User',
-        role: userData.role || 'mother',
-        dob: userData.dob,
-        allergies: userData.allergies,
-        dislikes: userData.dislikes,
-        condition: userData.condition,
-        foodPreference: userData.food_preference,
-      });
+      if (mountedRef.current) {
+        setUser({
+          id: userData.id,
+          email: userData.email,
+          name: userData.full_name || 'User',
+          role: (userData.role as any) || 'mother',
+          dob: userData.dob,
+          allergies: userData.allergies,
+          dislikes: userData.dislikes,
+          condition: userData.condition,
+          foodPreference: userData.food_preference,
+        });
 
-      fetchBabyInfo(userData.id);
+        fetchBabyInfo(userData.id);
+        setIsLoading(false);
+      }
     } catch (error) {
       console.error('Failed to fetch user data:', error);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
+      if (mountedRef.current) {
+        setUser(null);
+        setIsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    let mounted = true;
+    mountedRef.current = true;
+    setIsLoading(true);
 
     fetchUserData();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!mounted) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mountedRef.current) return;
 
       if (session?.user) {
         const { data: userData } = await supabaseAdmin.getUser(session.user.id);
-        if (userData && mounted) {
+        if (userData && mountedRef.current) {
           setUser({
             id: userData.id,
             email: userData.email,
             name: userData.full_name || 'User',
-            role: userData.role || 'mother',
+            role: (userData.role as any) || 'mother',
             dob: userData.dob,
             allergies: userData.allergies,
             dislikes: userData.dislikes,
@@ -140,14 +155,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
           });
           fetchBabyInfo(userData.id);
         }
-      } else {
+      } else if (event === 'SIGNED_OUT') {
         setUser(null);
       }
-      if (mounted) setIsLoading(false);
+      
+      if (mountedRef.current) setIsLoading(false);
     });
 
     return () => {
-      mounted = false;
+      mountedRef.current = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -166,7 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           id: userData.id,
           email: userData.email,
           name: userData.full_name || 'User',
-          role: userData.role || 'mother',
+          role: (userData.role as any) || 'mother',
           dob: userData.dob,
           allergies: userData.allergies,
           dislikes: userData.dislikes,

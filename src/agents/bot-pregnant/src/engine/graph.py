@@ -19,6 +19,8 @@ class AgentState(TypedDict, total=False):
     trust_note: str
     answer: str
     safety_level: str  # safe | warning | emergency
+    chat_history: list[dict[str, Any]]  # [{"role": "user" | "assistant", "content": "..."}, ...]
+    user_profile: dict[str, Any]  # {"gestation_weeks": int, "weight": float, "condition": str, ...}
 
 
 class MommyEngine:
@@ -63,6 +65,8 @@ class MommyEngine:
             question=state.get("question", ""),
             context=state.get("trusted_context", ""),
             safety_level=state.get("safety_level", "safe"),
+            chat_history=state.get("chat_history"),
+            user_profile=state.get("user_profile"),
         )
         return {"answer": answer}
 

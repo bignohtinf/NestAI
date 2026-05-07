@@ -1,13 +1,19 @@
 'use client';
 
-import { MainLayout } from '@/components/layouts/main-layout';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { Send, Loader2, Sparkles, Apple, ChefHat, HeartPulse, Stethoscope, Phone, Star, Clock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { useChatHistory, ChatMessage } from '@/hooks/useChatHistory';
+import { ChatHistoryToggle } from '@/components/chat/chat-history-toggle';
+import { Sidebar } from '@/components/navigation/sidebar';
+import { Header } from '@/components/navigation/header';
+import { MobileBottomNav } from '@/components/navigation/mobile-bottom-nav';
+import { OnboardingGuard } from '@/components/layouts/onboarding-guard';
 import { botPregnantApi } from '@/lib/bot-pregnant-api';
+import { apiCall } from '@/lib/api';
 
 interface Message {
   id: string;
@@ -57,7 +63,6 @@ const MOCK_EXPERTS = [
   }
 ];
 
-// PRD-aligned quick suggestions — pregnancy pain moments
 const quickSuggestions = [
   { icon: Apple, text: 'Tiểu đường thai kỳ nên ăn gì hôm nay?' },
   { icon: HeartPulse, text: 'Thiếu sắt nên ăn gì để bổ sung?' },
@@ -87,19 +92,64 @@ function BotAvatar({ size = 28 }: { size?: number }) {
 export default function NoriPage() {
   const { user } = useApp();
   const router = useRouter();
+  const { createChatHistory, updateChatHistory, generateChatTitle, getChatHistory, addMessagesToChat } = useChatHistory();
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const [showHistorySidebar, setShowHistorySidebar] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const [currentChatTitle, setCurrentChatTitle] = useState<string>('Cuộc trò chuyện mới');
+  const searchParams = useSearchParams();
+  const chatIdFromUrl = searchParams.get('id');
+  const [isBotReady, setIsBotReady] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    let attempts = 0;
+    
+    const checkHealth = async () => {
+      console.log('[Nori] Starting health check loop...');
+      while (mounted) {
+        try {
+          attempts++;
+          const isOk = await botPregnantApi.healthCheck();
+          
+          if (isOk) {
+            console.log(`[Nori] Health check passed after ${attempts} attempts`);
+            if (mounted) setIsBotReady(true);
+            break;
+          } else {
+            if (attempts % 5 === 0) {
+              console.warn(`[Nori] Health check still failing after ${attempts} attempts...`);
+            }
+          }
+        } catch (e) {
+          console.error('[Nori] Health check error:', e);
+        }
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    };
+    
+    checkHealth();
+    return () => { mounted = false; };
+  }, []);
 
   useEffect(() => {
     if (!user) router.push('/auth/login');
     else if (user.role === 'admin') router.push('/');
   }, [user, router]);
 
-  // Build a personalised opening message based on pregnancy week + condition
+  // Load chat history if ID is in URL
+  useEffect(() => {
+    if (chatIdFromUrl && chatIdFromUrl !== currentChatId) {
+      handleSelectChat(chatIdFromUrl);
+    }
+  }, [chatIdFromUrl]);
+
   useEffect(() => {
     if (messages.length === 0 && user) {
       const weekLabel =
@@ -118,7 +168,6 @@ export default function NoriPage() {
               ? '\n\n💊 Tôi biết bạn đang quản lý huyết áp — tôi sẽ ưu tiên gợi ý món ít muối.'
               : '';
 
-
       setMessages([
         {
           id: '1',
@@ -134,6 +183,59 @@ export default function NoriPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const handleToggle = () => {
+    const newState = !showHistorySidebar;
+    setShowHistorySidebar(newState);
+    localStorage.setItem('showChatHistory', JSON.stringify(newState));
+    
+    // Dispatch custom event để sidebar lắng nghe
+    window.dispatchEvent(new CustomEvent('chatHistoryToggle', { detail: newState }));
+  };
+
+  const handleNewChat = async () => {
+    try {
+      const newChat = await createChatHistory('Cuộc trò chuyện mới', []);
+      setCurrentChatId(newChat.id);
+      setCurrentChatTitle('Cuộc trò chuyện mới');
+      router.push(`/nori?id=${newChat.id}`);
+      setMessages([]);
+      setChatHistory([]);
+      setInput('');
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error('Failed to create new chat:', error);
+    }
+  };
+
+  const handleSelectChat = async (chatId: string) => {
+    if (!chatId || chatId === 'undefined') return;
+    console.log('NoriPage handleSelectChat called with:', chatId);
+    try {
+      setLoading(true);
+      const data = await getChatHistory(chatId);
+      if (data && data.messages) {
+        const loadedMessages = data.messages.map((m: any, i: number) => ({
+           id: Date.now().toString() + i,
+           type: m.role === 'user' ? 'user' : 'bot',
+           content: m.content,
+           timestamp: new Date(m.timestamp || Date.now())
+        }));
+        setMessages(loadedMessages);
+        setChatHistory(data.messages);
+        setCurrentChatId(chatId);
+        setCurrentChatTitle(data.title || 'Cuộc trò chuyện mới');
+        if (chatIdFromUrl !== chatId) {
+          router.push(`/nori?id=${chatId}`);
+        }
+        setShowSuggestions(false);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSend = async (text?: string) => {
     const msg = (text ?? input).trim();
@@ -155,70 +257,194 @@ export default function NoriPage() {
       { role: 'user', content: msg },
     ];
 
+    // Create bot message placeholder for streaming
+    const botMsgId = (Date.now() + 1).toString();
+    const botMsg: Message = {
+      id: botMsgId,
+      type: 'bot',
+      content: '',
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, botMsg]);
+
     try {
-      // Build rich context: pregnancy week + condition + food preference per PRD
-      const weekContext =
-        user?.babyStatus === 'pregnant' && user.gestationWeeks
-          ? `tuần ${user.gestationWeeks} thai kỳ`
-          : user?.babyStatus === 'born' && user.weeksPostpartum
-            ? `tuần ${user.weeksPostpartum} sau sinh`
-            : 'chưa rõ giai đoạn';
-
-      const conditionMap: Record<string, string> = {
-        gdm: 'tiểu đường thai kỳ',
-        anemia: 'thiếu máu/thiếu sắt',
-        hypertension: 'cao huyết áp thai kỳ',
+      // Prepare request payload for streaming endpoint
+      const requestPayload = {
+        user_id: user?.id,
+        question: msg,
+        conversation_id: null, // Can be set if tracking conversations
+        chat_history: newHistory,
+        user_profile: user ? {
+          id: user.id,
+          name: user.name,
+          gestation_weeks: user.babyStatus === 'pregnant' ? user.gestationWeeks : null,
+          condition: user.condition !== 'none' ? user.condition : null,
+          food_preference: user.foodPreference !== 'no_pref' ? user.foodPreference : null,
+          baby_status: user.babyStatus,
+        } : null,
       };
-      const conditionContext =
-        user?.condition && user.condition !== 'none'
-          ? `; Bệnh lý: ${conditionMap[user.condition] || user.condition}`
-          : '';
 
-      const foodCtx =
-        user?.foodPreference && user.foodPreference !== 'no_pref'
-          ? `; Hạn chế ăn: ${user.foodPreference}`
-          : '';
+      // Use EventSource for SSE streaming
+      const eventSource = new EventSource(
+        `/api/nori/stream?payload=${encodeURIComponent(JSON.stringify(requestPayload))}`
+      );
 
-      const userContext = user
-        ? `[Người dùng: mẹ bầu Việt Nam. ${weekContext}${conditionContext}${foodCtx}. Trả lời tiếng Việt, ưu tiên gợi ý món Việt phù hợp.]`
-        : '';
+      let fullResponse = '';
+      let hasError = false;
 
-      const res = await fetch('/api/nori', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newHistory, userContext }),
+      eventSource.addEventListener('token', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.content) {
+            fullResponse += data.content;
+            // Update bot message with streamed content
+            setMessages(prev =>
+              prev.map(m =>
+                m.id === botMsgId ? { ...m, content: fullResponse } : m
+              )
+            );
+          }
+        } catch (err) {
+          console.error('Error parsing token event:', err);
+        }
       });
 
-      const data = await res.json();
-      const botContent = data.response || generateFallback(msg);
+      const onDone = async () => {
+        eventSource.close();
+        console.log('[Nori] Stream done. fullResponse length:', fullResponse.length);
+        
+        const assistantMsg = { role: 'assistant' as const, content: fullResponse };
+        const updatedHistory = [...newHistory, assistantMsg];
+        setChatHistory(updatedHistory);
 
-      setChatHistory(newHistory);
-      setMessages(prev => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          type: 'bot',
-          content: botContent,
-          timestamp: new Date(),
-        },
-      ]);
+        // Generate title if the chat doesn't have a real title yet
+        const needsTitleGeneration = !currentChatId || currentChatTitle === 'Cuộc trò chuyện mới';
+        console.log('[Nori] needsTitleGeneration check:', { currentChatTitle, currentChatId, needsTitleGeneration });
+        
+        if (needsTitleGeneration) {
+          console.log('[Nori] Triggering title generation for:', msg);
+          try {
+            const data = await generateChatTitle(msg);
+            console.log('[Nori] generateChatTitle response:', data);
+            
+            if (data && data.title) {
+              const finalTitle = data.title;
+              const isGreeting = data.is_greeting;
+              
+              if (currentChatId) {
+                console.log('[Nori] Chat exists, checking if title update needed. isGreeting:', isGreeting);
+                if (!isGreeting) {
+                  console.log('[Nori] Calling updateChatHistory with:', finalTitle);
+                  await updateChatHistory(currentChatId, finalTitle);
+                  setCurrentChatTitle(finalTitle);
+                }
+                
+                console.log('[Nori] Calling addMessagesToChat');
+                await addMessagesToChat(currentChatId, [
+                  { role: 'user', content: msg },
+                  { role: 'assistant', content: fullResponse },
+                ]);
+              } else {
+                console.log('[Nori] Chat does not exist, creating new chat with title:', finalTitle);
+                const chatMessages: ChatMessage[] = [
+                  { role: 'user', content: msg },
+                  { role: 'assistant', content: fullResponse },
+                ];
+                const newChat = await createChatHistory(finalTitle, chatMessages);
+                console.log('[Nori] New chat created with ID:', newChat.id);
+                setCurrentChatId(newChat.id);
+                setCurrentChatTitle(finalTitle);
+                router.push(`/nori?id=${newChat.id}`);
+              }
+            }
+          } catch (err) {
+            console.error('[Nori] Error in title generation/saving:', err);
+          }
+        } else if (currentChatId) {
+          console.log('[Nori] Not first message, appending to existing chat:', currentChatId);
+          try {
+            await addMessagesToChat(currentChatId, [
+              { role: 'user', content: msg },
+              { role: 'assistant', content: fullResponse },
+            ]);
+            console.log('[Nori] Messages appended successfully');
+          } catch (err) {
+            console.error('[Nori] Failed to append messages:', err);
+          }
+        }
+
+        setLoading(false);
+      };
+
+      eventSource.addEventListener('done', onDone);
+      
+      eventSource.onerror = (err) => {
+        console.error('[Nori] EventSource error:', err);
+        eventSource.close();
+        setLoading(false);
+      };
+
+      eventSource.addEventListener('error', (event) => {
+        eventSource.close();
+        hasError = true;
+        console.error('Streaming error event:', event);
+        
+        // Check if event has more info (though EventSource error events usually don't)
+        if (event.target && 'status' in event.target) {
+          console.error('Streaming status:', (event.target as any).status);
+        }
+
+
+        // If no content was received, show fallback
+        if (!fullResponse) {
+          const fallbackContent = generateFallback(msg);
+          setMessages(prev =>
+            prev.map(m =>
+              m.id === botMsgId ? { ...m, content: fallbackContent } : m
+            )
+          );
+        }
+
+        setLoading(false);
+      });
+
+      // Handle connection timeout
+      const timeoutId = setTimeout(() => {
+        if (eventSource.readyState !== EventSource.CLOSED) {
+          eventSource.close();
+          if (!fullResponse) {
+            const fallbackContent = generateFallback(msg);
+            setMessages(prev =>
+              prev.map(m =>
+                m.id === botMsgId ? { ...m, content: fallbackContent } : m
+              )
+            );
+          }
+          setLoading(false);
+        }
+      }, 30000); // 30 second timeout
+
+      // Clear timeout when stream completes
+      const originalClose = eventSource.close.bind(eventSource);
+      eventSource.close = function() {
+        console.log('[Nori] Closing EventSource stream');
+        clearTimeout(timeoutId);
+        originalClose();
+      };
+
+
     } catch (error) {
-      console.error('Error querying bot:', error);
-      setMessages(prev => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          type: 'bot',
-          content: generateFallback(msg),
-          timestamp: new Date(),
-        },
-      ]);
-    } finally {
+      console.error('Error initiating stream:', error);
+      const fallbackContent = generateFallback(msg);
+      setMessages(prev =>
+        prev.map(m =>
+          m.id === botMsgId ? { ...m, content: fallbackContent } : m
+        )
+      );
       setLoading(false);
     }
   };
 
-  // Offline fallback responses — pregnancy-focused per PRD
   const generateFallback = (userInput: string): string => {
     const q = userInput.toLowerCase();
 
@@ -252,163 +478,207 @@ export default function NoriPage() {
   if (!user || user.role === 'admin') return null;
 
   return (
-    <MainLayout>
-      <div className="flex flex-col gap-4 h-[calc(100dvh-12rem)] md:h-[calc(100dvh-9rem)] min-h-[600px]">
-        {/* Chat Window */}
-        <div className="rounded-2xl border border-border/50 bg-card shadow-card flex flex-col overflow-hidden flex-1">
+    <OnboardingGuard>
+      <div className="flex h-screen overflow-hidden bg-background">
+        <Sidebar 
+          open={sidebarOpen} 
+          onOpenChange={setSidebarOpen} 
+          activeChatId={currentChatId}
+          onSelectChat={handleSelectChat}
+        />
+        
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+          <Header onMenuClick={() => setSidebarOpen(true)} />
           
-          {/* Action Header - Expert Connection */}
-          <div className="bg-primary/5 border-b border-primary/10 px-4 py-2.5 flex items-center justify-between shadow-sm z-10">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                <Stethoscope className="h-3.5 w-3.5 text-primary" />
-              </div>
-              <span className="text-xs font-semibold text-primary/90">
-                Cần tư vấn chuyên sâu?
-              </span>
-            </div>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button style={{ backgroundColor: '#dcfce7', borderColor: '#dcfce7', color: '#166534' }}
-                  size="sm" 
-                  className="h-7 text-xs px-3 rounded-full shadow-sm bg-primary hover:bg-primary/90"
-                >
-                  <Phone className="h-3 w-3 mr-1.5" /> Gặp chuyên gia
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-                <DialogHeader>
-                  <DialogTitle className="text-slate-900 dark:text-slate-100">Đặt lịch chuyên gia / phòng khám</DialogTitle>
-                  <DialogDescription className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed text-left">
-                    Chọn chuyên gia hoặc phòng khám phù hợp với nhu cầu của bạn để được tư vấn trực tiếp.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-2.5 py-1">
-                  {MOCK_EXPERTS.map(expert => (
-                    <div key={expert.id} className="flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-primary/40 transition-colors cursor-pointer bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50 shadow-sm">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-xl shrink-0">
-                        {expert.avatar}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">{expert.name}</h4>
-                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">{expert.title} • {expert.hospital}</p>
-                        <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-600 dark:text-slate-400">
-                          <span className="flex items-center gap-1 text-amber-600 dark:text-amber-500 font-medium bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded-md border border-amber-100 dark:border-amber-500/20">
-                            <Star className="h-3 w-3 fill-amber-500 text-amber-500" /> {expert.rating} ({expert.reviews})
-                          </span>
-                          <span className="flex items-center gap-1 text-primary font-medium">
-                            <Clock className="h-3 w-3" /> {expert.available}
-                          </span>
-                        </div>
-                      </div>
-                      <Button size="sm" variant="ghost" className="h-7 text-xs px-2.5 shrink-0 border border-primary/30 text-primary hover:bg-primary hover:text-white" onClick={(e) => { e.stopPropagation(); alert('Đã ghi nhận lịch hẹn mô phỏng.'); }}>
-                        Chọn
-                      </Button>
-                    </div>
-                  ))}
+          <main className="flex-1 overflow-hidden w-full">
+            {!isBotReady ? (
+              <div className="flex flex-col items-center justify-center h-full space-y-6">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+                  <BotAvatar size={160} />
                 </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex items-end gap-2 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                {msg.type === 'bot' && (
-                  <div className="w-8 h-8 rounded-full bg-white border border-green-100 flex items-center justify-center shrink-0 mb-0.5 overflow-hidden">
-                    <BotAvatar size={30} />
-                  </div>
-                )}
-                <div className={`max-w-[78%] rounded-2xl px-4 py-2.5 shadow-sm ${msg.type === 'user'
-                  ? 'text-rose-900 rounded-br-sm'
-                  : 'text-green-900 rounded-bl-sm'
-                  }`}
-                  style={msg.type === 'user'
-                    ? { background: '#fecdd3' }
-                    : { background: '#dcfce7' }}
-                >
-                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-                  <p className={`text-xs mt-1 ${msg.type === 'user' ? 'text-rose-400 text-right' : 'text-green-600'}`}>
-                    {msg.timestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                <div className="flex flex-col items-center space-y-2">
+                  <h3 className="text-xl font-bold text-primary animate-pulse">Nori đang khởi động...</h3>
+                  <p className="text-sm text-muted-foreground flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Đang chuẩn bị kiến thức dinh dưỡng thai kỳ
                   </p>
                 </div>
-                {msg.type === 'user' && (
-                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm shrink-0 mb-0.5">
-                    👤
-                  </div>
-                )}
               </div>
-            ))}
-
-            {loading && (
-              <div className="flex items-end gap-2 justify-start">
-                <div className="w-8 h-8 rounded-full bg-white border border-green-100 flex items-center justify-center shrink-0 overflow-hidden">
-                  <BotAvatar size={30} />
-                </div>
-                <div className="rounded-2xl rounded-bl-sm px-4 py-3" style={{ background: '#dcfce7' }}>
-                  <div className="flex gap-1 items-center">
-                    <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                </div>
+            ) : (
+            <div className="flex h-full gap-0">
+              {/* Chat History Toggle - Sát sidebar */}
+              <div className="flex flex-col items-center justify-start pt-4 w-12 shrink-0 border-r border-border/30">
+                <ChatHistoryToggle 
+                  isOpen={showHistorySidebar} 
+                  onToggle={handleToggle}
+                  onNewChat={handleNewChat}
+                />
               </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
 
-          {/* Input Area */}
-          <div className="border-t border-border/50 bg-background/50 p-3">
-            <form
-              onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-              className="flex gap-2 items-center"
-            >
-              <input
-                className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/15 transition-all placeholder:text-muted-foreground"
-                placeholder="Hỏi về dinh dưỡng thai kỳ..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                disabled={loading}
-              />
-              <button
-                type="submit"
-                disabled={loading || !input.trim()}
-                className="h-10 w-10 rounded-xl flex items-center justify-center text-violet-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-violet-200 active:scale-95 shrink-0 border border-violet-200"
-                style={{ background: '#ede9fe' }}
-              >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              </button>
-            </form>
-          </div>
-        </div>
+              {/* Main Chat Area - Mở rộng toàn bộ */}
+              <div className="flex flex-col gap-4 flex-1 p-6">
+          {/* Chat Window */}
+          <div className="rounded-2xl bg-card shadow-card flex flex-col overflow-hidden flex-1">
+            {/* Action Header */}
+            <div className="bg-primary/5 border-b border-primary/10 px-4 py-2.5 flex items-center justify-between shadow-sm z-10">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <Stethoscope className="h-3.5 w-3.5 text-primary" />
+                </div>
+                <span className="text-xs font-semibold text-primary/90">
+                  Cần tư vấn chuyên sâu?
+                </span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button style={{ backgroundColor: '#dcfce7', borderColor: '#dcfce7', color: '#166534' }}
+                    size="sm" 
+                    className="h-7 text-xs px-3 rounded-full shadow-sm bg-primary hover:bg-primary/90"
+                  >
+                    <Phone className="h-3 w-3 mr-1.5" /> Gặp chuyên gia
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                  <DialogHeader>
+                    <DialogTitle className="text-slate-900 dark:text-slate-100">Đặt lịch chuyên gia / phòng khám</DialogTitle>
+                    <DialogDescription className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed text-left">
+                      Chọn chuyên gia hoặc phòng khám phù hợp với nhu cầu của bạn để được tư vấn trực tiếp.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-2.5 py-1">
+                    {MOCK_EXPERTS.map(expert => (
+                      <div key={expert.id} className="flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-primary/40 transition-colors cursor-pointer bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50 shadow-sm">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-xl shrink-0">
+                          {expert.avatar}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">{expert.name}</h4>
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">{expert.title} • {expert.hospital}</p>
+                          <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-600 dark:text-slate-400">
+                            <span className="flex items-center gap-1 text-amber-600 dark:text-amber-500 font-medium bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded-md border border-amber-100 dark:border-amber-500/20">
+                              <Star className="h-3 w-3 fill-amber-500 text-amber-500" /> {expert.rating} ({expert.reviews})
+                            </span>
+                            <span className="flex items-center gap-1 text-primary font-medium">
+                              <Clock className="h-3 w-3" /> {expert.available}
+                            </span>
+                          </div>
+                        </div>
+                        <Button size="sm" variant="ghost" className="h-7 text-xs px-2.5 shrink-0 border border-primary/30 text-primary hover:bg-primary hover:text-white" onClick={(e) => { e.stopPropagation(); alert('Đã ghi nhận lịch hẹn mô phỏng.'); }}>
+                          Chọn
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
 
-        {/* Quick Suggestions */}
-        {showSuggestions && (
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-              <Sparkles className="h-3 w-3" />
-              Câu hỏi phổ biến
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {quickSuggestions.map((s) => (
-                <button
-                  key={s.text}
-                  onClick={() => handleSend(s.text)}
-                  disabled={loading}
-                  className="flex items-center gap-2.5 text-left rounded-xl border border-border/60 bg-card px-3.5 py-2.5 text-sm text-foreground/80 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all disabled:opacity-50"
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex items-end gap-2 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <s.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="leading-snug">{s.text}</span>
-                </button>
+                  {msg.type === 'bot' && (
+                    <div className="w-8 h-8 rounded-full bg-white border border-green-100 flex items-center justify-center shrink-0 mb-0.5 overflow-hidden">
+                      <BotAvatar size={30} />
+                    </div>
+                  )}
+                  <div className={`max-w-[78%] rounded-2xl px-4 py-2.5 shadow-sm ${msg.type === 'user'
+                    ? 'text-rose-900 rounded-br-sm'
+                    : 'text-green-900 rounded-bl-sm'
+                    }`}
+                    style={msg.type === 'user'
+                      ? { background: '#fecdd3' }
+                      : { background: '#dcfce7' }}
+                  >
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                    <p className={`text-xs mt-1 ${msg.type === 'user' ? 'text-rose-400 text-right' : 'text-green-600'}`}>
+                      {msg.timestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  {msg.type === 'user' && (
+                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm shrink-0 mb-0.5">
+                      👤
+                    </div>
+                  )}
+                </div>
               ))}
+
+              {loading && (
+                <div className="flex items-end gap-2 justify-start">
+                  <div className="w-8 h-8 rounded-full bg-white border border-green-100 flex items-center justify-center shrink-0 overflow-hidden">
+                    <BotAvatar size={30} />
+                  </div>
+                  <div className="rounded-2xl rounded-bl-sm px-4 py-3" style={{ background: '#dcfce7' }}>
+                    <div className="flex gap-1 items-center">
+                      <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input Area */}
+            <div className="border-t border-border/50 bg-background/50 p-3">
+              <form
+                onSubmit={(e) => { e.preventDefault(); handleSend(); }}
+                className="flex gap-2 items-center"
+              >
+                <input
+                  className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/15 transition-all placeholder:text-muted-foreground"
+                  placeholder="Hỏi về dinh dưỡng thai kỳ..."
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  disabled={loading}
+                />
+                <button
+                  type="submit"
+                  disabled={loading || !input.trim()}
+                  className="h-10 w-10 rounded-xl flex items-center justify-center text-violet-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-violet-200 active:scale-95 shrink-0 border border-violet-200"
+                  style={{ background: '#ede9fe' }}
+                >
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </button>
+              </form>
             </div>
           </div>
-        )}
+
+          {/* Quick Suggestions */}
+          {showSuggestions && (
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                <Sparkles className="h-3 w-3" />
+                Câu hỏi phổ biến
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {quickSuggestions.map((s) => (
+                  <button
+                    key={s.text}
+                    onClick={() => handleSend(s.text)}
+                    disabled={loading}
+                    className="flex items-center gap-2.5 text-left rounded-xl border border-border/60 bg-card px-3.5 py-2.5 text-sm text-foreground/80 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all disabled:opacity-50"
+                  >
+                    <s.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <span className="leading-snug">{s.text}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+              </div>
+            </div>
+            )}
+          </main>
+        </div>
+
+        <MobileBottomNav />
       </div>
-    </MainLayout>
+    </OnboardingGuard>
   );
 }

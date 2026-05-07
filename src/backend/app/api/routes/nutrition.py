@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.core.supabase_client import get_supabase
+from app.services.multi_dish_processor import MultiDishProcessor
 from pydantic import BaseModel
 from typing import Optional, List
 import difflib
@@ -24,14 +25,13 @@ class PhotoAnalysisRequest(BaseModel):
     image: str
     user_id: Optional[str] = None
 
-class PhotoAnalysisResponse(BaseModel):
-    dish_name: str
-    estimated_grams: float
+class DishAnalysis(BaseModel):
+    """Individual dish analysis result."""
+    name: str
     confidence: float
-    meal_context: Optional[str]
+    estimated_grams: float
     matched_food: Optional[dict]
     match_score: float
-    suggestions: List[str]
     calories: float
     protein: float
     carbs: float
@@ -39,9 +39,34 @@ class PhotoAnalysisResponse(BaseModel):
     iron: Optional[float] = None
     calcium: Optional[float] = None
     pregnancy_benefit: str
+    portion_multiplier: float = 1.0
 
-SYSTEM_PROMPT = """Bạn là chuyên gia dinh dưỡng Việt Nam.
-Nhận diện món ăn trong ảnh và trả về đúng JSON sau, KHÔNG giải thích thêm:
+class PhotoAnalysisResponse(BaseModel):
+    """Multi-dish photo analysis response."""
+    dishes: List[DishAnalysis]
+    meal_context: Optional[str]
+    total_calories: float
+    total_protein: float
+    total_carbs: float
+    total_fat: float
+    suggestions: List[str]
+    pregnancy_guidance: Optional[str] = None
+
+SYSTEM_PROMPT = """Bạn là chuyên gia nhận diện món ăn Việt Nam cho thai kỳ.
+Nhiệm vụ: nhận diện TẤT CẢ các món ăn trong ảnh ở mức CHI TIET, không gọi tên chung chung.
+
+YEU CAU NHAN DIEN:
+1) Ten mon phai day du theo bien the + cach che bien + nhan/chinh:
+   - Tot: "banh mi pate", "banh mi trung op la", "banh mi thit nuong", "pho bo tai", "bun bo hue"
+   - Khong tot: "banh mi", "pho", "bun"
+2) Uu tien thanh phan nhin thay ro trong anh (pate, trung, thit nuong, cha, ca, tom, bo, ga, ...).
+3) Chi duoc chon bien the khi co dau hieu thi giac hop ly.
+   - Neu khong du chac chan de ket luan bien the, tra ve ten mon + "khong ro bien the".
+4) Khong duoc tu suy dien qua muc tu nhung chi tiet khong co trong anh.
+5) estimated_grams phai la uoc luong khau phan thuc te trong anh.
+6) QUAN TRONG: Tra ve TAT CA cac mon an nhin thay trong anh, khong chi mon dau tien.
+
+Tra ve dung JSON sau, KHONG giai thich them:
 {
   "dishes": [
     {
@@ -183,64 +208,9 @@ def _normalize_text(value: Optional[str]) -> str:
     return value.strip().lower()
 
 
-def _get_best_food_match(supabase, detected_name: str) -> tuple[Optional[dict], float, List[str]]:
-    normalized_name = _normalize_text(detected_name)
-    if not normalized_name:
-        return None, 0.0, []
-
-    select_fields = "stt, dish_name_vi, dish_name_en, dish_type, energy, protein, fat, carbohydrate, iron, calcium"
-    candidates = []
-
-    for field in ["dish_name_vi", "dish_name_en"]:
-        try:
-            result = supabase.table("nutrition_database").select(select_fields).ilike(field, f"%{normalized_name}%").limit(80).execute()
-            candidates.extend(result.data or [])
-        except Exception:
-            continue
-
-    if not candidates:
-        try:
-            result = supabase.table("nutrition_database").select(select_fields).limit(200).execute()
-            candidates = result.data or []
-        except Exception:
-            candidates = []
-
-    scored = []
-    for item in candidates:
-        name_vi = _normalize_text(item.get("dish_name_vi"))
-        name_en = _normalize_text(item.get("dish_name_en"))
-        score_vi = difflib.SequenceMatcher(None, normalized_name, name_vi).ratio() if name_vi else 0.0
-        score_en = difflib.SequenceMatcher(None, normalized_name, name_en).ratio() if name_en else 0.0
-        score = max(score_vi, score_en)
-        scored.append((score, item))
-
-    scored.sort(key=lambda x: x[0], reverse=True)
-    suggestions = []
-    for score, item in scored[:3]:
-        if item and isinstance(item, dict):
-            suggestions.append(item.get("dish_name_vi") or item.get("dish_name_en") or "Unknown")
-
-    best_item = scored[0][1] if scored else None
-    best_score = scored[0][0] if scored else 0.0
-
-    return best_item, best_score, suggestions
-
-
-def _build_pregnancy_benefit(matched_food: Optional[dict]) -> str:
-    if not matched_food:
-        return "Món ăn được phân tích bởi AI; hiện chưa có dữ liệu khớp chính xác với DB để đánh giá dinh dưỡng."
-
-    dish_type = _normalize_text(matched_food.get("dish_type"))
-    if "canh" in dish_type or "rau" in dish_type:
-        return "Giàu nước và vi chất, giúp mẹ bầu cân bằng dinh dưỡng khi ăn kèm cơm hoặc bún."
-    if "thịt" in dish_type or "đạm" in dish_type or "main" in dish_type:
-        return "Cung cấp protein quan trọng cho sự phát triển của thai nhi và sửa chữa mô mẹ."
-    return "Món ăn này cung cấp năng lượng và chất dinh dưỡng cần thiết cho mẹ bầu, nên ăn kèm rau củ và uống đủ nước."
-
-
 @router.post("/analyze-photo", response_model=PhotoAnalysisResponse)
 async def analyze_photo(payload: PhotoAnalysisRequest, supabase = Depends(get_supabase)):
-    """Analyze a meal photo with OpenAI vision and match it against nutrition database."""
+    """Analyze a meal photo with OpenAI vision and match all dishes against nutrition database."""
     if not payload.image:
         raise HTTPException(status_code=400, detail="Image is required")
 
@@ -255,12 +225,11 @@ async def analyze_photo(payload: PhotoAnalysisRequest, supabase = Depends(get_su
 
     dishes = parsed.get("dishes")
     if not dishes or not isinstance(dishes, list):
-        raise HTTPException(status_code=502, detail="AI response did not include dishes list")
+        raise HTTPException(status_code=400, detail="No dishes detected in image")
+    
+    if len(dishes) == 0:
+        raise HTTPException(status_code=400, detail="No dishes detected in image")
 
-    first_dish = dishes[0]
-    dish_name = first_dish.get("name") or "Không rõ"
-    estimated_grams = float(first_dish.get("estimated_grams") or first_dish.get("estimated_grams", 0) or 0)
-    confidence = float(first_dish.get("confidence") or 0.0)
     meal_context = parsed.get("meal_context")
 
     matched_food, match_score, suggestions = _get_best_food_match(supabase, dish_name)
@@ -345,4 +314,3 @@ async def get_nutrition_summary(user_id: str, days: int = 7, supabase = Depends(
         "avg_calories": avg_calories,
         "log_count": len(logs)
     }
-

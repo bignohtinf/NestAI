@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 import httpx
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
 
@@ -50,6 +51,51 @@ async def query_bot(request: QueryRequest):
             )
         except httpx.HTTPStatusError as e:
             raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+
+
+class TitleRequest(BaseModel):
+    question: str
+
+class StreamRequest(BaseModel):
+    user_id: str
+    question: str
+    conversation_id: Optional[str] = None
+    chat_history: list[dict] = []
+    user_profile: Optional[dict] = None
+    stage: Optional[str] = None
+
+@router.post("/generate-title")
+async def generate_title(request: TitleRequest):
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            resp = await client.post(
+                f"{BOT_SERVICE_URL}/generate-title",
+                json=request.model_dump(),
+            )
+            resp.raise_for_status()
+            return resp.json()
+        except Exception as e:
+            # Fallback title if RAG service fails
+            return {"title": "Cuộc trò chuyện mới", "is_greeting": False}
+
+@router.post("/stream")
+async def stream_bot(request: StreamRequest):
+    async def event_generator():
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            try:
+                async with client.stream(
+                    "POST",
+                    f"{BOT_SERVICE_URL}/stream",
+                    json=request.model_dump(),
+                ) as resp:
+                    resp.raise_for_status()
+                    async for line in resp.aiter_lines():
+                        if line:
+                            yield f"{line}\n\n"
+            except Exception as e:
+                yield f"data: {{\"type\": \"error\", \"error\": \"{str(e)}\"}}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 @router.get("/health")

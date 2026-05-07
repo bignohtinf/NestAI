@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X, Loader2 } from 'lucide-react';
+import { adminApi } from '@/lib/api';
 
 interface AddFoodFormProps {
   onSuccess: () => void;
@@ -12,19 +13,27 @@ interface AddFoodFormProps {
   initialData?: any;
 }
 
-const categories = ['vegetable', 'fruit', 'protein', 'dairy', 'grain', 'supplement'];
+const categories = [
+  { value: 'món mặn', label: 'Món mặn' },
+  { value: 'món rau', label: 'Món rau' },
+  { value: 'món tinh bột', label: 'Món tinh bột' },
+  { value: 'món canh', label: 'Món canh' },
+  { value: 'tráng miệng', label: 'Tráng miệng' },
+  { value: 'nguyên liệu', label: 'Nguyên liệu' },
+];
 
 export function AddFoodForm({ onSuccess, onCancel, initialData }: AddFoodFormProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: initialData?.dish_name_vi || '',
+    name_en: initialData?.dish_name_en || '',
     calories: initialData?.energy?.toString() || '',
     protein: initialData?.protein?.toString() || '',
     carbs: initialData?.carbohydrate?.toString() || '',
     fat: initialData?.fat?.toString() || '',
-    fiber: '',
     price: initialData?.price_vnd?.toString() || '',
-    category: initialData?.dish_type || 'vegetable',
+    category: initialData?.dish_type || 'món mặn',
+    group: initialData?.group_name_vi || '',
     serving_size: '100',
     unit: 'g',
   });
@@ -40,42 +49,31 @@ export function AddFoodForm({ onSuccess, onCancel, initialData }: AddFoodFormPro
 
     try {
       const payload = {
-        stt: initialData?.stt || Math.floor(Math.random() * 10000) + 2000,
+        stt: initialData?.stt || Math.floor(Math.random() * 10000) + 5000,
         dish_name_vi: formData.name,
+        dish_name_en: formData.name_en,
         energy: parseFloat(formData.calories) || 0,
         protein: parseFloat(formData.protein) || 0,
         carbohydrate: parseFloat(formData.carbs) || 0,
         fat: parseFloat(formData.fat) || 0,
         price_vnd: parseFloat(formData.price) || 0,
         dish_type: formData.category,
+        group_name_vi: formData.group,
       };
 
-      const url = initialData 
-        ? `http://localhost:8000/api/admin/nutrition-database/${initialData.stt}`
-        : `http://localhost:8000/api/admin/nutrition-database`;
-        
-      const method = initialData ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) throw new Error('Failed to save food');
-      
+      await adminApi.saveNutritionItem(initialData?.stt || null, payload);
       onSuccess();
     } catch (error) {
       console.error('Failed to add food:', error);
-      alert('Lỗi khi thêm thực phẩm');
+      alert('Lỗi khi lưu thực phẩm');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+    <Card className="border-none shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-6">
         <div>
           <CardTitle>{initialData ? 'Chỉnh sửa thực phẩm' : 'Thêm thực phẩm mới'}</CardTitle>
           <CardDescription>Nhập thông tin dinh dưỡng của thực phẩm</CardDescription>
@@ -84,18 +82,28 @@ export function AddFoodForm({ onSuccess, onCancel, initialData }: AddFoodFormPro
           <X className="h-4 w-4" />
         </Button>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-6 pb-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Name */}
-            <div>
-              <label className="text-sm font-medium">Tên thực phẩm *</label>
+            <div className="col-span-2">
+              <label className="text-sm font-medium">Tên thực phẩm (Tiếng Việt) *</label>
               <Input
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="VD: Cà chua"
+                placeholder="VD: Cơm trắng"
                 required
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Tên Tiếng Anh</label>
+              <Input
+                name="name_en"
+                value={formData.name_en}
+                onChange={handleChange}
+                placeholder="VD: Steamed Rice"
               />
             </div>
 
@@ -106,17 +114,27 @@ export function AddFoodForm({ onSuccess, onCancel, initialData }: AddFoodFormPro
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               >
                 {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
+                  <option key={cat.value} value={cat.value}>{cat.label}</option>
                 ))}
               </select>
             </div>
 
+            <div>
+              <label className="text-sm font-medium">Nhóm thực phẩm</label>
+              <Input
+                name="group"
+                value={formData.group}
+                onChange={handleChange}
+                placeholder="VD: Ngũ cốc"
+              />
+            </div>
+
             {/* Calories */}
             <div>
-              <label className="text-sm font-medium">Calo *</label>
+              <label className="text-sm font-medium">Năng lượng (kcal) *</label>
               <Input
                 name="calories"
                 type="number"
@@ -143,7 +161,7 @@ export function AddFoodForm({ onSuccess, onCancel, initialData }: AddFoodFormPro
 
             {/* Carbs */}
             <div>
-              <label className="text-sm font-medium">Carbs (g) *</label>
+              <label className="text-sm font-medium">Carbohydrate (g) *</label>
               <Input
                 name="carbs"
                 type="number"
@@ -157,7 +175,7 @@ export function AddFoodForm({ onSuccess, onCancel, initialData }: AddFoodFormPro
 
             {/* Fat */}
             <div>
-              <label className="text-sm font-medium">Fat (g) *</label>
+              <label className="text-sm font-medium">Chất béo (g) *</label>
               <Input
                 name="fat"
                 type="number"
@@ -169,22 +187,9 @@ export function AddFoodForm({ onSuccess, onCancel, initialData }: AddFoodFormPro
               />
             </div>
 
-            {/* Fiber */}
-            <div>
-              <label className="text-sm font-medium">Fiber (g)</label>
-              <Input
-                name="fiber"
-                type="number"
-                step="0.1"
-                value={formData.fiber}
-                onChange={handleChange}
-                placeholder="0"
-              />
-            </div>
-
             {/* Price */}
             <div>
-              <label className="text-sm font-medium">Giá (VND) *</label>
+              <label className="text-sm font-medium">Giá tham khảo (VND) *</label>
               <Input
                 name="price"
                 type="number"
@@ -195,43 +200,38 @@ export function AddFoodForm({ onSuccess, onCancel, initialData }: AddFoodFormPro
               />
             </div>
 
-            {/* Serving Size */}
-            <div>
-              <label className="text-sm font-medium">Khẩu phần *</label>
-              <Input
-                name="serving_size"
-                type="number"
-                step="0.1"
-                value={formData.serving_size}
-                onChange={handleChange}
-                placeholder="100"
-                required
-              />
-            </div>
-
-            {/* Unit */}
-            <div>
-              <label className="text-sm font-medium">Đơn vị *</label>
-              <select
-                name="unit"
-                value={formData.unit}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-input rounded-md bg-background"
-              >
-                <option value="g">Gram (g)</option>
-                <option value="ml">Milliliter (ml)</option>
-                <option value="piece">Cái</option>
-                <option value="cup">Cốc</option>
-              </select>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-sm font-medium">Khẩu phần *</label>
+                <Input
+                  name="serving_size"
+                  type="number"
+                  value={formData.serving_size}
+                  onChange={handleChange}
+                  placeholder="100"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Đơn vị *</label>
+                <select
+                  name="unit"
+                  value={formData.unit}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm"
+                >
+                  <option value="g">Gram (g)</option>
+                  <option value="ml">Milliliter (ml)</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* Buttons */}
-          <div className="flex gap-2 justify-end pt-4">
-            <Button variant="secondary" onClick={onCancel} disabled={loading}>
+          <div className="flex gap-2 justify-end pt-4 border-t">
+            <Button variant="outline" type="button" onClick={onCancel} disabled={loading}>
               Hủy
             </Button>
-            <Button type="submit" disabled={loading} className="gap-2">
+            <Button type="submit" disabled={loading} className="gap-2 bg-rose-500 hover:bg-rose-600">
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               {initialData ? 'Lưu thay đổi' : 'Thêm thực phẩm'}
             </Button>

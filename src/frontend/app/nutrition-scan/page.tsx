@@ -1,55 +1,14 @@
 'use client';
 
-import { MainLayout } from '@/components/layouts/main-layout';
-import { NutritionRecommendations } from '@/components/metrics/nutrition-recommendations';
-import { SmartScan } from '@/components/metrics/smart-scan';
-import { useApp } from '@/lib/context';
-import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function NutritionScanPage() {
-  const { user } = useApp();
+export default function NutritionScanRoot() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-    } else if (user.role !== 'mother' && user.role !== 'father') {
-      router.push('/');
-    }
-  }, [user, router]);
+    router.replace('/nutrition-scan/scan');
+  }, [router]);
 
-  if (!user || (user.role !== 'mother' && user.role !== 'father')) {
-    return null;
-  }
-
-  const isFather = user.role === 'father';
-
-  return (
-    <MainLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Thực đơn AI</h1>
-          <p className="text-muted-foreground">
-            {isFather
-              ? 'Xem thực đơn dinh dưỡng của vợ trong tuần'
-              : 'AI sinh thực đơn món Việt cá nhân hóa theo tuần thai và bệnh lý'}
-          </p>
-        </div>
-
-        {isFather ? (
-          <NutritionRecommendations />
-        ) : (
-          <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
-            <div className="space-y-6">
-              <SmartScan />
-            </div>
-            <div className="space-y-6">
-              <NutritionRecommendations />
-            </div>
-          </div>
-        )}
-      </div>
-    </MainLayout>
-  );
+  return null;
 }

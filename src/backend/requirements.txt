@@ -13,3 +13,9 @@ supabase==2.4.1
 ortools>=9.8.0
 pandas>=2.0.0
 qdrant-client[http]
+numpy>=1.24.0
+sentence-transformers>=2.2.2
+langchain>=0.1.0
+langchain-openai>=0.0.5
+langgraph>=0.0.26
+langchain-community>=0.0.10

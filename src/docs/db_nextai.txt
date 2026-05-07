@@ -9,6 +9,13 @@ CREATE TABLE public.admin_logs (
   target_id uuid,
   details jsonb,
   created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  ip_address inet,
+  user_agent text,
+  request_id character varying,
+  old_values jsonb,
+  new_values jsonb,
+  success boolean DEFAULT true,
+  error_message text,
   CONSTRAINT admin_logs_pkey PRIMARY KEY (id),
   CONSTRAINT admin_logs_admin_id_fkey FOREIGN KEY (admin_id) REFERENCES public.users(id)
 );
@@ -54,6 +61,30 @@ CREATE TABLE public.chat_histories (
   CONSTRAINT chat_histories_pkey PRIMARY KEY (id),
   CONSTRAINT chat_histories_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
+CREATE TABLE public.cms_items (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  type character varying NOT NULL CHECK (type::text = ANY (ARRAY['post'::character varying, 'notification'::character varying, 'alert'::character varying, 'announcement'::character varying]::text[])),
+  title character varying NOT NULL,
+  content text NOT NULL,
+  thumbnail_url character varying,
+  slug character varying UNIQUE,
+  status character varying NOT NULL DEFAULT 'draft'::character varying CHECK (status::text = ANY (ARRAY['draft'::character varying, 'published'::character varying, 'archived'::character varying]::text[])),
+  published_at timestamp with time zone,
+  expires_at timestamp with time zone,
+  target_role character varying CHECK (target_role::text = ANY (ARRAY['mother'::character varying, 'father'::character varying, 'admin'::character varying, 'all'::character varying]::text[])),
+  target_pregnancy_status character varying CHECK (target_pregnancy_status::text = ANY (ARRAY['pregnant'::character varying, 'not_pregnant'::character varying, 'postpartum'::character varying, 'all'::character varying]::text[])),
+  view_count integer DEFAULT 0,
+  seo_title character varying,
+  seo_description character varying,
+  tags jsonb DEFAULT '[]'::jsonb,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  created_by uuid NOT NULL,
+  updated_by uuid,
+  CONSTRAINT cms_items_pkey PRIMARY KEY (id),
+  CONSTRAINT cms_items_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id),
+  CONSTRAINT cms_items_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.users(id)
+);
 CREATE TABLE public.conversations (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
@@ -77,6 +108,29 @@ CREATE TABLE public.daily_entries (
   CONSTRAINT daily_entries_pkey PRIMARY KEY (id),
   CONSTRAINT daily_entries_baby_id_fkey FOREIGN KEY (baby_id) REFERENCES public.babies(id),
   CONSTRAINT daily_entries_recorded_by_fkey FOREIGN KEY (recorded_by) REFERENCES public.users(id)
+);
+CREATE TABLE public.food_scan_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  image_url character varying,
+  image_size_kb integer,
+  recognized_dish_stt integer,
+  recognized_dish_name character varying,
+  confidence_score numeric CHECK (confidence_score IS NULL OR confidence_score >= 0::numeric AND confidence_score <= 1::numeric),
+  alternatives jsonb DEFAULT '[]'::jsonb,
+  nutrition_data jsonb,
+  meal_type character varying CHECK (meal_type::text = ANY (ARRAY['breakfast'::character varying, 'lunch'::character varying, 'dinner'::character varying, 'snack'::character varying]::text[])),
+  meal_time timestamp with time zone,
+  user_feedback character varying CHECK (user_feedback::text = ANY (ARRAY['accurate'::character varying, 'partial'::character varying, 'inaccurate'::character varying]::text[])),
+  model_version character varying,
+  processing_time_ms integer,
+  tokens_used integer,
+  cost_usd numeric,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT food_scan_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT food_scan_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT food_scan_logs_recognized_dish_stt_fkey FOREIGN KEY (recognized_dish_stt) REFERENCES public.nutrition_database(stt)
 );
 CREATE TABLE public.meal_plan_items (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -107,6 +161,40 @@ CREATE TABLE public.meal_plans (
   CONSTRAINT meal_plans_pkey PRIMARY KEY (id),
   CONSTRAINT meal_plans_user_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
   CONSTRAINT meal_plans_profile_fkey FOREIGN KEY (profile_stt) REFERENCES public.nutrition_profiles(stt)
+);
+CREATE TABLE public.medical_profiles (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL UNIQUE,
+  pregnancy_status character varying NOT NULL DEFAULT 'not_pregnant'::character varying CHECK (pregnancy_status::text = ANY (ARRAY['not_pregnant'::character varying, 'pregnant'::character varying, 'postpartum'::character varying]::text[])),
+  trimester integer CHECK (trimester IS NULL OR (trimester = ANY (ARRAY[1, 2, 3]))),
+  week_of_pregnancy integer CHECK (week_of_pregnancy IS NULL OR week_of_pregnancy >= 0 AND week_of_pregnancy <= 42),
+  due_date date,
+  pre_pregnancy_weight_kg numeric,
+  current_weight_kg numeric,
+  height_cm numeric,
+  weight_gain_kg numeric DEFAULT 
+CASE
+    WHEN ((current_weight_kg IS NOT NULL) AND (pre_pregnancy_weight_kg IS NOT NULL)) THEN (current_weight_kg - pre_pregnancy_weight_kg)
+    ELSE NULL::numeric
+END,
+  bmi numeric,
+  blood_type character varying,
+  rh_factor character varying,
+  chronic_diseases jsonb DEFAULT '[]'::jsonb,
+  allergies jsonb DEFAULT '[]'::jsonb,
+  medications jsonb DEFAULT '[]'::jsonb,
+  medical_history text,
+  last_checkup_date date,
+  next_checkup_date date,
+  regular_checkup_interval_days integer DEFAULT 30,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  created_by uuid,
+  updated_by uuid,
+  CONSTRAINT medical_profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT medical_profiles_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT medical_profiles_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id),
+  CONSTRAINT medical_profiles_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.users(id)
 );
 CREATE TABLE public.messages (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -158,6 +246,7 @@ CREATE TABLE public.nutrition_database (
   created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   price_vnd numeric,
+  embedding USER-DEFINED,
   CONSTRAINT nutrition_database_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.nutrition_log_items (
@@ -235,6 +324,25 @@ CREATE TABLE public.quests (
   updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT quests_pkey PRIMARY KEY (id)
 );
+CREATE TABLE public.recommendation_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  medical_profile_id uuid,
+  meal_type character varying NOT NULL CHECK (meal_type::text = ANY (ARRAY['breakfast'::character varying, 'lunch'::character varying, 'dinner'::character varying, 'snack'::character varying]::text[])),
+  recommended_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  recommended_dishes jsonb NOT NULL,
+  reason_text text,
+  user_accepted boolean,
+  user_feedback text,
+  model_version character varying,
+  tokens_used integer,
+  cost_usd numeric,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT recommendation_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT recommendation_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT recommendation_logs_medical_profile_id_fkey FOREIGN KEY (medical_profile_id) REFERENCES public.medical_profiles(id)
+);
 CREATE TABLE public.shopping_items (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   partnership_id uuid NOT NULL,
@@ -251,6 +359,59 @@ CREATE TABLE public.shopping_items (
   CONSTRAINT shopping_items_pkey PRIMARY KEY (id),
   CONSTRAINT shopping_items_partnership_id_fkey FOREIGN KEY (partnership_id) REFERENCES public.partnerships(id),
   CONSTRAINT shopping_items_purchased_by_fkey FOREIGN KEY (purchased_by) REFERENCES public.users(id)
+);
+CREATE TABLE public.store_food_mappings (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  store_id uuid NOT NULL,
+  dish_stt integer NOT NULL,
+  availability boolean DEFAULT true,
+  stock_level integer,
+  price_at_store numeric,
+  notes text,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT store_food_mappings_pkey PRIMARY KEY (id),
+  CONSTRAINT store_food_mappings_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.stores(id),
+  CONSTRAINT store_food_mappings_dish_stt_fkey FOREIGN KEY (dish_stt) REFERENCES public.nutrition_database(stt)
+);
+CREATE TABLE public.stores (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name character varying NOT NULL,
+  description text,
+  phone character varying,
+  email character varying,
+  website character varying,
+  address text NOT NULL,
+  city character varying NOT NULL,
+  district character varying,
+  ward character varying,
+  postal_code character varying,
+  latitude numeric,
+  longitude numeric,
+  operating_hours character varying,
+  operates_on jsonb DEFAULT '{"Fri": true, "Mon": true, "Sat": true, "Sun": true, "Thu": true, "Tue": true, "Wed": true}'::jsonb,
+  status character varying NOT NULL DEFAULT 'active'::character varying CHECK (status::text = ANY (ARRAY['active'::character varying, 'inactive'::character varying, 'suspended'::character varying]::text[])),
+  food_items_count integer DEFAULT 0,
+  last_inventory_update timestamp with time zone,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  created_by uuid,
+  updated_by uuid,
+  CONSTRAINT stores_pkey PRIMARY KEY (id),
+  CONSTRAINT stores_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id),
+  CONSTRAINT stores_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.users(id)
+);
+CREATE TABLE public.system_settings (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  key character varying NOT NULL UNIQUE,
+  value jsonb NOT NULL,
+  description text,
+  is_sensitive boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_by uuid,
+  CONSTRAINT system_settings_pkey PRIMARY KEY (id),
+  CONSTRAINT system_settings_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.users(id)
 );
 CREATE TABLE public.tasks (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -321,5 +482,7 @@ CREATE TABLE public.users (
   dob date,
   allergies ARRAY DEFAULT '{}'::text[],
   dislikes ARRAY DEFAULT '{}'::text[],
+  condition text DEFAULT 'none'::text,
+  food_preference text DEFAULT 'no_pref'::text,
   CONSTRAINT users_pkey PRIMARY KEY (id)
 );
