@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
 import { LogOut, Menu } from 'lucide-react';
@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { UserMenu } from '@/components/navigation/user-menu';
+import { NotificationBell } from '@/components/navigation/notification-bell';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -53,55 +54,50 @@ export function Header({ onMenuClick }: HeaderProps) {
     <header
       className={cn(
         "sticky top-0 z-30 flex h-16 items-center justify-between px-4 md:px-6 transition-all duration-300",
-        isScrolled ? "bg-background/80 backdrop-blur-xl border-b border-border/40 shadow-sm" : "bg-transparent"
+        isScrolled
+          ? "bg-background/80 backdrop-blur-xl border-b border-border/40 shadow-sm"
+          : "bg-transparent"
       )}
     >
       <div className="flex items-center gap-3">
-        {/* Mobile Hamburger & Logo */}
         <div className="flex items-center gap-2 md:hidden">
           <Button
             variant="ghost"
             size="sm"
             onClick={onMenuClick}
             className="h-9 w-9 p-0 hover:bg-primary/10 shrink-0 text-muted-foreground"
-            aria-label="Mở menu"
+            aria-label="Mo menu"
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <Link
-            href="/"
-            className="flex items-center gap-2 hover:opacity-85 transition-opacity"
-          >
-            <Image
-              src="/img_0174.png"
-              alt="NestAI Logo"
-              width={28}
-              height={28}
-              className="object-contain"
-            />
+          <Link href="/" className="flex items-center gap-2 hover:opacity-85 transition-opacity">
+            <Image src="/img_0174.png" alt="NestAI Logo" width={28} height={28} className="object-contain" />
             <span className="font-bold text-primary tracking-tight">NestAI</span>
           </Link>
         </div>
       </div>
 
-      {/* Right side - User info */}
-      <div className="flex items-center gap-3">
+      {/* Right side */}
+      <div className="flex items-center gap-2">
         {user && (
           <>
-            <div className="hidden sm:flex flex-col items-end text-right">
+            <div className="hidden sm:flex flex-col items-end text-right mr-1">
               <span className="text-sm font-semibold text-foreground leading-tight">{user.name}</span>
               <span className="text-xs text-muted-foreground font-medium">
                 {user.babyStatus === 'pregnant' && user.gestationWeeks != null
-                  ? `Tuần ${user.gestationWeeks} thai`
+                  ? `Tuan ${user.gestationWeeks} thai`
                   : user.babyStatus === 'born' && user.weeksPostpartum != null
-                    ? `Tuần ${user.weeksPostpartum} sau sinh`
-                    : user.age != null
-                      ? `${user.age} tuổi`
-                      : user.role === 'admin'
-                        ? 'Admin'
-                        : ''}
+                  ? `Tuan ${user.weeksPostpartum} sau sinh`
+                  : user.age != null
+                  ? `${user.age} tuoi`
+                  : user.role === 'admin'
+                  ? 'Admin'
+                  : ''}
               </span>
             </div>
+
+            {/* Bell icon nam sat ten */}
+            <NotificationBell />
 
             {['father', 'mother'].includes(user.role) ? (
               <UserMenu />
@@ -110,7 +106,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                title="Đăng xuất"
+                title="Dang xuat"
                 className="h-9 w-9 p-0 hover:bg-destructive/10 hover:text-destructive"
               >
                 <LogOut className="h-4 w-4" />
@@ -122,4 +118,3 @@ export function Header({ onMenuClick }: HeaderProps) {
     </header>
   );
 }
-

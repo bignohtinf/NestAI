@@ -41,7 +41,7 @@ export default function Home() {
 
   // Regular users (mother/father) use HomeLayout
   return (
-    <HomeLayout>
+    <HomeLayout fullWidth>
       {user.role === 'mother' ? (
         <MomDashboard />
       ) : (

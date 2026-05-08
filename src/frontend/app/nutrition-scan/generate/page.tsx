@@ -5,9 +5,9 @@ import { Utensils } from 'lucide-react';
 
 export default function GeneratePage() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Page Header */}
-      <div className="max-w-4xl mx-auto flex items-start gap-4">
+      <div className="flex items-start gap-4">
         <div className="w-12 h-12 rounded-2xl bg-[#0075de]/10 flex items-center justify-center shrink-0">
           <Utensils className="w-6 h-6 text-[#0075de]" />
         </div>
@@ -19,9 +19,7 @@ export default function GeneratePage() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto">
-        <NutritionRecommendations />
-      </div>
+      <NutritionRecommendations />
     </div>
   );
 }

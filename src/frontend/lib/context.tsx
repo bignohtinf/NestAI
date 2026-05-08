@@ -23,6 +23,12 @@ export interface UserData {
   dislikes?: string[];
   condition?: string;
   foodPreference?: string;
+  lastMenstrualPeriod?: string;
+  dueDate?: string;
+  trimester?: number;
+  daysInWeek?: number;
+  weightGain?: number;
+  bmi?: number;
 }
 
 export interface Quest {
@@ -84,6 +90,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const fetchMedicalProfile = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/medical-profile/me?user_id=${userId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.profile) {
+        const p = data.profile;
+        if (mountedRef.current) {
+          setUser((prev) => prev ? { 
+            ...prev, 
+            babyStatus: p.pregnancy_status === 'pregnant' ? 'pregnant' : (p.pregnancy_status === 'postpartum' ? 'born' : prev.babyStatus),
+            gestationWeeks: p.week_of_pregnancy,
+            daysInWeek: p.days_in_week,
+            dueDate: p.due_date,
+            lastMenstrualPeriod: p.last_menstrual_period,
+            trimester: p.trimester,
+            weightGain: p.weight_gain_kg,
+            bmi: p.bmi
+          } : prev);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch medical profile:', err);
+    }
+  };
+
   const fetchUserData = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -119,6 +151,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
 
         fetchBabyInfo(userData.id);
+        fetchMedicalProfile(userData.id);
         setIsLoading(false);
       }
     } catch (error) {
@@ -154,6 +187,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             foodPreference: userData.food_preference,
           });
           fetchBabyInfo(userData.id);
+          fetchMedicalProfile(userData.id);
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);

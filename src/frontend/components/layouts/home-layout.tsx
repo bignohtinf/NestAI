@@ -9,9 +9,10 @@ import { OnboardingGuard } from '@/components/layouts/onboarding-guard';
 
 interface HomeLayoutProps {
   children: ReactNode;
+  fullWidth?: boolean;
 }
 
-export function HomeLayout({ children }: HomeLayoutProps) {
+export function HomeLayout({ children, fullWidth = false }: HomeLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -23,7 +24,7 @@ export function HomeLayout({ children }: HomeLayoutProps) {
           <Header onMenuClick={() => setSidebarOpen(true)} />
 
           <main className="flex-1 overflow-y-auto w-full flex flex-col">
-            <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8 pb-24 md:pb-8 flex-1">
+            <div className={`${fullWidth ? 'w-full' : 'mx-auto max-w-6xl'} px-4 py-6 md:px-8 md:py-8 pb-24 md:pb-8 flex-1`}>
               {children}
             </div>
             <Footer className="hidden md:block mt-auto" />

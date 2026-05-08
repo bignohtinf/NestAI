@@ -15,7 +15,8 @@ import {
   ShoppingCart,
   Calendar,
   Settings,
-  Camera
+  Camera,
+  BookOpen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
@@ -40,31 +41,42 @@ interface NavItem {
 
 const navigationItems: NavItem[] = [
   { href: '/', label: 'Trang chủ', icon: Home, roles: ['mother', 'father', 'admin'] },
-  
+
   // Mother
-  { 
-    href: '/nutrition-scan', 
-    label: 'Thực đơn AI', 
-    icon: Utensils, 
+  {
+    href: '/nutrition-scan',
+    label: 'Thực đơn AI',
+    icon: Utensils,
     roles: ['mother'],
     subItems: [
       { href: '/nutrition-scan/scan', label: 'Quét ảnh', icon: Camera },
       { href: '/nutrition-scan/generate', label: 'Gen thực đơn', icon: Utensils }
     ]
   },
-  
+
   { href: '/nori', label: 'Nori AI', icon: MessageCircle, roles: ['mother', 'father'] },
   { href: '/baby-journey', label: 'Hành trình bé', icon: Baby, roles: ['mother', 'father'] },
-  
+  { href: '/blogs', label: 'Cẩm nang', icon: BookOpen, roles: ['mother', 'father'] },
+
   // Mother Health
-  { href: '/wellness', label: 'Sức khỏe', icon: HeartPulse, roles: ['mother'] },
-  
+  {
+    href: '/wellness',
+    label: 'Sức khỏe',
+    icon: HeartPulse,
+    roles: ['mother'],
+    subItems: [
+      { href: '/wellness?tab=dashboard', label: 'Dashboard', icon: Home },
+      { href: '/wellness?tab=tracking', label: 'Track & Challenges', icon: Utensils },
+      { href: '/wellness?tab=support', label: 'Support', icon: Bell }
+    ]
+  },
+
   { href: '/notifications', label: 'Thông báo', icon: Bell, roles: ['mother', 'father'] },
-  
+
   // Father
   { href: '/nutrimart', label: 'NutriMart', icon: ShoppingCart, roles: ['father'] },
   { href: '/planner', label: 'Kế Hoạch', icon: Calendar, roles: ['father'] },
-  
+
   // Admin
   { href: '/admin', label: 'Quản trị', icon: Settings, roles: ['admin'] },
 ];
@@ -88,7 +100,7 @@ export function Sidebar({ open, onOpenChange, activeChatId, onSelectChat }: Side
 
   useEffect(() => {
     fetchUnreadCount();
-    
+
     // Refresh every 60 seconds
     const interval = setInterval(fetchUnreadCount, 60000);
     return () => clearInterval(interval);
@@ -113,7 +125,7 @@ export function Sidebar({ open, onOpenChange, activeChatId, onSelectChat }: Side
 
     window.addEventListener('chatHistoryToggle', handleToggleEvent);
     window.addEventListener('notificationsUpdated', handleNotificationUpdate);
-    
+
     return () => {
       window.removeEventListener('chatHistoryToggle', handleToggleEvent);
       window.removeEventListener('notificationsUpdated', handleNotificationUpdate);
@@ -171,13 +183,13 @@ export function Sidebar({ open, onOpenChange, activeChatId, onSelectChat }: Side
             const Icon = item.icon;
             const pathWithoutQuery = pathname.split('?')[0];
             const itemPathWithoutQuery = item.href?.split('?')[0];
-            
-            const isActive = item.href === '/' 
+
+            const isActive = item.href === '/'
               ? pathWithoutQuery === '/'
               : pathWithoutQuery.startsWith(itemPathWithoutQuery || '');
 
             return (
-              <div 
+              <div
                 key={item.label}
                 onMouseEnter={() => setHoveredItem(item.label)}
                 onMouseLeave={() => setHoveredItem(null)}
@@ -229,17 +241,17 @@ export function Sidebar({ open, onOpenChange, activeChatId, onSelectChat }: Side
 
                 {/* Chat History Tab - Show under Nori */}
                 {item.label === 'Nori AI' && (isActive || hoveredItem === 'Nori AI') && (
-                    <div className="mt-2 ml-2 border-l border-border/30 pl-3">
-                      <ChatHistoryTab 
-                        activeChatId={activeChatId}
-                        onSelectChat={(chatId) => {
-                          console.log('Selected chat:', chatId);
-                          onSelectChat?.(chatId);
-                          onOpenChange(false);
-                        }} 
-                        isVisible={showChatHistory} 
-                      />
-                    </div>
+                  <div className="mt-2 ml-2 border-l border-border/30 pl-3">
+                    <ChatHistoryTab
+                      activeChatId={activeChatId}
+                      onSelectChat={(chatId) => {
+                        console.log('Selected chat:', chatId);
+                        onSelectChat?.(chatId);
+                        onOpenChange(false);
+                      }}
+                      isVisible={showChatHistory}
+                    />
+                  </div>
                 )}
               </div>
             );

@@ -1,0 +1,566 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Cylindrical Carousel — 3-D drum effect
+   Key values (from introduce_3d.txt formula + visual tuning):
+     perspective  : 700 px   ← close camera → dramatic size difference
+     translateZ   : 300 px   ← cylinder radius (smaller = more curvature)
+   At these values a card 5 positions away (45°) appears ~42 % smaller than
+   the front card, giving the unmistakable "slot-machine drum" look.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Outer Container ─────────────────────────────────────────────────────── */
+.cylindrical-carousel-container {
+  width: 100%;
+  padding: 30px 0 60px 0; /* Reduced top padding from 60px to 30px */
+  background: linear-gradient(180deg, #fffafb 0%, #fff5f6 100%);
+  border-radius: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  box-shadow: 0 20px 50px rgba(255, 182, 193, 0.1);
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Title ───────────────────────────────────────────────────────────────── */
+.carousel-title {
+  text-align: center;
+  z-index: 10;
+  margin-bottom: -40px; /* Increased negative margin to push up more */
+  margin-top: -10px;
+}
+
+.carousel-title h2 {
+  margin: 0;
+  font-size: 36px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ff8da1 0%, #ff9a8b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.carousel-title p {
+  margin: 8px 0 0 0;
+  color: #a08c8c;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* ── Layout Wrapper ──────────────────────────────────────────────────────── */
+.main-content-wrapper {
+  display: flex;
+  align-items: stretch; /* Stretch panels vertically */
+  justify-content: center;
+  gap: 15px;
+  width: 100%;
+  max-width: 100%; /* Expand to full width */
+  padding: 0 10px;
+  position: relative;
+}
+
+/* ── 3-D Scene (perspective origin) ─────────────────────────────────────── */
+.cylinder-stage {
+  flex: 1;
+  max-width: 450px;
+  height: 500px;
+  /* NO perspective here — moved to .cylinder so manual z-index works */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: grab;
+  user-select: none;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.cylinder-stage:active {
+  cursor: grabbing;
+}
+
+/* ── The rotating drum ───────────────────────────────────────────────────── */
+.cylinder {
+  position: relative;
+  width: 280px;
+  height: 200px;
+  /*
+   * perspective here (NOT on stage) so each card is perspective-projected
+   * individually. This lets us use z-index for manual 21-layer stacking
+   * without CSS 3D painter-algorithm conflicts.
+   * NO transform-style: preserve-3d — that caused incorrect browser z-sorting.
+   */
+  perspective: 700px;
+  perspective-origin: center center;
+}
+
+/* ── Individual week cards ───────────────────────────────────────────────── */
+.cylinder-card {
+  position: absolute;
+  width: 220px;
+  height: 160px;
+  left: 50%;
+  top: 50%;
+  margin-left: -110px;
+  margin-top: -80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /*
+   * transform, z-index, opacity, visibility are ALL set by applyRotation() in JS.
+   * No CSS defaults for these — JS owns them entirely.
+   * This gives the 21-layer manual stacking system without browser z-sorting bugs.
+   */
+}
+
+/* ── Card face ───────────────────────────────────────────────────────────── */
+.card-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 18px;
+  background: white;
+  padding: 8px;
+  box-shadow: 0 12px 28px rgba(255, 105, 180, 0.12);
+  border: 1px solid rgba(255, 192, 203, 0.3);
+  cursor: pointer;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.card-image-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  background: #fffafa;
+}
+
+.baby-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+  pointer-events: none;
+}
+
+.week-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ff6b81;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 107, 129, 0.2);
+  white-space: nowrap;
+}
+
+/* ── Hover ───────────────────────────────────────────────────────────────── */
+.cylinder-card:hover .card-inner {
+  transform: scale(1.06);
+  box-shadow: 0 25px 50px rgba(255, 105, 180, 0.22);
+  border-color: #ff8da1;
+}
+
+.cylinder-card:hover .baby-image {
+  transform: scale(1.08);
+}
+
+/* ── Active (centre) card ────────────────────────────────────────────────── */
+.cylinder-card.active .card-inner {
+  border: 2.5px solid #ff8da1;
+  box-shadow: 0 0 30px rgba(255, 141, 161, 0.35);
+}
+
+.cylinder-card.active .week-badge {
+  background: #ff8da1;
+  color: white;
+}
+
+/* ── Gradient masks — fade out cards near the top/bottom viewport edge ───── */
+.cylinder-mask-top,
+.cylinder-mask-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 38%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.cylinder-mask-top {
+  top: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 250, 251, 1) 0%,
+    rgba(255, 250, 251, 0) 100%
+  );
+}
+
+.cylinder-mask-bottom {
+  bottom: 0;
+  background: linear-gradient(
+    to top,
+    rgba(255, 250, 251, 1) 0%,
+    rgba(255, 250, 251, 0) 100%
+  );
+}
+
+/* ── Centre highlight frame ──────────────────────────────────────────────── */
+.cylinder-center-highlight {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 260px;
+  height: 185px;
+  border-radius: 22px;
+  background: radial-gradient(circle, rgba(255, 141, 161, 0.08) 0%, transparent 70%);
+  border: 1.5px dashed rgba(255, 141, 161, 0.35);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Side Panels (Common) ───────────────────────────────────────────────── */
+.side-panel {
+  flex: 0 0 280px; /* Fixed narrower width, won't grow or shrink too much */
+  max-width: 280px;
+  background: white;
+  border-radius: 28px;
+  padding: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+  border: 1px solid #fff0f3;
+  animation: fadeInUp 0.4s ease-out both;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.side-panel.left {
+  animation-delay: 0.1s;
+}
+
+.side-panel.right {
+  animation-delay: 0.2s;
+}
+
+/* ── Detail Panel ────────────────────────────────────────────────────────── */
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #fff0f3;
+  padding-bottom: 16px;
+}
+
+.detail-icon {
+  font-size: 36px;
+  background: #fff5f6;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  box-shadow: inset 0 2px 10px rgba(255, 141, 161, 0.1);
+  flex-shrink: 0;
+}
+
+.detail-info h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #4a3a3a;
+  font-weight: 800;
+}
+
+.detail-subtitle {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: #ff9a8b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-item {
+  background: #fffafb;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid #fff0f3;
+}
+
+.detail-label {
+  font-size: 11px;
+  color: #a08c8c;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.detail-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ff6b81;
+}
+
+/* ── Summary Panel ───────────────────────────────────────────────────────── */
+.summary-header h4 {
+  margin: 0;
+  font-size: 18px;
+  color: #4a3a3a;
+  font-weight: 700;
+}
+
+.detail-description {
+  background: #fffafb;
+  padding: 16px;
+  border-radius: 14px;
+  border-left: 4px solid #ff8da1;
+}
+
+.detail-description strong {
+  color: #4a3a3a;
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.detail-description p {
+  margin: 0;
+  font-size: 14px;
+  color: #6a5a5a;
+  line-height: 1.6;
+}
+
+.quick-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #a08c8c;
+  font-weight: 500;
+}
+
+.stat-tag {
+  background: #fff5f6;
+  color: #ff6b81;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid #fff0f3;
+}
+
+/* ── Decorative Elements ─────────────────────────────────────────────────── */
+.milestone-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #fff5f6 0%, #fff 100%);
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ff8da1;
+  border: 1px solid rgba(255, 141, 161, 0.2);
+  margin-top: auto;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #ff8da1;
+  border-radius: 50%;
+  position: relative;
+}
+
+.pulse-dot::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #ff8da1;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  70% { transform: scale(2.5); opacity: 0; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Progress bar ────────────────────────────────────────────────────────── */
+.week-progress-container {
+  width: 100%;
+  max-width: 800px;
+  margin-top: 0;
+}
+
+.progress-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #a08c8c;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.progress-track {
+  width: 100%;
+  height: 12px;
+  background: #fff0f3;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff8da1 0%, #ff9a8b 100%);
+  border-radius: 10px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 15px rgba(255, 141, 161, 0.3);
+}
+
+/* ── Instructions ────────────────────────────────────────────────────────── */
+.carousel-instructions {
+  margin-top: 0;
+  font-size: 13px;
+  color: #a08c8c;
+  background: white;
+  padding: 8px 20px;
+  border-radius: 30px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid #fff0f3;
+}
+
+/* ── Dark mode ───────────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .cylindrical-carousel-container {
+    background: linear-gradient(180deg, #1a1515 0%, #251a1a 100%);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  }
+
+  .carousel-title h2 {
+    background: linear-gradient(135deg, #ffb3c1 0%, #ffc1b6 100%);
+    -webkit-background-clip: text;
+  }
+
+  .side-panel {
+    background: #2a2020;
+    border-color: #3a2a2a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  .detail-icon {
+    background: #352525;
+  }
+
+  .detail-info h3, .summary-header h4 {
+    color: #fef3f4;
+  }
+
+  .detail-item,
+  .detail-description,
+  .stat-tag,
+  .milestone-badge {
+    background: #352525;
+    border-color: #403030;
+  }
+
+  .detail-description strong,
+  .detail-value,
+  .stat-tag {
+    color: #ffb3c1;
+  }
+
+  .detail-description p,
+  .stat-row,
+  .progress-label {
+    color: #d1c1c1;
+  }
+
+  .progress-track {
+    background: #352525;
+  }
+
+  .carousel-instructions {
+    background: #2a2020;
+    color: #a08c8c;
+    border-color: #352525;
+  }
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .main-content-wrapper {
+    flex-direction: column;
+    padding: 0 20px;
+    gap: 30px;
+  }
+  
+  .side-panel {
+    max-width: 600px;
+    width: 100%;
+    order: 2;
+  }
+  
+  .cylinder-stage {
+    order: 1;
+    height: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .cylinder-stage {
+    height: 350px;
+    /* no perspective here — on .cylinder */
+  }
+
+  .cylinder {
+    width: 180px;
+    height: 260px;
+    perspective: 520px; /* tighter perspective on mobile */
+  }
+
+  .cylinder-card {
+    width: 160px;
+    height: 140px;
+    margin-left: -80px;
+    margin-top: -70px;
+    /* transform managed by JS with RADIUS=220 on mobile */
+  }
+
+  .carousel-title h2 {
+    font-size: 28px;
+  }
+}

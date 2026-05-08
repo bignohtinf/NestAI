@@ -3,6 +3,7 @@ from app.core.supabase_client import get_supabase
 from pydantic import BaseModel
 from typing import Optional, List, Literal, Dict, Any
 from datetime import datetime, timedelta
+from uuid import UUID
 
 from app.schemas.admin_analytics import AnalyticsPeriod, UserAnalyticsResponse, ChatAnalyticsResponse, HealthAnalyticsResponse
 from app.schemas.admin_users import UserListResponse, UserDetailResponse, MedicalProfileListResponse
@@ -25,6 +26,8 @@ from app.services.admin_users_service import AdminUsersService
 from app.services.admin_stores_service import AdminStoresService
 from app.services.admin_ai_hub_service import AdminAIHubService
 from app.services.admin_system_service import AdminSystemService
+from app.services.blog_service import BlogService
+from app.schemas.blog import BlogCategoryCreate, BlogCategory
 
 router = APIRouter()
 
@@ -410,6 +413,61 @@ async def get_audit_logs(
 ):
     service = AdminSystemService(supabase)
     return service.get_audit_logs(limit, offset, action, adminId, dateFrom, dateTo)
+
+# ─── Blog Management Endpoints ────────────────────────────────────────────
+
+@router.get("/blog/categories", response_model=List[BlogCategory])
+async def admin_get_blog_categories(supabase = Depends(get_supabase)):
+    service = BlogService(supabase)
+    return service.get_categories()
+
+@router.post("/blog/categories")
+async def admin_create_blog_category(category: BlogCategoryCreate, supabase = Depends(get_supabase)):
+    service = BlogService(supabase)
+    res = supabase.table("blog_categories").insert(category.model_dump()).execute()
+    if not res.data:
+        raise HTTPException(status_code=400, detail="Could not create category")
+    return res.data[0]
+
+@router.put("/blog/categories/{category_id}")
+async def admin_update_blog_category(category_id: str, category: BlogCategoryCreate, supabase = Depends(get_supabase)):
+    service = BlogService(supabase)
+    res = supabase.table("blog_categories").update(category.model_dump()).eq("id", category_id).execute()
+    if not res.data:
+        raise HTTPException(status_code=404, detail="Category not found")
+    return res.data[0]
+
+@router.delete("/blog/categories/{category_id}")
+async def admin_delete_blog_category(category_id: str, supabase = Depends(get_supabase)):
+    supabase.table("blog_categories").delete().eq("id", category_id).execute()
+    return {"success": True}
+
+@router.get("/blog/comments")
+async def admin_get_all_comments(
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    post_id: Optional[str] = None,
+    supabase = Depends(get_supabase)
+):
+    query = supabase.table("blog_comments").select("*, users(email), cms_items(title)", count="exact")
+    if post_id:
+        query = query.eq("post_id", post_id)
+    res = query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
+    return {
+        "comments": res.data or [],
+        "total": res.count or 0
+    }
+
+@router.delete("/blog/comments/{comment_id}")
+async def admin_delete_comment(comment_id: str, supabase = Depends(get_supabase)):
+    supabase.table("blog_comments").delete().eq("id", comment_id).execute()
+    return {"success": True}
+
+@router.post("/blog/posts/{post_id}/categories")
+async def admin_set_post_categories(post_id: str, category_ids: List[str], supabase = Depends(get_supabase)):
+    service = BlogService(supabase)
+    service.set_post_categories(UUID(post_id), [UUID(cid) for cid in category_ids])
+    return {"success": True}
 
 @router.get("/spending-breakdown")
 async def get_spending_breakdown(user_id: str, supabase = Depends(get_supabase)):

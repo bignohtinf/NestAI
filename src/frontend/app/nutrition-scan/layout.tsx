@@ -26,11 +26,9 @@ export default function NutritionScanLayout({
   }
 
   return (
-    <MainLayout>
-      <div className="space-y-6">
-        <div className="pt-2">
-          {children}
-        </div>
+    <MainLayout fullWidth>
+      <div className="pt-2">
+        {children}
       </div>
     </MainLayout>
   );

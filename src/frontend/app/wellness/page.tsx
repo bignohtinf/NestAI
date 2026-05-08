@@ -2,17 +2,24 @@
 
 import { MainLayout } from '@/components/layouts/main-layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MilkBabyImpact } from '@/components/metrics/milk-baby-impact';
 import { useApp } from '@/lib/context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { DashboardSection } from './components/sections/DashboardSection';
+import { TrackingLayoutSection } from './components/sections/TrackingLayoutSection';
+import { SupportSection } from './components/sections/SupportSection';
+import { PersonalizationDialog } from './components/PersonalizationDialog';
+import { useWellnessData } from './hooks/useWellnessData';
 
 export default function WellnessPage() {
   const { user } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<'trend' | 'impact' | 'checkup'>('trend');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'tracking' | 'support'>('dashboard');
   const [mounted, setMounted] = useState(false);
+  const [showPersonalization, setShowPersonalization] = useState(false);
+
+  const { profile, loading } = useWellnessData(user?.id || null);
 
   useEffect(() => {
     setMounted(true);
@@ -26,15 +33,18 @@ export default function WellnessPage() {
     }
   }, [user, router]);
 
+  // Show personalization dialog if not completed
+  useEffect(() => {
+    if (!loading && profile && !profile.personalization_completed) {
+      setShowPersonalization(true);
+    }
+  }, [profile, loading]);
+
   useEffect(() => {
     if (!mounted) return;
     const tab = searchParams.get('tab');
-    if (tab === 'impact') {
-      setActiveTab('impact');
-    } else if (tab === 'checkup') {
-      setActiveTab('checkup');
-    } else {
-      setActiveTab('trend');
+    if (['dashboard', 'tracking', 'support'].includes(tab || '')) {
+      setActiveTab(tab as any);
     }
   }, [searchParams, mounted]);
 
@@ -43,49 +53,31 @@ export default function WellnessPage() {
   }
 
   return (
-    <MainLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Theo Dõi Sức Khỏe</h1>
-          <p className="text-muted-foreground">
-            {user.babyStatus === 'pregnant'
-              ? 'Theo dõi sức khỏe thai kỳ, chỉ số dinh dưỡng và lịch khám định kì'
-              : 'Theo dõi xu hướng sữa, ảnh hưởng thực phẩm và khám định kì'}
-          </p>
-        </div>
+    <MainLayout fullWidth>
+      {/* Personalization Dialog */}
+      {showPersonalization && (
+        <PersonalizationDialog
+          userId={user.id}
+          isOpen={showPersonalization}
+          onClose={() => setShowPersonalization(false)}
+        />
+      )}
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'trend' | 'impact' | 'checkup')} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="trend">
-              <span className="hidden sm:inline">
-                {user.babyStatus === 'pregnant' ? 'Sức khỏe thai kỳ' : 'Xu hướng'}
-              </span>
-              <span className="sm:hidden">Xu hướng</span>
-            </TabsTrigger>
-            <TabsTrigger value="impact">
-              <span className="hidden sm:inline">Ảnh hưởng</span>
-              <span className="sm:hidden">Ảnh hưởng</span>
-            </TabsTrigger>
-            <TabsTrigger value="checkup">
-              <span className="hidden sm:inline">Khám định kì</span>
-              <span className="sm:hidden">Khám</span>
-            </TabsTrigger>
-          </TabsList>
+      <div className="space-y-4">
+        {activeTab === 'dashboard' && (
+          <DashboardSection
+            userId={user.id}
+            onTrackClick={() => setActiveTab('tracking')}
+          />
+        )}
 
-          <TabsContent value="trend">
-            <MilkBabyImpact activeTab="trend" />
-          </TabsContent>
+        {activeTab === 'tracking' && (
+          <TrackingLayoutSection userId={user.id} />
+        )}
 
-          <TabsContent value="impact">
-            <MilkBabyImpact activeTab="impact" />
-          </TabsContent>
-
-          <TabsContent value="checkup">
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Cập nhật kết quả khám định kì</p>
-            </div>
-          </TabsContent>
-        </Tabs>
+        {activeTab === 'support' && (
+          <SupportSection userId={user.id} />
+        )}
       </div>
     </MainLayout>
   );

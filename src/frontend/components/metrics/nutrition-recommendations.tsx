@@ -267,7 +267,25 @@ export function NutritionRecommendations() {
         profileStt: parseInt(selectedProfileStt),
         dailyBudgetVnd: budgetInput ? Number(budgetInput.replace(/\D/g, '')) : undefined,
       });
-      setSaveMessage({ type: 'success', text: '✅ Đã lưu thực đơn và thông báo cho bố!' });
+
+      // Gửi thông báo cho bố (không block nếu lỗi)
+      let notified = false;
+      try {
+        const result = await nutritionApi.createMealPlanNotification(
+          user.id,
+          selectedDate,
+          activePlan,
+          target
+        );
+        notified = !!result.success;
+      } catch { /* bỏ qua lỗi notification */ }
+
+      setSaveMessage({
+        type: 'success',
+        text: notified
+          ? '✅ Đã lưu thực đơn và gửi thông báo cho bố!'
+          : '✅ Đã lưu thực đơn thành công!',
+      });
       await loadWeekPlans();
     } catch {
       setSaveMessage({ type: 'error', text: '❌ Lưu thất bại, thử lại sau.' });
@@ -333,237 +351,227 @@ export function NutritionRecommendations() {
 
   // ─── Render ─────────────────────────────────────────────────────────
   return (
-    <div className="space-y-4">
-      {/* Week Calendar */}
-      <WeekCalendar
-        weekStart={weekStart}
-        selectedDate={selectedDate}
-        savedDates={savedDates}
-        onSelectDate={setSelectedDate}
-        onWeekChange={handleWeekChange}
-      />
+    <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 items-start">
 
-      {/* Config Card */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Thực đơn ngày {formatDateVi(selectedDate)}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Target Toggle — hidden for father (read-only view) */}
-          {!isFather && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => setTarget('mother')}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all border ${target === 'mother' ? 'bg-pink-50 border-pink-200 text-pink-700 shadow-sm' : 'bg-white border-border/50 text-muted-foreground hover:bg-muted/40'}`}
-              >
-                🤰 Mẹ
-              </button>
-              <button
-                onClick={() => setTarget('baby')}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all border ${target === 'baby' ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm' : 'bg-white border-border/50 text-muted-foreground hover:bg-muted/40'}`}
-              >
-                👶 Bé
-              </button>
-            </div>
-          )}
+      {/* ── Cột trái: lịch + config (sticky) ── */}
+      <div className="space-y-4 lg:sticky lg:top-6">
+        <WeekCalendar
+          weekStart={weekStart}
+          selectedDate={selectedDate}
+          savedDates={savedDates}
+          onSelectDate={setSelectedDate}
+          onWeekChange={handleWeekChange}
+        />
 
-          {/* Profile info */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-medium text-muted-foreground">Hồ sơ:</span>
-            {isProfilesLoading ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : profileLabel ? (
-              <Badge variant="default" className="text-xs">{profileLabel}</Badge>
-            ) : (
-              <Badge variant="warning" className="text-xs">⚠ Chưa xác định</Badge>
-            )}
-            {target === 'mother' && gestationWeeks == null && (
-              <Badge variant="warning" className="text-[10px]">Chưa có tuần thai</Badge>
-            )}
-            {target === 'baby' && !babyAge && user?.babyStatus === 'born' && (
-              <Badge variant="warning" className="text-[10px]">Chưa có thông tin bé</Badge>
-            )}
-          </div>
-
-          {/* Budget & action buttons — hidden for father */}
-          {!isFather && (
-            <>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground shrink-0">💰 Ngân sách:</span>
-                <div className="relative flex-1 max-w-[200px]">
-                  <input
-                    type="text"
-                    value={budgetInput}
-                    onChange={(e) => setBudgetInput(formatBudget(e.target.value))}
-                    placeholder="Không giới hạn"
-                    className="w-full h-8 px-2.5 pr-12 text-sm border border-border/60 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                  />
-                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-medium">VNĐ</span>
-                </div>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Thực đơn ngày {formatDateVi(selectedDate)}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Target Toggle */}
+            {!isFather && (
+              <div className="flex gap-2">
+                <button onClick={() => setTarget('mother')}
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all border ${target === 'mother' ? 'bg-pink-50 border-pink-200 text-pink-700 shadow-sm' : 'bg-white border-border/50 text-muted-foreground hover:bg-muted/40'}`}>
+                  🤰 Mẹ
+                </button>
+                <button onClick={() => setTarget('baby')}
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all border ${target === 'baby' ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm' : 'bg-white border-border/50 text-muted-foreground hover:bg-muted/40'}`}>
+                  👶 Bé
+                </button>
               </div>
+            )}
 
-              <div className="flex flex-col sm:flex-row items-center gap-3">
-                <Button
-                  onClick={hasSavedPlan ? handleReset : handleGenerate}
-                  disabled={isGenerating || isPastDate}
-                  className="w-full sm:flex-1 gap-2"
-                >
-                  {isGenerating ? (
-                    <><RefreshCw className="h-4 w-4 animate-spin" /> Đang tạo...</>
-                  ) : hasSavedPlan ? (
-                    <><RotateCcw className="h-4 w-4" /> Tạo lại</>
-                  ) : (
-                    <><Utensils className="h-4 w-4" /> Tạo thực đơn</>
-                  )}
-                </Button>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="secondary" className="w-full sm:w-auto gap-2 shrink-0 border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10">
-                      <Camera className="h-4 w-4" /> Quét ảnh bữa ăn
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader><DialogTitle>Quét ảnh bữa ăn</DialogTitle></DialogHeader>
-                    <div className="py-2"><SmartScan /></div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-
-              {!activePlan && !isGenerating && !hasSavedPlan && (
-                <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                  <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-400" />
-                  <span>
-                    {isPastDate
-                      ? "Không thể tạo thực đơn cho ngày trong quá khứ."
-                      : "Bấm \"Tạo thực đơn\" để AI sinh thực đơn theo đúng hồ sơ dinh dưỡng."}
-                  </span>
-                </div>
-              )}
-            </>
-          )}
-
-          {/* Father: show info if no partner linked yet */}
-          {isFather && !partnerUserId && (
-            <div className="flex items-start gap-2 text-xs text-muted-foreground">
-              <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-400" />
-              <span>Chưa kết nối gia đình. Vào tab <strong>Quan hệ</strong> để ghép đôi với mẹ.</span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Meal Plan Results */}
-      {activePlan ? (
-        <div className="space-y-4">
-          {/* Plan selector dots */}
-          {plans.length > 1 && (
-            <div className="flex items-center justify-between px-1">
-              <h3 className="text-sm font-semibold text-primary flex items-center gap-2">
-                <Utensils className="h-4 w-4" /> Thực đơn gợi ý
-              </h3>
-              <div className="flex gap-1">
-                {plans.map((_, i) => (
-                  <button key={i} onClick={() => { setActivePlanIdx(i); setActivePlan(plans[i]); }}
-                    className={`h-1.5 w-4 rounded-full transition-colors ${i === activePlanIdx ? 'bg-primary' : 'bg-muted'}`} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Meal cards */}
-          {MEAL_INFO.map(m => {
-            const mealData = activePlan[m.key] || { dishes: [], stts: [] };
-            const isLocked = !!lockedMeals[m.key];
-            const ns = activePlan.nutrition_summary?.[m.key];
-            return (
-              <MealCard
-                key={m.key}
-                mealKey={m.key}
-                label={m.label}
-                icon={m.icon}
-                time={m.time}
-                dishes={mealData.dishes || []}
-                stts={mealData.stts || []}
-                nutritionSummary={ns}
-                isLocked={isLocked}
-                onToggleLock={toggleLock}
-                defaultExpanded={m.key === 'lunch'}
-              />
-            );
-          })}
-
-          {/* Nutrition Summary */}
-          <Card className="bg-gradient-to-r from-emerald-50/80 to-blue-50/80 border-emerald-100">
-            <CardContent className="p-4">
-              <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">📊 Tổng ngày</h4>
-              {totalNutrition ? (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                  <div className="bg-white/80 rounded-lg p-2 text-center">
-                    <p className="text-muted-foreground">Năng lượng</p>
-                    <p className="font-bold text-orange-600">{Math.round(totalNutrition.energy || 0)} kcal</p>
-                  </div>
-                  <div className="bg-white/80 rounded-lg p-2 text-center">
-                    <p className="text-muted-foreground">Protein</p>
-                    <p className="font-bold text-blue-600">{(totalNutrition.protein || 0).toFixed(1)}g</p>
-                  </div>
-                  <div className="bg-white/80 rounded-lg p-2 text-center">
-                    <p className="text-muted-foreground">Fat</p>
-                    <p className="font-bold text-amber-600">{(totalNutrition.fat || 0).toFixed(1)}g</p>
-                  </div>
-                  <div className="bg-white/80 rounded-lg p-2 text-center">
-                    <p className="text-muted-foreground">Carbs</p>
-                    <p className="font-bold text-green-600">{(totalNutrition.carbohydrate || 0).toFixed(1)}g</p>
-                  </div>
-                </div>
+            {/* Profile info */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-medium text-muted-foreground">Hồ sơ:</span>
+              {isProfilesLoading ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : profileLabel ? (
+                <Badge variant="default" className="text-xs">{profileLabel}</Badge>
               ) : (
-                <p className="text-xs text-muted-foreground">Chưa có thông tin dinh dưỡng</p>
+                <Badge variant="warning" className="text-xs">⚠ Chưa xác định</Badge>
               )}
-              {totalCost != null && totalCost > 0 && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  💰 Chi phí ước tính: <span className="font-semibold text-foreground">{Number(totalCost).toLocaleString('vi-VN')}đ</span>
-                </p>
+              {target === 'mother' && gestationWeeks == null && (
+                <Badge variant="warning" className="text-[10px]">Chưa có tuần thai</Badge>
               )}
-            </CardContent>
-          </Card>
+              {target === 'baby' && !babyAge && user?.babyStatus === 'born' && (
+                <Badge variant="warning" className="text-[10px]">Chưa có thông tin bé</Badge>
+              )}
+            </div>
 
-          {/* Action Buttons — hidden for father (read-only) */}
-          {!isFather && (
-            <div className="flex gap-3">
-              {!hasSavedPlan && !isPastDate && (
-                <Button onClick={handleSave} disabled={isSaving} className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700">
-                  {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  {isSaving ? 'Đang lưu...' : 'Sử dụng thực đơn này'}
+            {/* Budget & buttons */}
+            {!isFather && (
+              <>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-muted-foreground shrink-0">💰 Ngân sách:</span>
+                  <div className="relative flex-1">
+                    <input type="text" value={budgetInput}
+                      onChange={(e) => setBudgetInput(formatBudget(e.target.value))}
+                      placeholder="Không giới hạn"
+                      className="w-full h-8 px-2.5 pr-12 text-sm border border-border/60 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-medium">VNĐ</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Button onClick={hasSavedPlan ? handleReset : handleGenerate}
+                    disabled={isGenerating || isPastDate} className="w-full gap-2">
+                    {isGenerating ? (
+                      <><RefreshCw className="h-4 w-4 animate-spin" /> Đang tạo...</>
+                    ) : hasSavedPlan ? (
+                      <><RotateCcw className="h-4 w-4" /> Tạo lại</>
+                    ) : (
+                      <><Utensils className="h-4 w-4" /> Tạo thực đơn</>
+                    )}
+                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="secondary" className="w-full gap-2 border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10">
+                        <Camera className="h-4 w-4" /> Quét ảnh bữa ăn
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader><DialogTitle>Quét ảnh bữa ăn</DialogTitle></DialogHeader>
+                      <div className="py-2"><SmartScan /></div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+
+                {!activePlan && !isGenerating && !hasSavedPlan && (
+                  <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-400" />
+                    <span>{isPastDate ? 'Không thể tạo thực đơn cho ngày trong quá khứ.' : 'Bấm "Tạo thực đơn" để AI sinh thực đơn theo đúng hồ sơ dinh dưỡng.'}</span>
+                  </div>
+                )}
+              </>
+            )}
+
+            {isFather && !partnerUserId && (
+              <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-400" />
+                <span>Chưa kết nối gia đình. Vào tab <strong>Quan hệ</strong> để ghép đôi với mẹ.</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Tips */}
+        <div className="p-4 rounded-xl bg-blue-50 border border-blue-100 flex gap-3">
+          <Info className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+          <div className="text-[11px] text-blue-700 leading-relaxed">
+            <p className="font-semibold mb-1">Mẹo sử dụng:</p>
+            <ul className="list-disc pl-3 space-y-1">
+              <li>Chọn ngày trên lịch tuần để tạo hoặc xem thực đơn.</li>
+              <li>Bấm 🔓 để <strong>khóa</strong> bữa ăn bạn ưng ý trước khi tạo lại.</li>
+              <li>Bấm <strong>&ldquo;Sử dụng thực đơn&rdquo;</strong> để lưu và gửi thông báo cho bố.</li>
+              <li>Reset sau 9h sáng sẽ có cảnh báo xác nhận.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Cột phải: kết quả thực đơn ── */}
+      <div className="space-y-4">
+        {activePlan ? (
+          <>
+            {plans.length > 1 && (
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-sm font-semibold text-primary flex items-center gap-2">
+                  <Utensils className="h-4 w-4" /> Thực đơn gợi ý
+                </h3>
+                <div className="flex gap-1">
+                  {plans.map((_, i) => (
+                    <button key={i} onClick={() => { setActivePlanIdx(i); setActivePlan(plans[i]); }}
+                      className={`h-1.5 w-4 rounded-full transition-colors ${i === activePlanIdx ? 'bg-primary' : 'bg-muted'}`} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {MEAL_INFO.map(m => {
+              const mealData = activePlan[m.key] || { dishes: [], stts: [] };
+              const isLocked = !!lockedMeals[m.key];
+              const ns = activePlan.nutrition_summary?.[m.key];
+              return (
+                <MealCard key={m.key} mealKey={m.key} label={m.label} icon={m.icon} time={m.time}
+                  dishes={mealData.dishes || []} stts={mealData.stts || []}
+                  nutritionSummary={ns} isLocked={isLocked} onToggleLock={toggleLock}
+                  defaultExpanded={m.key === 'lunch'} />
+              );
+            })}
+
+            <Card className="bg-gradient-to-r from-emerald-50/80 to-blue-50/80 border-emerald-100">
+              <CardContent className="p-4">
+                <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">📊 Tổng ngày</h4>
+                {totalNutrition ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    {[
+                      { label: 'Năng lượng', value: `${Math.round(totalNutrition.energy || 0)} kcal`, color: 'text-orange-600' },
+                      { label: 'Protein',    value: `${(totalNutrition.protein || 0).toFixed(1)}g`,    color: 'text-blue-600'   },
+                      { label: 'Fat',        value: `${(totalNutrition.fat || 0).toFixed(1)}g`,        color: 'text-amber-600'  },
+                      { label: 'Carbs',      value: `${(totalNutrition.carbohydrate || 0).toFixed(1)}g`, color: 'text-green-600'},
+                    ].map(n => (
+                      <div key={n.label} className="bg-white/80 rounded-lg p-2 text-center">
+                        <p className="text-muted-foreground">{n.label}</p>
+                        <p className={`font-bold ${n.color}`}>{n.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Chưa có thông tin dinh dưỡng</p>
+                )}
+                {totalCost != null && totalCost > 0 && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    💰 Chi phí ước tính: <span className="font-semibold text-foreground">{Number(totalCost).toLocaleString('vi-VN')}đ</span>
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {!isFather && (
+              <div className="flex gap-3">
+                {!hasSavedPlan && !isPastDate && (
+                  <Button onClick={handleSave} disabled={isSaving} className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700">
+                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    {isSaving ? 'Đang lưu...' : 'Sử dụng thực đơn này'}
+                  </Button>
+                )}
+                <Button onClick={handleReset} variant="secondary" className="gap-2" disabled={isGenerating || isPastDate}>
+                  <RotateCcw className="h-4 w-4" /> Tạo lại
                 </Button>
-              )}
-              <Button onClick={handleReset} variant="secondary" className="gap-2" disabled={isGenerating || isPastDate}>
-                <RotateCcw className="h-4 w-4" /> Tạo lại
-              </Button>
-            </div>
-          )}
+              </div>
+            )}
 
-          {/* Save message */}
-          {saveMessage && (
-            <div className={`p-3 rounded-lg text-sm ${saveMessage.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
-              {saveMessage.text}
-            </div>
-          )}
-        </div>
-      ) : !isGenerating && (
-        <div className="py-16 flex flex-col items-center justify-center text-center opacity-60">
-          <ChefHat className="h-12 w-12 text-muted-foreground mb-4" />
-          <h4 className="text-sm font-medium">
-            {isFather ? 'Mẹ chưa lưu thực đơn cho ngày này' : hasSavedPlan ? 'Đã có thực đơn cho ngày này' : 'Bấm "Tạo thực đơn" để bắt đầu'}
-          </h4>
-          <p className="text-xs text-muted-foreground max-w-[240px] mt-1">
-            {isFather ? 'Thực đơn sẽ hiển thị khi mẹ tạo và lưu.' : 'Gợi ý chi tiết cho 3 bữa ăn chính trong ngày.'}
-          </p>
-        </div>
-      )}
+            {saveMessage && (
+              <div className={`p-3 rounded-lg text-sm ${saveMessage.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
+                {saveMessage.text}
+              </div>
+            )}
+          </>
+        ) : isGenerating ? (
+          <div className="rounded-2xl border border-border/50 bg-card p-12 flex flex-col items-center justify-center text-center">
+            <RefreshCw className="h-10 w-10 text-primary animate-spin mb-4" />
+            <p className="text-sm font-medium text-foreground">AI đang tạo thực đơn...</p>
+            <p className="text-xs text-muted-foreground mt-1">Thường mất 10–20 giây</p>
+          </div>
+        ) : (
+          <div className="rounded-2xl border-2 border-dashed border-border/40 bg-secondary/20 flex flex-col items-center justify-center py-24 px-6 text-center">
+            <ChefHat className="h-12 w-12 text-muted-foreground/40 mb-4" />
+            <h4 className="text-sm font-medium text-muted-foreground">
+              {isFather ? 'Mẹ chưa lưu thực đơn cho ngày này' : 'Bấm "Tạo thực đơn" để bắt đầu'}
+            </h4>
+            <p className="text-xs text-muted-foreground/70 max-w-[240px] mt-1">
+              {isFather ? 'Thực đơn sẽ hiển thị khi mẹ tạo và lưu.' : 'Gợi ý chi tiết cho 3 bữa ăn chính trong ngày.'}
+            </p>
+          </div>
+        )}
+      </div>
 
-      {/* 9h Reset Warning Dialog */}
+      {/* Reset Warning Dialog */}
       <Dialog open={showResetWarning} onOpenChange={setShowResetWarning}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
@@ -572,8 +580,7 @@ export function NutritionRecommendations() {
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Đã quá <strong>9h sáng</strong>. Thay đổi thực đơn lúc này có thể ảnh hưởng đến việc chuẩn bị bữa ăn.
-            Bạn có chắc muốn tạo lại?
+            Đã quá <strong>9h sáng</strong>. Thay đổi thực đơn lúc này có thể ảnh hưởng đến việc chuẩn bị bữa ăn. Bạn có chắc muốn tạo lại?
           </p>
           <div className="flex gap-2 mt-2">
             <Button variant="secondary" className="flex-1" onClick={() => setShowResetWarning(false)}>Giữ nguyên</Button>
@@ -581,20 +588,6 @@ export function NutritionRecommendations() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Tips */}
-      <div className="p-4 rounded-xl bg-blue-50 border border-blue-100 flex gap-3">
-        <Info className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
-        <div className="text-[11px] text-blue-700 leading-relaxed">
-          <p className="font-semibold mb-1">Mẹo sử dụng:</p>
-          <ul className="list-disc pl-3 space-y-1">
-            <li>Chọn ngày trên lịch tuần để tạo hoặc xem thực đơn.</li>
-            <li>Bấm 🔓 để <strong>khóa</strong> bữa ăn bạn ưng ý trước khi tạo lại.</li>
-            <li>Bấm <strong>&ldquo;Sử dụng thực đơn&rdquo;</strong> để lưu và gửi thông báo cho bố.</li>
-            <li>Reset sau 9h sáng sẽ có cảnh báo xác nhận.</li>
-          </ul>
-        </div>
-      </div>
     </div>
   );
 }

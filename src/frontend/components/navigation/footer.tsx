@@ -64,10 +64,10 @@ export function Footer({ className }: { className?: string }) {
             <h4 className="font-semibold text-sm text-foreground">Hỗ trợ</h4>
             <ul className="space-y-2 text-sm">
               {[
-                { href: '#', label: 'Trung tâm trợ giúp' },
-                { href: '#', label: 'Liên hệ chúng tôi' },
-                { href: '#', label: 'Chính sách bảo mật' },
-                { href: '#', label: 'Điều khoản sử dụng' },
+                { href: '/support', label: 'Trung tâm trợ giúp' },
+                { href: '/contact', label: 'Liên hệ chúng tôi' },
+                { href: '/privacy', label: 'Chính sách bảo mật' },
+                { href: '/terms', label: 'Điều khoản sử dụng' },
               ].map((link) => (
                 <li key={link.label}>
                   <Link href={link.href}

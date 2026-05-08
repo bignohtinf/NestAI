@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { useApp } from '@/lib/context';
+import { PregnancyWeekCarouselCylindrical } from './pregnancy-week-carousel-cylindrical';
 
 export function BabyJourneyTracker() {
   const { user } = useApp();
@@ -146,9 +147,9 @@ function PostpartumJourney({ user }: { user: any }) {
 // ---------------------------------------------------------
 function PregnancyJourney({ user }: { user: any }) {
   const weeks = user.gestationWeeks || 1;
-  const daysInWeek = 4; // Simulated current day of the week
+  const daysInWeek = user.daysInWeek || 0;
   const progressPercentage = (weeks / 40) * 100;
-  const trimester = weeks <= 13 ? 1 : weeks <= 26 ? 2 : 3;
+  const trimester = user.trimester || (weeks <= 13 ? 1 : weeks <= 26 ? 2 : 3);
 
   // Helper function to get fetal development details based on week
   const getFetalDevelopment = (w: number) => {
@@ -208,6 +209,9 @@ function PregnancyJourney({ user }: { user: any }) {
           </div>
         </div>
       </Card>
+
+      {/* Week Carousel Cylindrical */}
+      <PregnancyWeekCarouselCylindrical currentWeek={weeks} />
 
       {/* Fetal Development Details */}
       <div className="grid md:grid-cols-2 gap-6">

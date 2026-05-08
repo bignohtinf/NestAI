@@ -1,14 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.core.supabase_client import get_supabase
-from app.services.multi_dish_processor import MultiDishProcessor
+from app.services.embedding_service import EmbeddingService
+from app.services.vector_search_service import VectorSearchService
 from pydantic import BaseModel
 from typing import Optional, List
-import difflib
 import httpx
 import json
+import logging
 import os
 import re
 import asyncio
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -52,27 +55,43 @@ class PhotoAnalysisResponse(BaseModel):
     suggestions: List[str]
     pregnancy_guidance: Optional[str] = None
 
-SYSTEM_PROMPT = """Bạn là chuyên gia nhận diện món ăn Việt Nam cho thai kỳ.
-Nhiệm vụ: nhận diện TẤT CẢ các món ăn trong ảnh ở mức CHI TIET, không gọi tên chung chung.
+SYSTEM_PROMPT = """Bạn là chuyên gia dinh dưỡng và nhận diện món ăn Việt Nam.
 
-YEU CAU NHAN DIEN:
-1) Ten mon phai day du theo bien the + cach che bien + nhan/chinh:
-   - Tot: "banh mi pate", "banh mi trung op la", "banh mi thit nuong", "pho bo tai", "bun bo hue"
-   - Khong tot: "banh mi", "pho", "bun"
-2) Uu tien thanh phan nhin thay ro trong anh (pate, trung, thit nuong, cha, ca, tom, bo, ga, ...).
-3) Chi duoc chon bien the khi co dau hieu thi giac hop ly.
-   - Neu khong du chac chan de ket luan bien the, tra ve ten mon + "khong ro bien the".
-4) Khong duoc tu suy dien qua muc tu nhung chi tiet khong co trong anh.
-5) estimated_grams phai la uoc luong khau phan thuc te trong anh.
-6) QUAN TRONG: Tra ve TAT CA cac mon an nhin thay trong anh, khong chi mon dau tien.
+Nhiệm vụ: Phân tích ảnh, nhận diện từng món với tên CỤ THỂ NHẤT có thể, và ước tính giá trị dinh dưỡng cho mỗi món.
 
-Tra ve dung JSON sau, KHONG giai thich them:
+NGUYÊN TẮC ĐẶT TÊN MÓN (bắt buộc):
+1. Tên phải gồm: loại thực phẩm chính + cách chế biến (+ biến thể nếu nhìn thấy rõ).
+   Đúng: "thịt lợn ba chỉ rang cháy cạnh", "bún gà xé hành lá", "lòng lợn xào dứa", "canh chua cá lóc"
+   Sai: "thịt đỏ rang", "bún nước", "lòng xào", "canh chua"
+
+2. Phân biệt loại thịt dựa vào màu sắc và kết cấu:
+   - Thịt hồng nhạt, mỡ trắng xen kẽ → thịt lợn (ba chỉ / nạc / sườn tùy hình dạng)
+   - Thịt đỏ đậm, thớ thô → thịt bò
+   - Da vàng sậm, thịt tối → vịt
+   - Da trắng ngà, thịt nhạt → gà
+   - Nếu thực sự không phân biệt được, chọn loại phổ biến nhất trong bữa ăn Việt và đặt confidence thấp (≤ 0.6).
+
+3. Liệt kê TẤT CẢ món trong ảnh: đồ ăn chính, nước chấm, rau ăn kèm, đồ uống.
+   Không bỏ sót bất kỳ đĩa/bát/ly nào nhìn thấy rõ.
+
+4. estimated_grams: ước lượng phần ĂN ĐƯỢC trong ảnh (không tính xương, vỏ).
+
+ƯỚC TÍNH DINH DƯỠNG (per 100g, theo cách chế biến Việt Nam điển hình):
+- calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g
+- Dựa trên nguyên liệu nhìn thấy và phương pháp chế biến.
+- Nước chấm / rau: ước lượng theo thành phần điển hình.
+
+Trả về JSON, KHÔNG giải thích thêm:
 {
   "dishes": [
     {
-      "name": "tên món chuẩn tiếng Việt",
+      "name": "tên món cụ thể",
       "estimated_grams": 250,
-      "confidence": 0.85
+      "confidence": 0.85,
+      "calories_per_100g": 180,
+      "protein_per_100g": 18.5,
+      "carbs_per_100g": 2.0,
+      "fat_per_100g": 11.0
     }
   ],
   "meal_context": "bữa sáng/trưa/tối/phụ"
@@ -116,9 +135,12 @@ async def _call_openai_vision(image_data: str) -> dict:
                         "model": model_name,
                         "messages": [
                             {
+                                "role": "system",
+                                "content": SYSTEM_PROMPT
+                            },
+                            {
                                 "role": "user",
                                 "content": [
-                                    {"type": "text", "text": SYSTEM_PROMPT},
                                     {"type": "image_url", "image_url": {"url": image_data}}
                                 ]
                             }
@@ -202,15 +224,76 @@ def _parse_json_from_response(text: str) -> dict:
         return json.loads(match.group(0))
 
 
-def _normalize_text(value: Optional[str]) -> str:
-    if not value:
-        return ""
-    return value.strip().lower()
+_DB_MATCH_THRESHOLD = 0.85  # Only accept DB canonical name if similarity >= this value
+
+
+def _pregnancy_benefit_from_nutrition(protein: float, fat: float, calcium: Optional[float], iron: Optional[float]) -> str:
+    """Generate a short pregnancy benefit string from calculated nutrition values."""
+    benefits = []
+    if protein > 15:
+        benefits.append("giàu protein cho sự phát triển của thai nhi")
+    if iron is not None and iron > 2.0:
+        benefits.append("giàu sắt giúp phòng chống thiếu máu")
+    if calcium is not None and calcium > 100:
+        benefits.append("giàu canxi hỗ trợ phát triển xương của thai nhi")
+    if benefits:
+        return "Món ăn này " + ", ".join(benefits) + "."
+    return "Món ăn này cung cấp năng lượng và chất dinh dưỡng cần thiết cho mẹ bầu."
+
+
+def _pregnancy_guidance_from_totals(total_protein: float, total_calories: float) -> str:
+    """Generate overall meal guidance for pregnant women."""
+    points = []
+    if total_protein > 20:
+        points.append("Bữa ăn cung cấp dồi dào protein cho sự phát triển của thai nhi")
+    elif total_protein > 10:
+        points.append("Bữa ăn cung cấp lượng protein vừa phải")
+    else:
+        points.append("Mẹ nên bổ sung thêm thực phẩm giàu protein (thịt, cá, trứng) cho bữa ăn tiếp theo")
+    if total_calories > 600:
+        points.append("bữa ăn đủ năng lượng")
+    return ", ".join(points) + "."
+
+
+def _try_db_enrich(supabase, dish_name: str) -> tuple[Optional[dict], float]:
+    """
+    Try to find a canonical DB entry for the dish name via vector similarity.
+    Returns (matched_food, score). Only meaningful if score >= _DB_MATCH_THRESHOLD.
+    Silently returns (None, 0.0) on any error so the main flow is never interrupted.
+    """
+    try:
+        embedding_svc = EmbeddingService()
+        embedding = embedding_svc.embed_text(dish_name)
+        if not embedding:
+            return None, 0.0
+
+        vs = VectorSearchService(supabase)
+        if not vs._verify_pgvector_available():
+            return None, 0.0
+
+        results = vs.search_similar_dishes(embedding, top_k=1)
+        if not results:
+            return None, 0.0
+
+        top = results[0]
+        score = float(top.get("match_score", 0.0))
+        if score >= _DB_MATCH_THRESHOLD:
+            return top, score
+        return None, score
+    except Exception as exc:
+        logger.debug(f"DB enrich skipped for '{dish_name}': {exc}")
+        return None, 0.0
 
 
 @router.post("/analyze-photo", response_model=PhotoAnalysisResponse)
 async def analyze_photo(payload: PhotoAnalysisRequest, supabase = Depends(get_supabase)):
-    """Analyze a meal photo with OpenAI vision and match all dishes against nutrition database."""
+    """
+    Analyze a meal photo:
+    1. OpenAI Vision identifies all dishes with specific names + nutrition estimates per 100g.
+    2. Backend calculates actual nutrition from estimated_grams.
+    3. Optional DB enrichment: if vector similarity >= 85%, attach canonical DB entry for the dish
+       (used for food recommendations — does NOT override AI nutrition values).
+    """
     if not payload.image:
         raise HTTPException(status_code=400, detail="Image is required")
 
@@ -224,54 +307,76 @@ async def analyze_photo(payload: PhotoAnalysisRequest, supabase = Depends(get_su
         raise HTTPException(status_code=502, detail=f"Vision model error: {str(exc)}")
 
     dishes = parsed.get("dishes")
-    if not dishes or not isinstance(dishes, list):
-        raise HTTPException(status_code=400, detail="No dishes detected in image")
-    
-    if len(dishes) == 0:
+    if not dishes or not isinstance(dishes, list) or len(dishes) == 0:
         raise HTTPException(status_code=400, detail="No dishes detected in image")
 
     meal_context = parsed.get("meal_context")
 
-    matched_food, match_score, suggestions = _get_best_food_match(supabase, dish_name)
-    calories = 0.0
-    protein = 0.0
-    carbs = 0.0
-    fat = 0.0
-    iron = None
-    calcium = None
+    dish_analyses: List[DishAnalysis] = []
+    total_calories = 0.0
+    total_protein = 0.0
+    total_carbs = 0.0
+    total_fat = 0.0
 
-    if matched_food and match_score >= 0.35:
-        energy = float(matched_food.get("energy") or 0)
-        protein = float(matched_food.get("protein") or 0)
-        carbs = float(matched_food.get("carbohydrate") or 0)
-        fat = float(matched_food.get("fat") or 0)
-        iron = matched_food.get("iron")
-        calcium = matched_food.get("calcium")
-        
-        if energy <= 0:
-            energy = (protein * 4) + (carbs * 4) + (fat * 9)
-            
-        calories = round((energy * estimated_grams) / 100.0, 1)
-        protein = round((protein * estimated_grams) / 100.0, 1)
-        carbs = round((carbs * estimated_grams) / 100.0, 1)
-        fat = round((fat * estimated_grams) / 100.0, 1)
+    for dish in dishes:
+        name = (dish.get("name") or "Không rõ").strip()
+        estimated_grams = max(0.0, float(dish.get("estimated_grams") or 0.0))
+        confidence = max(0.0, min(1.0, float(dish.get("confidence") or 0.0)))
 
-    return {
-        "dish_name": dish_name,
-        "estimated_grams": round(estimated_grams, 1),
-        "confidence": round(confidence, 3),
-        "meal_context": meal_context,
-        "matched_food": matched_food,
-        "match_score": round(match_score, 3),
-        "suggestions": suggestions,
-        "calories": calories,
-        "protein": protein,
-        "carbs": carbs,
-        "fat": fat,
-        "iron": iron,
-        "calcium": calcium,
-        "pregnancy_benefit": _build_pregnancy_benefit(matched_food),
-    }
+        # --- Nutrition from AI (per 100g) ---
+        cal_100 = max(0.0, float(dish.get("calories_per_100g") or 0.0))
+        protein_100 = max(0.0, float(dish.get("protein_per_100g") or 0.0))
+        carbs_100 = max(0.0, float(dish.get("carbs_per_100g") or 0.0))
+        fat_100 = max(0.0, float(dish.get("fat_per_100g") or 0.0))
+
+        portion = (estimated_grams / 100.0) if estimated_grams > 0 else 1.0
+        calories = round(cal_100 * portion, 1)
+        protein = round(protein_100 * portion, 1)
+        carbs = round(carbs_100 * portion, 1)
+        fat = round(fat_100 * portion, 1)
+
+        # --- Optional DB enrichment (async offload to thread to avoid blocking event loop) ---
+        loop = asyncio.get_event_loop()
+        matched_food, match_score = await loop.run_in_executor(
+            None, _try_db_enrich, supabase, name
+        )
+
+        # --- Pregnancy benefit (based on AI-calculated nutrition, not DB) ---
+        pregnancy_benefit = _pregnancy_benefit_from_nutrition(protein, fat, None, None)
+
+        dish_analyses.append(DishAnalysis(
+            name=name,
+            confidence=confidence,
+            estimated_grams=estimated_grams,
+            matched_food=matched_food,
+            match_score=round(match_score, 4),
+            calories=calories,
+            protein=protein,
+            carbs=carbs,
+            fat=fat,
+            iron=None,
+            calcium=None,
+            pregnancy_benefit=pregnancy_benefit,
+            portion_multiplier=round(portion, 2),
+        ))
+
+        total_calories += calories
+        total_protein += protein
+        total_carbs += carbs
+        total_fat += fat
+
+    pregnancy_guidance = _pregnancy_guidance_from_totals(total_protein, total_calories)
+
+    return PhotoAnalysisResponse(
+        dishes=dish_analyses,
+        meal_context=meal_context,
+        total_calories=round(total_calories, 1),
+        total_protein=round(total_protein, 1),
+        total_carbs=round(total_carbs, 1),
+        total_fat=round(total_fat, 1),
+        suggestions=[],
+        pregnancy_guidance=pregnancy_guidance,
+    )
 
 @router.get("/logs")
 async def get_nutrition_logs(user_id: str, limit: int = 30, supabase = Depends(get_supabase)):

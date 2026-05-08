@@ -67,6 +67,14 @@ function ProfilePageContent() {
     notes: '',
   });
 
+  const [medicalProfile, setMedicalProfile] = useState({
+    pregnancyStatus: 'not_pregnant',
+    lastMenstrualPeriod: '',
+    dueDate: '',
+    currentWeightKg: '',
+  });
+  const [loadingMedical, setLoadingMedical] = useState(false);
+
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/auth/login');
@@ -106,13 +114,6 @@ function ProfilePageContent() {
       .finally(() => setLoadingPartnership(false));
   }, [user?.id]);
 
-  // Fetch babies on mount
-  useEffect(() => {
-    if (user?.id) {
-      fetchBabies();
-    }
-  }, [user?.id]);
-
   const fetchBabies = async () => {
     try {
       setLoadingBabies(true);
@@ -127,6 +128,36 @@ function ProfilePageContent() {
       setLoadingBabies(false);
     }
   };
+
+  const fetchMedicalProfile = async () => {
+    if (!user?.id) return;
+    try {
+      setLoadingMedical(true);
+      const res = await fetch(`/api/medical-profile/me?user_id=${user.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.profile) {
+          setMedicalProfile({
+            pregnancyStatus: data.profile.pregnancy_status || 'not_pregnant',
+            lastMenstrualPeriod: data.profile.last_menstrual_period || '',
+            dueDate: data.profile.due_date || '',
+            currentWeightKg: data.profile.current_weight_kg || '',
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch medical profile:', err);
+    } finally {
+      setLoadingMedical(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchBabies();
+      fetchMedicalProfile();
+    }
+  }, [user?.id]);
 
   if (isLoading || !user) {
     return (
@@ -317,6 +348,39 @@ function ProfilePageContent() {
         type: 'error',
         text: err instanceof Error ? err.message : 'Đã xảy ra lỗi',
       });
+    }
+  };
+
+  const handleUpdateMedicalProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/medical-profile/me?user_id=${user?.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pregnancy_status: medicalProfile.pregnancyStatus,
+          last_menstrual_period: medicalProfile.lastMenstrualPeriod || null,
+          due_date: medicalProfile.dueDate || null,
+          current_weight_kg: medicalProfile.currentWeightKg ? parseFloat(medicalProfile.currentWeightKg) : null,
+        }),
+      });
+
+      if (res.ok) {
+        setMessage({ type: 'success', text: 'Cập nhật hồ sơ thai kỳ thành công' });
+        setTimeout(() => setMessage(null), 3000);
+        fetchUserData(); // Refresh global context
+        fetchMedicalProfile(); // Refresh local state
+      } else {
+        throw new Error('Không thể cập nhật hồ sơ thai kỳ');
+      }
+    } catch (err) {
+      setMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Đã xảy ra lỗi',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -558,8 +622,79 @@ function ProfilePageContent() {
           </TabsContent>
 
           {/* Babies Tab */}
-          <TabsContent value="babies" className="space-y-4">
-            {/* Babies List */}
+          <TabsContent value="babies" className="space-y-6">
+            {/* Pregnancy Profile Section (Only for mothers) */}
+            {user.role === 'mother' && (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-primary">
+                    <Sparkles className="h-5 w-5" />
+                    Hồ sơ thai kỳ (Dành cho mẹ)
+                  </CardTitle>
+                  <CardDescription>Cài đặt để hệ thống tự động tính toán tuần thai và ngày dự sinh</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleUpdateMedicalProfile} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Tình trạng</Label>
+                        <select
+                          value={medicalProfile.pregnancyStatus}
+                          onChange={(e) => setMedicalProfile(prev => ({ ...prev, pregnancyStatus: e.target.value }))}
+                          className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm"
+                        >
+                          <option value="not_pregnant">Chưa mang thai</option>
+                          <option value="pregnant">Đang mang thai</option>
+                          <option value="postpartum">Sau sinh</option>
+                        </select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Cân nặng hiện tại (kg)</Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          value={medicalProfile.currentWeightKg}
+                          onChange={(e) => setMedicalProfile(prev => ({ ...prev, currentWeightKg: e.target.value }))}
+                          placeholder="60.5"
+                        />
+                      </div>
+                    </div>
+
+                    {medicalProfile.pregnancyStatus === 'pregnant' && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-lg bg-white/50 dark:bg-slate-900/50 border border-primary/10">
+                        <div className="space-y-2">
+                          <Label>Ngày kinh cuối (LMP)</Label>
+                          <Input
+                            type="date"
+                            value={medicalProfile.lastMenstrualPeriod}
+                            onChange={(e) => setMedicalProfile(prev => ({ ...prev, lastMenstrualPeriod: e.target.value }))}
+                          />
+                          <p className="text-[10px] text-muted-foreground">Hệ thống sẽ tự tính tuần thai dựa trên ngày này</p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Hoặc Ngày dự sinh (EDD)</Label>
+                          <Input
+                            type="date"
+                            value={medicalProfile.dueDate}
+                            onChange={(e) => setMedicalProfile(prev => ({ ...prev, dueDate: e.target.value }))}
+                          />
+                          <p className="text-[10px] text-muted-foreground">Nhập nếu bạn đã có ngày dự sinh từ bác sĩ</p>
+                        </div>
+                      </div>
+                    )}
+
+                    <Button type="submit" disabled={loading} className="w-full">
+                      {loading ? 'Đang lưu...' : 'Lưu hồ sơ thai kỳ'}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            )}
+
+            <div className="pt-2 border-t">
+              <h3 className="font-bold text-lg mb-4">Danh sách các bé</h3>
             {loadingBabies ? (
               <div className="text-center py-8">
                 <p className="text-muted-foreground">Đang tải danh sách bé...</p>

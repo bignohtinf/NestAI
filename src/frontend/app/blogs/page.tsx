@@ -4,63 +4,73 @@ import { HomeLayout } from '@/components/layouts/home-layout';
 import { Search, Filter, BookOpen, Clock, ChevronRight, User, Tag, Calendar } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
-
-// Mock data based on cms_items schema
-const mockPosts = [
-  {
-    id: '1',
-    title: 'Dinh dưỡng vàng cho mẹ bầu 3 tháng đầu',
-    excerpt: 'Giai đoạn 3 tháng đầu đời là vô cùng quan trọng cho sự phát triển của thai nhi. Cùng tìm hiểu những nhóm chất thiết yếu mẹ cần bổ sung ngay.',
-    content: '...',
-    thumbnail_url: '/blog/nutrition.png',
-    published_at: '2026-05-01',
-    view_count: 1250,
-    tags: ['Dinh dưỡng', 'Thai kỳ'],
-    author: 'BS. Nguyễn Thị Hoa',
-    category: 'Sức khỏe'
-  },
-  {
-    id: '2',
-    title: 'Bí quyết gắn kết tình cảm mẹ và bé',
-    excerpt: 'Sợi dây liên kết vô hình giữa mẹ và bé bắt đầu ngay từ những ngày đầu tiên. Hãy khám phá cách để nuôi dưỡng tình yêu này mỗi ngày.',
-    content: '...',
-    thumbnail_url: '/blog/baby-care.png',
-    published_at: '2026-05-03',
-    view_count: 980,
-    tags: ['Chăm sóc bé', 'Gắn kết'],
-    author: 'Tâm lý gia Lê Mai',
-    category: 'Nuôi dạy con'
-  },
-  {
-    id: '3',
-    title: 'Thực đơn lợi sữa cho mẹ sau sinh',
-    excerpt: 'Làm sao để có nguồn sữa dồi dào và đầy đủ dưỡng chất cho bé? Tham khảo ngay thực đơn 7 ngày dành riêng cho mẹ bỉm sữa.',
-    content: '...',
-    thumbnail_url: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=2053&auto=format&fit=crop',
-    published_at: '2026-04-28',
-    view_count: 2100,
-    tags: ['Sau sinh', 'Lợi sữa'],
-    author: 'Dinh dưỡng viên Trần Nam',
-    category: 'Sức khỏe'
-  }
-];
-
-const categories = ['Tất cả', 'Sức khỏe', 'Nuôi dạy con', 'Dinh dưỡng', 'Kinh nghiệm'];
+import { blogApi } from '@/lib/api';
+import { Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function BlogPage() {
+  const [posts, setPosts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tất cả');
 
-  const filteredPosts = mockPosts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'Tất cả' || post.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  // Fetch initial data
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [categoriesRes, postsRes] = await Promise.all([
+          blogApi.getCategories(),
+          blogApi.getPosts({ limit: 12 })
+        ]);
+        setCategories([{ name: 'Tất cả', slug: 'all' }, ...categoriesRes]);
+        setPosts(postsRes.posts || []);
+      } catch (error) {
+        console.error('Failed to fetch blog data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Filter posts when category or search changes
+  useEffect(() => {
+    const filterData = async () => {
+      // In a real app, you might want to debounce search
+      try {
+        const categorySlug = selectedCategory === 'Tất cả' ? undefined : categories.find(c => c.name === selectedCategory)?.slug;
+        const postsRes = await blogApi.getPosts({ 
+          category: categorySlug,
+          search: searchQuery || undefined
+        });
+        setPosts(postsRes.posts || []);
+      } catch (error) {
+        console.error('Failed to filter posts:', error);
+      }
+    };
+    
+    // Only fetch if initial data is loaded
+    if (!loading) {
+      filterData();
+    }
+  }, [selectedCategory, searchQuery, loading, categories]);
+
+  if (loading) {
+    return (
+      <HomeLayout fullWidth>
+        <div className="flex h-[60vh] items-center justify-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+      </HomeLayout>
+    );
+  }
+
+  const filteredPosts = posts; // Already filtered by API
 
   return (
-    <HomeLayout>
+    <HomeLayout fullWidth>
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -89,15 +99,15 @@ export default function BlogPage() {
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide no-scrollbar">
             {categories.map((category) => (
               <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
+                key={category.slug}
+                onClick={() => setSelectedCategory(category.name)}
                 className={`px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap border ${
-                  selectedCategory === category
+                  selectedCategory === category.name
                     ? 'bg-primary text-primary-foreground border-primary shadow-md scale-105'
                     : 'bg-card text-muted-foreground border-border hover:bg-muted'
                 }`}
               >
-                {category}
+                {category.name}
               </button>
             ))}
           </div>
@@ -125,11 +135,11 @@ export default function BlogPage() {
                 <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
                   <span className="flex items-center gap-1.5">
                     <Calendar className="h-3.5 w-3.5" />
-                    {filteredPosts[0].published_at}
+                    {filteredPosts[0].published_at ? new Date(filteredPosts[0].published_at).toLocaleDateString('vi-VN') : ''}
                   </span>
                   <span className="flex items-center gap-1.5">
                     <BookOpen className="h-3.5 w-3.5" />
-                    5 phút đọc
+                    {Math.ceil((filteredPosts[0].content?.length || 0) / 1000) + 1} phút đọc
                   </span>
                 </div>
                 <h2 className="text-2xl md:text-3xl font-bold text-foreground group-hover:text-primary transition-colors leading-tight">
@@ -141,12 +151,12 @@ export default function BlogPage() {
                 <div className="flex items-center justify-between pt-4">
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                      {filteredPosts[0].author.split(' ').pop()?.charAt(0)}
+                      {filteredPosts[0].author_name?.split(' ').pop()?.charAt(0) || 'U'}
                     </div>
-                    <span className="text-sm font-medium">{filteredPosts[0].author}</span>
+                    <span className="text-sm font-medium">{filteredPosts[0].author_name || 'NestAI User'}</span>
                   </div>
                   <Link
-                    href={`/blog/${filteredPosts[0].id}`}
+                    href={`/blogs/${filteredPosts[0].slug || filteredPosts[0].id}`}
                     className="inline-flex items-center gap-1 text-primary font-semibold hover:underline"
                   >
                     Đọc tiếp <ChevronRight className="h-4 w-4" />
@@ -162,7 +172,7 @@ export default function BlogPage() {
           {filteredPosts.slice(searchQuery === '' && selectedCategory === 'Tất cả' ? 1 : 0).map((post) => (
             <Link
               key={post.id}
-              href={`/blog/${post.id}`}
+              href={`/blogs/${post.id}`}
               className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:shadow-xl hover:-translate-y-1"
             >
               <div className="relative aspect-[16/10] overflow-hidden">
@@ -184,21 +194,21 @@ export default function BlogPage() {
                 <div className="flex items-center gap-3 text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
                   <span className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {post.published_at}
+                    {post.published_at ? new Date(post.published_at).toLocaleDateString('vi-VN') : ''}
                   </span>
                   <span>•</span>
-                  <span>{post.category}</span>
+                  <span>{post.categories?.[0]?.name || 'Tin tức'}</span>
                 </div>
                 <h3 className="text-lg font-bold text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-2">
                   {post.title}
                 </h3>
                 <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                  {post.excerpt}
+                  {post.content?.replace(/<[^>]*>/g, '').substring(0, 120)}...
                 </p>
                 <div className="mt-auto pt-4 flex items-center justify-between border-t border-border/50">
                   <div className="flex items-center gap-2">
                     <User className="h-3 w-3 text-primary" />
-                    <span className="text-xs font-medium text-muted-foreground">{post.author}</span>
+                    <span className="text-xs font-medium text-muted-foreground">{post.author_name || 'NestAI User'}</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-primary opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                 </div>

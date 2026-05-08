@@ -9,21 +9,22 @@ import { OnboardingGuard } from '@/components/layouts/onboarding-guard';
 
 interface MainLayoutProps {
   children: ReactNode;
+  fullWidth?: boolean;
 }
 
-export function MainLayout({ children }: MainLayoutProps) {
+export function MainLayout({ children, fullWidth = false }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <OnboardingGuard>
       <div className="flex h-screen overflow-hidden bg-background">
         <Sidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
-        
+
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
           <Header onMenuClick={() => setSidebarOpen(true)} />
-          
+
           <main className="flex-1 overflow-y-auto w-full flex flex-col">
-            <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8 pb-24 md:pb-8 flex-1">
+            <div className={`${fullWidth ? 'w-full' : 'mx-auto max-w-6xl'} px-4 py-6 md:px-8 md:py-8 pb-24 md:pb-8 flex-1`}>
               {children}
             </div>
             <Footer className="hidden md:block mt-auto" />

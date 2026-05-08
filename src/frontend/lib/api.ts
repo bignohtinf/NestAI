@@ -118,6 +118,45 @@ export const nutritionApi = {
     );
   },
 
+  async createMealPlanNotification(
+    motherId: string,
+    planDate: string,
+    planData: any,
+    target: 'mother' | 'baby'
+  ) {
+    return apiCall<{ success: boolean; notification_id?: string; skipped?: boolean }>(
+      '/api/notifications/meal-plan',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mother_id: motherId, plan_date: planDate, plan_data: planData, target }),
+      }
+    );
+  },
+
+  async createScanFoodNotification(
+    motherId: string,
+    mealData: {
+      meal_name: string;
+      total_calories: number;
+      total_protein: number;
+      total_carbs: number;
+      total_fat: number;
+      dishes: any[];
+      pregnancy_guidance?: string | null;
+      meal_context?: string | null;
+    }
+  ) {
+    return apiCall<{ success: boolean; notification_id?: string; skipped?: boolean }>(
+      '/api/notifications/scan-food',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mother_id: motherId, meal_data: mealData }),
+      }
+    );
+  },
+
   // ─── Users & Babies ───────────────────────────────────────────────────
 
   async getMe(userId: string) {
@@ -334,5 +373,53 @@ export const adminApi = {
     if (options.limit) params.append('limit', String(options.limit));
     if (options.offset) params.append('offset', String(options.offset));
     return apiCall<any>(`/api/admin/ai-logs/recommendations?${params}`);
+  },
+};
+
+export const blogApi = {
+  async getCategories() {
+    return apiCall<any[]>('/api/blog/categories');
+  },
+
+  async getPosts(options: { 
+    limit?: number; 
+    offset?: number; 
+    category?: string; 
+    tag?: string; 
+    search?: string 
+  } = {}) {
+    const params = new URLSearchParams();
+    if (options.limit) params.append('limit', String(options.limit));
+    if (options.offset) params.append('offset', String(options.offset));
+    if (options.category) params.append('category', options.category);
+    if (options.tag) params.append('tag', options.tag);
+    if (options.search) params.append('search', options.search);
+    
+    return apiCall<any>(`/api/blog/posts?${params}`);
+  },
+
+  async getPostDetail(slugOrId: string) {
+    return apiCall<any>(`/api/blog/posts/${slugOrId}`);
+  },
+
+  async getComments(postId: string, options: { limit?: number; offset?: number } = {}) {
+    const params = new URLSearchParams();
+    if (options.limit) params.append('limit', String(options.limit));
+    if (options.offset) params.append('offset', String(options.offset));
+    return apiCall<any>(`/api/blog/posts/${postId}/comments?${params}`);
+  },
+
+  async addComment(data: { post_id: string; content: string; parent_id?: string }) {
+    return apiCall<any>('/api/blog/comments', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async toggleReaction(data: { post_id: string; reaction_type: string }) {
+    return apiCall<any>('/api/blog/reactions', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
 };

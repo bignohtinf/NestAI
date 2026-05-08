@@ -23,7 +23,7 @@ export default function BabyJourneyPage() {
   }
 
   return (
-    <MainLayout>
+    <MainLayout fullWidth>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Hành Trình Của Bé</h1>
