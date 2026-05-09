@@ -914,6 +914,7 @@ function ProfilePageContent() {
                 </CardContent>
               </Card>
             )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
