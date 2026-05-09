@@ -10,11 +10,10 @@
 ## 1. Attention (Thu hút sự chú ý)
 **Mục tiêu**: Bắt ngay vào "nỗi đau" (pain points) lớn nhất của người dùng để khiến khán giả phải tập trung lắng nghe.
 
-- **Mở đầu bằng câu hỏi thực tế**:
-  > *"Đã bao giờ các bạn chứng kiến một người mẹ mang thai loay hoay trước bàn ăn, tự hỏi: 'Món này ăn vào có bị tiểu đường thai kỳ không?', 'Ăn thế nào để dinh dưỡng vào con chứ không vào mẹ?', hay 'Làm sao để có đủ sữa cho con bú mà mẹ vẫn nhanh lấy lại vóc dáng?'"*
+- **Mở đầu bằng các quan niệm dân gian sai lầm**:
+  > *"Các quan niệm dân gian chưa chuẩn xác vẫn còn rất phổ biến, ví dụ điển hình như: *"Bà bầu ăn trứng ngỗng thì con sẽ thông minh",* *"Mẹ sau sinh phải ăn thật nhiều móng giò để có nhiều sữa."* - thực tế điều này chủ yếu làm mẹ tăng cân, thừa mỡ và thậm chí dễ gây tắc tia sữa."*
 - **Đưa ra số liệu / Sự thật**:
   - Tỷ lệ phụ nữ mắc đái tháo đường thai kỳ tại Việt Nam hiện đang ở mức khoảng 20% (nghĩa là cứ 5 mẹ bầu thì có 1 người mắc). Số liệu này đã tăng gấp nhiều lần so với khoảng 20 năm trước (chỉ khoảng 3-4%).
-  - Các quan niệm dân gian chưa chuẩn xác vẫn còn rất phổ biến, ví dụ điển hình như: *"Bà bầu ăn trứng ngỗng thì con sẽ thông minh",* *"Mẹ sau sinh phải ăn thật nhiều móng giò để có nhiều sữa."* - thực tế điều này chủ yếu làm mẹ tăng cân, thừa mỡ và thậm chí dễ gây tắc tia sữa.
 
 
 ## 2. Interest (Tạo sự thích thú)
