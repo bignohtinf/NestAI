@@ -12,9 +12,9 @@
 > **Chị Linh, 28 tuổi** — nhân viên văn phòng, mang thai con đầu lòng tuần 24. Tuần trước bác sĩ chẩn đoán cô bị **đái tháo đường thai kỳ**. Mẹ chồng vẫn nhắc *"ăn nhiều trứng ngỗng cho con thông minh"*. Chồng cô — anh Nam — muốn giúp nhưng không biết bắt đầu từ đâu.
 >
 > Linh có **4 mong muốn** rất con người:
-> 1. *"Tôi muốn biết hôm nay tôi nên ăn gì — riêng cho tình trạng của tôi."*
-> 2. *"Khi cầm bát phở lên, tôi muốn biết ngay nó có hại cho con tôi không."*
-> 3. *"Tôi muốn chồng cùng đồng hành, không phải một mình."*
+> 1. *"Tôi muốn một thực đơn phong phú, thay đổi liên tục — riêng cho tình trạng của tôi."*
+> 2. *"Khi cầm đĩa mít lên, tôi muốn biết ngay nó có hại cho con tôi không."*
+> 3. *"Tôi muốn gia đình cùng đồng hành, không phải một mình trải qua thai kỳ."*
 > 4. *"3 giờ sáng con quấy, tôi muốn có người trả lời câu hỏi của tôi ngay."*
 
 ---
@@ -25,9 +25,9 @@
 |---|---|---|---|
 | 00:00–00:30 | Mở màn | — | — |
 | 00:30–02:30 | **Attention** — Linh là ai? | Bối cảnh, nỗi đau | — |
-| 02:30–05:00 | **Interest 1** — *"Tôi nên ăn gì?"* | Mong muốn #1 | F1: Onboarding & Health Profile |
-| 05:00–09:00 | **Interest 2** — *"Bát phở này có hại không?"* | Mong muốn #2 | F2: Smart Scan |
-| 09:00–12:30 | **Desire 1** — *"Tôi không muốn cô đơn"* | Mong muốn #3 | F3: Nutrition Planner + gửi Bố |
+| 02:30–05:00 | **Interest 1** — *"Hôm nay ăn gì để đạt mục tiêu dinh dưỡng?"* | Mong muốn #1 | F1: Nutrition Planner & Health Profile |
+| 05:00–09:00 | **Interest 2** — *"Đĩa mít này có hại không?"* | Mong muốn #2 | F2: Smart Scan |
+| 09:00–12:30 | **Desire 1** — *"Tôi muốn cả gia đình cùng đồng hành"* | Mong muốn #3 | F3: Chia sẻ thực đơn cho gia đình |
 | 12:30–16:00 | **Desire 2** — *"3 giờ sáng tôi cần ai đó"* | Mong muốn #4 | F4: Hành trình bé + Nori |
 | 16:00–19:00 | **Action** — Linh không cô đơn | Business + CTA | — |
 | 19:00–20:00 | Q&A buffer | — | — |
@@ -64,44 +64,42 @@
 
 ## 🟡 I — Interest (02:30 → 09:00)
 
-### 02:30 — 05:00 | Mong muốn #1: *"Tôi muốn biết tôi nên ăn gì"* — Demo F1 Onboarding (2 phút 30 giây)
+### 02:30 — 05:00 | Mong muốn #1: *"Tôi muốn một thực đơn phong phú, thay đổi liên tục"* — Demo F1 Nutrition Planner & Health Profile (2 phút 30 giây)
 
 #### 02:30 — 03:00 | Setup câu chuyện (30s)
-> *"Tối hôm đó Linh tải NestAI. Cô không có thời gian đọc 50 trang hướng dẫn. Cô chỉ muốn biết: hôm nay tôi nên ăn gì?"*
+> *"Tối hôm đó Linh tải NestAI. Cô không có thời gian đọc 50 trang hướng dẫn. Cô chỉ muốn biết: 'Tuần này, mỗi ngày tôi nên ăn gì để đạt mục tiêu dinh dưỡng — và xin đừng bắt tôi ăn ức gà luộc cả tuần.'"*
 
 #### 03:00 — 04:30 | 🎬 Thao tác app (1 phút 30 giây)
-- **00:30s** — Mở app, bấm "Bắt đầu hành trình".
-- **00:30s** — Linh nhập: tuần thai **24**, BMI, **chọn "Có tiểu đường thai kỳ"**.
-- **00:30s** — App tự render dashboard cá nhân hoá:
-  - Mục tiêu calo riêng cho mẹ tiểu đường thai kỳ.
-  - Tỷ lệ carbs giảm, protein tăng so với mẹ bình thường.
-  - Cảnh báo các nhóm thực phẩm cần tránh.
+- **00:20s** — Mở app, bấm "Bắt đầu hành trình" → nhập nhanh: tuần thai **24**, BMI, **chọn "Có tiểu đường thai kỳ"**.
+- **00:20s** — App tự render dashboard cá nhân hoá: mục tiêu calo riêng, tỷ lệ carbs giảm, protein tăng — khác hẳn mẹ bầu thông thường.
+- **00:25s** — Linh bấm **"Tạo thực đơn tuần"** → AI sinh menu 7 ngày, mỗi ngày 3 bữa + 2 bữa phụ, **không lặp món**.
+- **00:25s** — Bấm **"Đổi món khác"** trên 1 bữa bất kỳ → AI gợi ý ngay 3 phương án thay thế cùng giá trị dinh dưỡng.
 
 #### 04:30 — 05:00 | Chốt giá trị (30s)
-> *"30 giây. Linh đã có một bản kế hoạch dinh dưỡng dành riêng cho cô — không phải dành cho 'mẹ bầu chung chung'. Toàn bộ dựa trên **Hướng dẫn quốc gia về Sàng lọc & Quản lý Đái tháo đường thai kỳ**."*
+> *"Linh không bị nhốt trong một thực đơn cứng. Mỗi tuần, mỗi bữa đều có thể đổi — nhưng vẫn nằm trong vùng an toàn của **Hướng dẫn quốc gia về Sàng lọc & Quản lý Đái tháo đường thai kỳ**. Phong phú, nhưng không tuỳ tiện."*
 >
 > ✅ **Mong muốn #1: hoàn thành.**
 
 ---
 
-### 05:00 — 09:00 | Mong muốn #2: *"Bát phở này có hại cho con tôi không?"* — Demo F2 Smart Scan (4 phút)
+### 05:00 — 09:00 | Mong muốn #2: *"Đĩa mít này có hại cho con tôi không?"* — Demo F2 Smart Scan (4 phút)
 
 #### 05:00 — 05:45 | Setup câu chuyện (45s)
-> *"Trưa hôm sau, Linh đi ăn cùng đồng nghiệp. Trên bàn là một bát bún bò. Cô tự hỏi: 'Có nên ăn không? Bao nhiêu là vừa? Có hại cho con không?'"*
+> *"Chiều hôm sau, đồng nghiệp mời Linh một đĩa mít — 'mít tốt cho bà bầu lắm, nhiều vitamin'. Linh ngại từ chối, nhưng cũng không dám ăn. Cô tự hỏi: 'Mít ngọt vậy, mình bị tiểu đường thai kỳ, có nên ăn không? Ăn bao nhiêu là vừa?'"*
 >
-> *"Linh không phải bác sĩ dinh dưỡng. Cô không thể nhìn bát bún bò và đếm được carbs."*
+> *"Linh không phải bác sĩ dinh dưỡng. Cô không thể nhìn đĩa mít và đoán được lượng đường nó mang vào máu."*
 >
 > *"Nhưng NestAI thì có thể."*
 
 #### 05:45 — 08:15 | 🎬 Thao tác app (2 phút 30 giây)
-- **00:30s** — Linh mở camera trong app, chụp/chọn ảnh bát bún bò đã chuẩn bị.
-- **00:30s** — AI nhận diện trong ~2 giây → hiện tên món, calo, protein, carbs, fat.
-- **00:30s** — Tự động cập nhật vào tracker ngày — biểu đồ tiến độ chạy real-time.
-- **00:30s** — **Khoảnh khắc quan trọng:** ⚠️ cảnh báo đỏ hiện ra: *"Món này nhiều tinh bột tinh chế — không phù hợp với mẹ tiểu đường thai kỳ. Gợi ý: bớt 1/3 bún, thêm rau xanh."*
-- **00:30s** — Linh bấm vào cảnh báo → app gợi ý món thay thế phù hợp.
+- **00:30s** — Linh mở camera trong app, chụp/chọn ảnh đĩa mít đã chuẩn bị.
+- **00:30s** — AI nhận diện trong ~2 giây → hiện "Mít chín" + ước lượng số múi → calo, protein, carbs, fat, **đường (sugar)**.
+- **00:30s** — Tự động cập nhật vào tracker ngày — biểu đồ tiến độ chạy real-time, **chỉ số đường ngày nhảy lên gần ngưỡng**.
+- **00:30s** — **Khoảnh khắc quan trọng:** ⚠️ cảnh báo đỏ hiện ra: *"Mít chín có chỉ số đường huyết (GI) cao — không phù hợp với mẹ tiểu đường thai kỳ. Gợi ý: tối đa 2–3 múi, ăn sau bữa chính, không ăn lúc đói."*
+- **00:30s** — Linh bấm vào cảnh báo → app gợi ý trái cây thay thế GI thấp (ổi, bưởi, táo).
 
 #### 08:15 — 09:00 | Chốt giá trị (45s)
-> *"Đây là điều mà ngay cả MyFitnessPal hay các app quốc tế không làm được — họ chỉ cho biết calo. NestAI hiểu **Linh là ai**, và nói với Linh điều cô **cần** nghe, không chỉ điều cô muốn nghe."*
+> *"Mít — món mà mẹ chồng vẫn khen 'tốt cho bà bầu' — lại là cái bẫy với mẹ tiểu đường thai kỳ. Đây là điều ngay cả MyFitnessPal hay các app quốc tế không làm được: họ chỉ cho biết calo. NestAI hiểu **Linh là ai**, và nói với Linh điều cô **cần** nghe, không chỉ điều cô muốn nghe."*
 >
 > ✅ **Mong muốn #2: hoàn thành.**
 
@@ -109,25 +107,25 @@
 
 ## 🟠 D — Desire (09:00 → 16:00)
 
-### 09:00 — 12:30 | Mong muốn #3: *"Tôi không muốn đi qua thai kỳ một mình"* — Demo F3 Nutrition Planner (3 phút 30 giây)
+### 09:00 — 12:30 | Mong muốn #3: *"Tôi muốn cả gia đình cùng đồng hành, không phải một mình"* — Demo F3 Chia sẻ thực đơn cho gia đình (3 phút 30 giây)
 
 #### 09:00 — 09:45 | Setup câu chuyện (45s)
-> *"Tối hôm đó Linh mệt, nghén, không nấu nổi. Anh Nam — chồng Linh — về đến nhà, hỏi 'Em muốn ăn gì?'. Linh không biết trả lời. Nam muốn giúp nhưng không biết nấu gì cho người tiểu đường thai kỳ."*
+> *"Tối hôm đó Linh mệt, nghén, không nấu nổi. Mẹ chồng vẫn muốn nấu móng giò 'cho cháu mập'. Anh Nam — chồng Linh — vừa đi làm về, muốn giúp nhưng không biết đi chợ mua gì cho người tiểu đường thai kỳ."*
 >
-> *"Đây là khoảnh khắc rất nhiều cặp vợ chồng Việt Nam đang trải qua: muốn đồng hành — nhưng không biết bắt đầu từ đâu."*
+> *"Đây là khoảnh khắc rất nhiều gia đình Việt Nam đang trải qua: ai cũng yêu thương — nhưng mỗi người yêu thương theo một cách khác nhau, và không ai biết đâu mới là đúng."*
 
 #### 09:45 — 12:00 | 🎬 Thao tác app (2 phút 15 giây)
-- **00:30s** — Linh bấm "Tạo thực đơn hôm nay" → AI sinh menu 3 bữa cân bằng theo profile của Linh.
-- **00:20s** — Linh review menu, OK.
-- **00:25s** — Linh bấm **"Gửi cho chồng"**.
+- **00:25s** — Linh mở thực đơn tuần đã được tạo ở Feature 1 → chọn ngày hôm nay.
+- **00:20s** — Linh bấm **"Chia sẻ với người thân"** → chọn vai trò: 👨 *Chồng đi chợ* / 👵 *Mẹ chồng nấu ăn*.
+- **00:25s** — Gửi cho **anh Nam** (vai "Chồng đi chợ").
 - **00:30s** — **Switch sang điện thoại Nam** → push notification: *"Linh vừa giao nhiệm vụ đi chợ ❤️"*.
-- **00:30s** — Nam mở app, thấy:
-  - Danh sách đi chợ (gom nhóm theo quầy: rau, thịt, gia vị).
-  - Công thức từng món có hình ảnh.
-  - Checklist tick khi mua xong.
+- **00:35s** — Nam mở app, thấy:
+  - Danh sách đi chợ gom theo quầy (rau, thịt, gia vị).
+  - Công thức từng món kèm hình ảnh & lưu ý dinh dưỡng cho mẹ tiểu đường thai kỳ.
+  - Checklist tick khi mua xong → Linh thấy tiến độ real-time trên app của mình.
 
 #### 12:00 — 12:30 | Chốt giá trị (30s)
-> *"Bữa cơm không còn là gánh nặng của riêng Linh. Nó trở thành **hành trình hai người**. Nam không còn đứng ngoài thai kỳ — anh là một phần của nó."*
+> *"Bữa cơm không còn là gánh nặng của riêng Linh. Mẹ chồng hiểu vì sao không nấu móng giò. Nam biết chính xác cần mua gì. Cả gia đình cùng đi một hành trình — và NestAI là người phiên dịch giữa họ."*
 >
 > ✅ **Mong muốn #3: hoàn thành.**
 
@@ -200,8 +198,9 @@
 ## 📋 Checklist trước khi lên demo
 
 - [ ] **Profile "chị Linh"** đã tạo sẵn: tuần 24, BMI, có tiểu đường thai kỳ.
-- [ ] **Profile "anh Nam"** đã login trên thiết bị/tab thứ 2.
-- [ ] **2–3 ảnh món ăn** chuẩn bị sẵn — ít nhất 1 món sẽ trigger cảnh báo (vd. bún bò, phở, cơm tấm).
+- [ ] **Profile "anh Nam"** (vai chồng đi chợ) đã login trên thiết bị/tab thứ 2.
+- [ ] Thực đơn tuần của Linh đã được tạo sẵn ở Feature 1 — để Feature 3 có sẵn dữ liệu chia sẻ (tránh tạo lại trên sân khấu).
+- [ ] **2–3 ảnh món ăn** chuẩn bị sẵn — phải có **đĩa mít chín** để trigger cảnh báo GI cao; thêm 1 ảnh "an toàn" (vd. cá hấp + rau) để đối chứng.
 - [ ] Câu hỏi mẫu cho Nori đã copy sẵn vào clipboard (tránh gõ lỗi trên sân khấu).
 - [ ] Wifi ổn định + hotspot 4G dự phòng.
 - [ ] Volume thiết bị to + đã test loa ngoài.
