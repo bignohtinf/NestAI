@@ -10,8 +10,44 @@ import logging
 import os
 import re
 import asyncio
+import time
 
 logger = logging.getLogger(__name__)
+
+# ─── In-memory cache cho AI Insights ────────────────────────────────────
+# Tránh gọi OpenAI mỗi lần user mở trang nutrition-report.
+# Cache theo user_id, TTL 6 giờ, invalidate khi có bữa ăn mới.
+_INSIGHTS_CACHE_TTL = 6 * 3600  # 6 giờ
+
+# Structure: { user_id: { "data": {...summary response}, "ts": timestamp, "log_count": int } }
+_summary_cache: dict[str, dict] = {}
+
+
+def _get_cached_summary(user_id: str) -> dict | None:
+    """Trả về cached summary nếu còn hạn, None nếu hết hạn hoặc chưa có."""
+    entry = _summary_cache.get(user_id)
+    if not entry:
+        return None
+    if time.time() - entry["ts"] > _INSIGHTS_CACHE_TTL:
+        _summary_cache.pop(user_id, None)
+        return None
+    return entry["data"]
+
+
+def _set_cached_summary(user_id: str, data: dict, log_count: int) -> None:
+    """Lưu summary vào cache."""
+    _summary_cache[user_id] = {
+        "data": data,
+        "ts": time.time(),
+        "log_count": log_count,
+    }
+
+
+def invalidate_nutrition_cache(user_id: str) -> None:
+    """Xóa cache khi user ghi nhận bữa ăn mới."""
+    removed = _summary_cache.pop(user_id, None)
+    if removed:
+        logger.info(f"Nutrition cache invalidated for user {user_id}")
 
 router = APIRouter()
 
@@ -380,42 +416,463 @@ async def analyze_photo(payload: PhotoAnalysisRequest, supabase = Depends(get_su
 
 @router.get("/logs")
 async def get_nutrition_logs(user_id: str, limit: int = 30, supabase = Depends(get_supabase)):
-    """Get nutrition logs for a user"""
-    result = supabase.table("nutrition_logs").select("*").eq("user_id", user_id).order("created_at", desc=True).limit(limit).execute()
-    return {"logs": result.data or []}
+    """
+    Trả về lịch sử bữa ăn từ 2 nguồn:
+    1. nutrition_logs (ghi tay hoặc từ AI recommendation)
+    2. food_scan_logs (quét ảnh Smart Scan)
+    Merge và sắp xếp theo thời gian, trả về format thống nhất cho frontend.
+    """
+    combined = []
+
+    # 1. nutrition_logs
+    nl_res = supabase.table("nutrition_logs") \
+        .select("id, user_id, log_date, calories, protein, carbs, fat, notes, meal_type, source, created_at") \
+        .eq("user_id", user_id) \
+        .order("created_at", desc=True) \
+        .limit(limit) \
+        .execute()
+
+    for log in (nl_res.data or []):
+        combined.append({
+            "id": log["id"],
+            "meal_name": log.get("notes") or log.get("meal_type") or "Bữa ăn",
+            "calories": log.get("calories") or 0,
+            "protein": log.get("protein") or 0,
+            "carbs": log.get("carbs") or 0,
+            "fat": log.get("fat") or 0,
+            "image_url": None,
+            "source": log.get("source", "manual"),
+            "meal_type": log.get("meal_type"),
+            "created_at": log.get("created_at"),
+        })
+
+    # 2. food_scan_logs
+    fs_res = supabase.table("food_scan_logs") \
+        .select("id, user_id, image_url, recognized_dish_name, nutrition_data, meal_type, created_at") \
+        .eq("user_id", user_id) \
+        .order("created_at", desc=True) \
+        .limit(limit) \
+        .execute()
+
+    for scan in (fs_res.data or []):
+        nd = scan.get("nutrition_data") or {}
+        combined.append({
+            "id": scan["id"],
+            "meal_name": scan.get("recognized_dish_name") or "Smart Scan",
+            "calories": nd.get("calories") or nd.get("total_calories") or 0,
+            "protein": nd.get("protein") or nd.get("total_protein") or 0,
+            "carbs": nd.get("carbs") or nd.get("total_carbs") or 0,
+            "fat": nd.get("fat") or nd.get("total_fat") or 0,
+            "image_url": scan.get("image_url"),
+            "source": "smart_scan",
+            "meal_type": scan.get("meal_type"),
+            "created_at": scan.get("created_at"),
+        })
+
+    # Sắp xếp theo thời gian mới nhất
+    combined.sort(key=lambda x: x.get("created_at") or "", reverse=True)
+
+    return {"logs": combined[:limit]}
+
 
 @router.post("/logs")
 async def create_nutrition_log(user_id: str, log: NutritionLogCreate, supabase = Depends(get_supabase)):
     """Create a nutrition log entry"""
     result = supabase.table("nutrition_logs").insert({
         "user_id": user_id,
-        "meal_name": log.meal_name,
-        "calories": log.calories,
+        "calories": int(log.calories),
         "protein": log.protein,
         "carbs": log.carbs,
         "fat": log.fat,
-        "image_url": log.image_url,
-        "notes": log.notes
+        "notes": log.meal_name,
+        "source": "manual",
     }).execute()
-    
+
     if not result.data:
         raise HTTPException(status_code=400, detail="Failed to create nutrition log")
-    
+
+    # Invalidate cache vì có bữa ăn mới
+    invalidate_nutrition_cache(user_id)
+
     return {"status": "created", "data": result.data[0]}
+
 
 @router.get("/summary")
 async def get_nutrition_summary(user_id: str, days: int = 7, supabase = Depends(get_supabase)):
-    """Get nutrition summary for the past N days"""
-    result = supabase.table("nutrition_logs").select("*").eq("user_id", user_id).order("created_at", desc=True).limit(days * 3).execute()
-    
-    logs = result.data or []
-    total_calories = sum(log.get("calories", 0) for log in logs)
-    total_protein = sum(log.get("protein", 0) for log in logs if log.get("protein"))
-    avg_calories = total_calories / len(logs) if logs else 0
-    
-    return {
-        "total_calories": total_calories,
-        "total_protein": total_protein,
-        "avg_calories": avg_calories,
-        "log_count": len(logs)
+    """
+    Trả về tổng hợp dinh dưỡng cho NutritionDashboard.
+    Có in-memory cache: chỉ gọi OpenAI khi chưa có cache hoặc có bữa ăn mới.
+    - summary: avg_calories, total_protein, log_count
+    - history: danh sách {date, calories} theo ngày (dùng cho biểu đồ)
+    - macro_ratios: tỉ lệ protein/carbs/fat (dùng cho pie chart)
+    - micro_nutrients: vi chất thiết yếu (iron, calcium, vitamin_c, zinc) tính từ DB thật
+    """
+    from datetime import datetime, timedelta
+    from collections import defaultdict
+
+    cutoff = (datetime.utcnow() - timedelta(days=days)).isoformat()
+
+    # Lấy nutrition_logs trong khoảng thời gian
+    nl_res = supabase.table("nutrition_logs") \
+        .select("id, log_date, calories, protein, carbs, fat, created_at") \
+        .eq("user_id", user_id) \
+        .gte("created_at", cutoff) \
+        .order("created_at", desc=True) \
+        .execute()
+
+    # Lấy food_scan_logs trong khoảng thời gian
+    fs_res = supabase.table("food_scan_logs") \
+        .select("nutrition_data, created_at") \
+        .eq("user_id", user_id) \
+        .gte("created_at", cutoff) \
+        .order("created_at", desc=True) \
+        .execute()
+
+    # Gộp dữ liệu macro
+    all_entries = []
+    log_ids = []
+
+    for log in (nl_res.data or []):
+        log_ids.append(log["id"])
+        all_entries.append({
+            "date": log.get("log_date") or (log.get("created_at") or "")[:10],
+            "calories": log.get("calories") or 0,
+            "protein": log.get("protein") or 0,
+            "carbs": log.get("carbs") or 0,
+            "fat": log.get("fat") or 0,
+        })
+
+    for scan in (fs_res.data or []):
+        nd = scan.get("nutrition_data") or {}
+        all_entries.append({
+            "date": (scan.get("created_at") or "")[:10],
+            "calories": nd.get("calories") or nd.get("total_calories") or 0,
+            "protein": nd.get("protein") or nd.get("total_protein") or 0,
+            "carbs": nd.get("carbs") or nd.get("total_carbs") or 0,
+            "fat": nd.get("fat") or nd.get("total_fat") or 0,
+        })
+
+    # Aggregate theo ngày cho biểu đồ
+    daily = defaultdict(lambda: {"calories": 0, "protein": 0, "carbs": 0, "fat": 0})
+    for e in all_entries:
+        d = e["date"]
+        daily[d]["calories"] += e["calories"]
+        daily[d]["protein"] += e["protein"]
+        daily[d]["carbs"] += e["carbs"]
+        daily[d]["fat"] += e["fat"]
+
+    history = [{"date": d, "calories": round(v["calories"])} for d, v in sorted(daily.items())]
+
+    # Summary
+    total_calories = sum(e["calories"] for e in all_entries)
+    total_protein = sum(e["protein"] for e in all_entries)
+    total_carbs = sum(e["carbs"] for e in all_entries)
+    total_fat = sum(e["fat"] for e in all_entries)
+    log_count = len(all_entries)
+    num_days = max(len(daily), 1)
+    avg_calories = round(total_calories / num_days)
+
+    # ─── Cache check ────────────────────────────────────────────────
+    # Nếu cache còn hạn VÀ số bữa ăn chưa thay đổi → trả luôn,
+    # nhưng cập nhật lại history/summary (dữ liệu nhẹ) để chart luôn mới.
+    cached = _get_cached_summary(user_id)
+    if cached is not None:
+        cache_entry = _summary_cache.get(user_id, {})
+        if cache_entry.get("log_count") == log_count:
+            # Giữ nguyên ai_insights + nutrition_score từ cache,
+            # cập nhật phần dữ liệu realtime (history, summary, macro, micro)
+            logger.debug(f"Nutrition cache HIT for user {user_id}")
+            # Vẫn cần tính macro/micro cho dữ liệu mới nhất — nhưng skip OpenAI
+            pass  # fall through, sẽ dùng cached AI insights bên dưới
+        else:
+            # log_count thay đổi → invalidate
+            invalidate_nutrition_cache(user_id)
+            cached = None
+
+    # Macro ratios (% of total grams)
+    macro_total = total_protein + total_carbs + total_fat
+    if macro_total > 0:
+        macro_ratios = [
+            {"name": "Protein", "value": round(total_protein / macro_total * 100), "color": "#0075de"},
+            {"name": "Carbs", "value": round(total_carbs / macro_total * 100), "color": "#f59e0b"},
+            {"name": "Fat", "value": round(total_fat / macro_total * 100), "color": "#10b981"},
+        ]
+    else:
+        macro_ratios = [
+            {"name": "Protein", "value": 0, "color": "#0075de"},
+            {"name": "Carbs", "value": 0, "color": "#f59e0b"},
+            {"name": "Fat", "value": 0, "color": "#10b981"},
+        ]
+
+    # ─── Vi chất thiết yếu ───────────────────────────────────────────
+    # Tính từ nutrition_log_items → nutrition_database (iron, calcium, vitamin_c, zinc)
+    # RDA cho thai phụ (Recommended Daily Allowance):
+    #   Sắt: 27mg/ngày, Canxi: 1000mg/ngày, Vitamin C: 85mg/ngày, Kẽm: 11mg/ngày
+    RDA = {"iron": 27, "calcium": 1000, "vitamin_c": 85, "zinc": 11}
+
+    total_iron = 0.0
+    total_calcium = 0.0
+    total_vitamin_c = 0.0
+    total_zinc = 0.0
+
+    if log_ids:
+        # Lấy nutrition_log_items cho các logs trong khoảng thời gian
+        # Join với nutrition_database để lấy vi chất per serving
+        try:
+            items_res = supabase.table("nutrition_log_items") \
+                .select("dish_stt, servings, log_id") \
+                .in_("log_id", log_ids) \
+                .execute()
+
+            if items_res.data:
+                # Lấy tất cả dish_stt unique
+                dish_stts = list(set(item["dish_stt"] for item in items_res.data))
+                dishes_res = supabase.table("nutrition_database") \
+                    .select("stt, iron, calcium, vitamin_c, zinc, serving_size") \
+                    .in_("stt", dish_stts) \
+                    .execute()
+
+                # Map stt → nutrition
+                dish_map = {}
+                for d in (dishes_res.data or []):
+                    dish_map[d["stt"]] = d
+
+                # Tính tổng vi chất
+                for item in items_res.data:
+                    dish = dish_map.get(item["dish_stt"])
+                    if not dish:
+                        continue
+                    servings = float(item.get("servings") or 1)
+                    total_iron += float(dish.get("iron") or 0) * servings
+                    total_calcium += float(dish.get("calcium") or 0) * servings
+                    total_vitamin_c += float(dish.get("vitamin_c") or 0) * servings
+                    total_zinc += float(dish.get("zinc") or 0) * servings
+        except Exception as e:
+            logger.warning(f"Failed to fetch micronutrients: {e}")
+
+    # Tính % đạt mục tiêu (dựa trên RDA * số ngày có dữ liệu)
+    def pct(total: float, rda_per_day: float) -> int:
+        target = rda_per_day * num_days
+        if target <= 0:
+            return 0
+        return min(100, round(total / target * 100))
+
+    iron_pct = pct(total_iron, RDA["iron"])
+    calcium_pct = pct(total_calcium, RDA["calcium"])
+    vitc_pct = pct(total_vitamin_c, RDA["vitamin_c"])
+    zinc_pct = pct(total_zinc, RDA["zinc"])
+
+    micro_nutrients = [
+        {"name": "Sắt (Iron)", "value": iron_pct, "target": 100, "unit": "mg", "icon": "🩸"},
+        {"name": "Canxi (Calcium)", "value": calcium_pct, "target": 100, "unit": "mg", "icon": "🦴"},
+        {"name": "Vitamin C", "value": vitc_pct, "target": 100, "unit": "mg", "icon": "🌿"},
+        {"name": "Kẽm (Zinc)", "value": zinc_pct, "target": 100, "unit": "mg", "icon": "🧠"},
+    ]
+
+    # ─── Điểm Dinh Dưỡng (0-100) ────────────────────────────────────
+    # Tính từ 3 yếu tố:
+    #   1. Calorie adherence (40%): bám sát mục tiêu 2100 kcal/ngày
+    #   2. Macro balance (30%): protein 15-25%, carbs 45-65%, fat 20-35%
+    #   3. Micro coverage (30%): trung bình % đạt RDA của 4 vi chất
+    CALORIE_TARGET = 2100
+
+    # 1. Calorie adherence score (0-100)
+    if avg_calories > 0:
+        cal_ratio = avg_calories / CALORIE_TARGET
+        # Penalty tăng dần khi lệch khỏi mục tiêu
+        cal_deviation = abs(1 - cal_ratio)
+        cal_score = max(0, 100 - cal_deviation * 150)
+    else:
+        cal_score = 0
+
+    # 2. Macro balance score (0-100)
+    if macro_total > 0:
+        p_pct = total_protein / macro_total * 100
+        c_pct = total_carbs / macro_total * 100
+        f_pct = total_fat / macro_total * 100
+        # Mỗi macro: 0 nếu ngoài range, 100 nếu trong range, tuyến tính ở biên
+        def macro_score(val, lo, hi):
+            if lo <= val <= hi:
+                return 100
+            elif val < lo:
+                return max(0, 100 - (lo - val) * 10)
+            else:
+                return max(0, 100 - (val - hi) * 10)
+        m_score = (macro_score(p_pct, 15, 25) + macro_score(c_pct, 45, 65) + macro_score(f_pct, 20, 35)) / 3
+    else:
+        m_score = 0
+
+    # 3. Micro coverage score (0-100)
+    micro_avg = (iron_pct + calcium_pct + vitc_pct + zinc_pct) / 4
+
+    # Tổng hợp
+    nutrition_score = round(cal_score * 0.4 + m_score * 0.3 + micro_avg * 0.3)
+    if log_count == 0:
+        nutrition_score = 0
+
+    # ─── AI Insights (OpenAI — có cache) ───────────────────────────────
+    if cached is not None:
+        # Cache hit: dùng lại ai_insights từ cache, skip OpenAI call
+        ai_insights = cached.get("ai_insights", [])
+        logger.debug(f"Using cached AI insights for user {user_id}")
+    else:
+        # Cache miss: gọi OpenAI
+        ai_insights = await _generate_ai_insights(
+            avg_calories=avg_calories,
+            macro_ratios={"protein": round(total_protein / macro_total * 100) if macro_total > 0 else 0,
+                          "carbs": round(total_carbs / macro_total * 100) if macro_total > 0 else 0,
+                          "fat": round(total_fat / macro_total * 100) if macro_total > 0 else 0},
+            micro_pcts={"iron": iron_pct, "calcium": calcium_pct, "vitamin_c": vitc_pct, "zinc": zinc_pct},
+            log_count=log_count,
+            num_days=num_days,
+            gestation_weeks=None,
+        )
+
+    result = {
+        "summary": {
+            "avg_calories": avg_calories,
+            "total_protein": round(total_protein),
+            "total_carbs": round(total_carbs),
+            "total_fat": round(total_fat),
+            "log_count": log_count,
+        },
+        "history": history,
+        "macro_ratios": macro_ratios,
+        "micro_nutrients": micro_nutrients,
+        "nutrition_score": nutrition_score,
+        "ai_insights": ai_insights,
     }
+
+    # Lưu vào cache (cả khi cache hit để cập nhật data mới nhất)
+    _set_cached_summary(user_id, result, log_count)
+
+    return result
+
+
+async def _generate_ai_insights(
+    avg_calories: float,
+    macro_ratios: dict,
+    micro_pcts: dict,
+    log_count: int,
+    num_days: int,
+    gestation_weeks: Optional[int] = None,
+) -> list:
+    """
+    Phân tích dinh dưỡng bằng OpenAI, trả về danh sách insights.
+    Mỗi insight: { type: "warning"|"success"|"info", title: str, message: str }
+    Fallback: dùng rule-based nếu không có API key hoặc lỗi.
+    """
+    # Luôn tạo rule-based insights trước (làm fallback + bổ sung)
+    rules = _rule_based_insights(avg_calories, macro_ratios, micro_pcts, log_count)
+
+    if not OPENAI_API_KEY or log_count == 0:
+        return rules
+
+    try:
+        prompt = f"""Bạn là chuyên gia dinh dưỡng thai kỳ Việt Nam. Phân tích dữ liệu dinh dưỡng {num_days} ngày gần đây của một mẹ bầu:
+
+Dữ liệu:
+- Calo trung bình/ngày: {avg_calories} kcal (mục tiêu: 2100 kcal)
+- Tỉ lệ macro: Protein {macro_ratios['protein']}%, Carbs {macro_ratios['carbs']}%, Fat {macro_ratios['fat']}%
+- Vi chất (% đạt RDA): Sắt {micro_pcts['iron']}%, Canxi {micro_pcts['calcium']}%, Vitamin C {micro_pcts['vitamin_c']}%, Kẽm {micro_pcts['zinc']}%
+- Số bữa ghi nhận: {log_count} bữa trong {num_days} ngày
+
+Trả về JSON array, mỗi phần tử là một nhận xét (tối đa 3, tối thiểu 1):
+[
+  {{
+    "type": "warning" | "success" | "info",
+    "title": "Tiêu đề ngắn (dưới 8 từ)",
+    "message": "Giải thích ngắn gọn + gợi ý cụ thể (1-2 câu, dưới 50 từ)"
+  }}
+]
+
+Quy tắc:
+- "warning": khi chỉ số dưới 60% mục tiêu hoặc mất cân bằng rõ
+- "success": khi chỉ số đạt hoặc vượt 80% mục tiêu
+- "info": gợi ý cải thiện nhẹ
+- Ưu tiên vấn đề nghiêm trọng nhất trước
+- Luôn gợi ý thực phẩm Việt Nam cụ thể
+- Chỉ trả về JSON, không giải thích thêm"""
+
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {OPENAI_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": "gpt-4o-mini",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.3,
+                    "max_tokens": 400,
+                },
+            )
+
+        if response.status_code != 200:
+            logger.warning(f"OpenAI insights failed: {response.status_code}")
+            return rules
+
+        text = _extract_text_from_openai_response(response.json())
+        parsed = _parse_json_from_response(text)
+
+        # Validate format
+        if isinstance(parsed, list):
+            valid = []
+            for item in parsed[:3]:
+                if isinstance(item, dict) and all(k in item for k in ("type", "title", "message")):
+                    if item["type"] in ("warning", "success", "info"):
+                        valid.append(item)
+            if valid:
+                return valid
+
+        return rules
+
+    except Exception as e:
+        logger.warning(f"AI insights error, using rules: {e}")
+        return rules
+
+
+def _rule_based_insights(
+    avg_calories: float,
+    macro_ratios: dict,
+    micro_pcts: dict,
+    log_count: int,
+) -> list:
+    """Fallback rule-based insights khi không có OpenAI."""
+    if log_count == 0:
+        return [{"type": "info", "title": "Chưa có dữ liệu", "message": "Hãy quét ảnh bữa ăn hoặc lưu thực đơn để nhận phân tích dinh dưỡng chi tiết."}]
+
+    insights = []
+
+    # Calorie check
+    if avg_calories > 0 and avg_calories < 1500:
+        insights.append({"type": "warning", "title": "Calo quá thấp", "message": f"Trung bình chỉ {round(avg_calories)} kcal/ngày, thấp hơn nhiều so với mục tiêu 2100 kcal. Mẹ cần ăn thêm các bữa phụ giàu năng lượng."})
+    elif avg_calories > 2800:
+        insights.append({"type": "warning", "title": "Calo vượt mục tiêu", "message": f"Trung bình {round(avg_calories)} kcal/ngày, cao hơn khuyến nghị. Nên giảm bớt đồ chiên, đồ ngọt."})
+    elif avg_calories >= 1800:
+        insights.append({"type": "success", "title": "Calo ổn định", "message": f"Trung bình {round(avg_calories)} kcal/ngày, gần mục tiêu 2100 kcal. Duy trì nhé!"})
+
+    # Micro check — tìm vi chất thấp nhất
+    micro_items = [
+        ("Sắt", micro_pcts["iron"], "thịt bò, rau bina, đậu lăng"),
+        ("Canxi", micro_pcts["calcium"], "sữa, phô mai, tôm, cá nhỏ"),
+        ("Vitamin C", micro_pcts["vitamin_c"], "cam, ổi, ớt chuông, bưởi"),
+        ("Kẽm", micro_pcts["zinc"], "thịt bò, hạt bí, đậu nành"),
+    ]
+    micro_items.sort(key=lambda x: x[1])
+
+    lowest = micro_items[0]
+    if lowest[1] < 50:
+        insights.append({"type": "warning", "title": f"Thiếu {lowest[0]} nghiêm trọng", "message": f"Chỉ đạt {lowest[1]}% mục tiêu. Bổ sung từ: {lowest[2]}."})
+    elif lowest[1] < 80:
+        insights.append({"type": "info", "title": f"Cần thêm {lowest[0]}", "message": f"Đạt {lowest[1]}% mục tiêu. Thêm {lowest[2]} vào bữa ăn."})
+
+    # Tìm vi chất tốt nhất
+    highest = micro_items[-1]
+    if highest[1] >= 80:
+        insights.append({"type": "success", "title": f"Duy trì {highest[0]} tốt", "message": f"Đạt {highest[1]}% mục tiêu — tiếp tục duy trì chế độ ăn hiện tại."})
+
+    return insights[:3] if insights else [
+        {"type": "info", "title": "Đang theo dõi", "message": "Tiếp tục ghi nhận bữa ăn để có phân tích chi tiết hơn."}
+    ]
