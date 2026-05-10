@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MainLayout } from '@/components/layouts/main-layout';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AlertCircle, CheckCircle, Plus, Trash2, Heart, Mail, Phone, Sparkles } from 'lucide-react';
+import { AlertCircle, CheckCircle, Plus, Trash2, Heart, Mail, Phone, Sparkles, Pencil, X, User } from 'lucide-react';
+import { formatGestationAge } from '@/lib/utils';
 
 const PREDEFINED_ALLERGIES = [
   'Hải sản', 'Đậu phộng', 'Các loại hạt', 'Sữa bò', 'Trứng', 'Đậu nành', 'Lúa mì (Gluten)'
@@ -34,6 +35,7 @@ function ProfilePageContent() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [babies, setBabies] = useState<any[]>([]);
   const [loadingBabies, setLoadingBabies] = useState(true);
+  const [editingBabyId, setEditingBabyId] = useState<string | null>(null);
   const [isAddingBaby, setIsAddingBaby] = useState(false);
 
   const [phone, setPhone] = useState('');
@@ -57,10 +59,11 @@ function ProfilePageContent() {
 
   const [babyData, setBabyData] = useState({
     name: '',
-    status: 'born' as 'born' | 'pregnant', // 'born' = đã sinh, 'pregnant' = mang bầu
-    dateOfBirth: '', // Khi đã sinh
-    gestationWeeks: '', // Khi mang bầu (tuần thai)
-    gender: 'male' as 'male' | 'female',
+    status: 'pregnant' as 'born' | 'pregnant', // 'pregnant' = đang mang thai, 'born' = đã sinh
+    dateOfBirth: '',   // Khi đã sinh (cập nhật sau)
+    lmp: '',           // Last Menstrual Period — nguồn tính tuần thai
+    edd: '',           // Expected Due Date — nguồn tính tuần thai (thay thế nếu không có LMP)
+    gender: '' as '' | 'male' | 'female',
     weightAtBirth: '',
     heightAtBirth: '',
     bloodType: '',
@@ -240,7 +243,7 @@ function ProfilePageContent() {
         body: JSON.stringify({
           partnerEmail: partnerData.partnerEmail,
           partnerPhone: partnerData.partnerPhone,
-          fatherId: user?.id,
+          requesterId: user?.id, // Cả mẹ và bố đều có thể gửi — backend tự xác định role
         }),
       });
 
@@ -277,8 +280,8 @@ function ProfilePageContent() {
         throw new Error('Vui lòng nhập ngày sinh của bé');
       }
 
-      if (babyData.status === 'pregnant' && !babyData.gestationWeeks) {
-        throw new Error('Vui lòng nhập tuần thai');
+      if (babyData.status === 'pregnant' && !babyData.lmp && !babyData.edd) {
+        throw new Error('Vui lòng nhập Ngày kinh cuối (LMP) hoặc Ngày dự sinh (EDD) để tính tuần thai');
       }
 
       const response = await fetch(`/api/babies/?user_id=${user?.id}`, {
@@ -288,10 +291,12 @@ function ProfilePageContent() {
           name: babyData.name,
           status: babyData.status,
           date_of_birth: babyData.status === 'born' ? babyData.dateOfBirth : null,
-          gestation_weeks: babyData.status === 'pregnant' ? parseInt(babyData.gestationWeeks) : null,
-          gender: babyData.gender,
-          weight_at_birth: babyData.weightAtBirth ? parseFloat(babyData.weightAtBirth) : null,
-          height_at_birth: babyData.heightAtBirth ? parseFloat(babyData.heightAtBirth) : null,
+          // Tuần thai sẽ được tính live từ lmp/edd — không gửi gestation_weeks
+          lmp: babyData.status === 'pregnant' && babyData.lmp ? babyData.lmp : null,
+          edd: babyData.status === 'pregnant' && babyData.edd ? babyData.edd : null,
+          gender: babyData.gender || null,
+          weight_at_birth: babyData.status === 'born' && babyData.weightAtBirth ? parseFloat(babyData.weightAtBirth) : null,
+          height_at_birth: babyData.status === 'born' && babyData.heightAtBirth ? parseFloat(babyData.heightAtBirth) : null,
           blood_type: babyData.bloodType || null,
           notes: babyData.notes || null,
         }),
@@ -299,18 +304,30 @@ function ProfilePageContent() {
 
       if (response.ok) {
         const data = await response.json();
-        setBabies([...babies, data.data]);
+        const newBaby = data.data;
+        console.log('New baby created:', newBaby);
+        
+        if (newBaby && newBaby.id) {
+          setBabies(prev => [...prev, newBaby]);
+        } else {
+          console.warn('Baby created but ID is missing in response, re-fetching list...');
+          fetchBabies();
+        }
+
+        // Reset form data
         setBabyData({
           name: '',
-          status: 'born',
+          status: 'pregnant',
           dateOfBirth: '',
-          gestationWeeks: '',
-          gender: 'male',
+          lmp: '',
+          edd: '',
+          gender: '',
           weightAtBirth: '',
           heightAtBirth: '',
           bloodType: '',
           notes: '',
         });
+
         setMessage({ type: 'success', text: 'Thêm bé thành công' });
         setTimeout(() => setMessage(null), 3000);
         fetchUserData();
@@ -329,10 +346,23 @@ function ProfilePageContent() {
   };
 
   const handleDeleteBaby = async (babyId: string) => {
+    console.log('DEBUG DELETE:', {
+      value: babyId,
+      type: typeof babyId,
+      length: String(babyId).length,
+      isUndefinedString: babyId === "undefined",
+      isEmpty: !babyId
+    });
+    
+    if (!babyId || String(babyId).trim() === "undefined" || babyId === "null") {
+      setMessage({ type: 'error', text: `Không tìm thấy ID hợp lệ (Giá trị: ${babyId})` });
+      return;
+    }
+    
     if (!confirm('Bạn có chắc chắn muốn xóa bé này?')) return;
 
     try {
-      const response = await fetch(`/api/babies/${babyId}`, {
+      const response = await fetch(`/api/babies/${babyId}?user_id=${user?.id}`, {
         method: 'DELETE',
       });
 
@@ -351,42 +381,83 @@ function ProfilePageContent() {
     }
   };
 
-  const handleUpdateMedicalProfile = async (e: React.FormEvent) => {
+  const handleUpdateBaby = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!editingBabyId) return;
     setLoading(true);
+    setMessage(null);
+
     try {
-      const res = await fetch(`/api/medical-profile/me?user_id=${user?.id}`, {
+      const response = await fetch(`/api/babies/${editingBabyId}?user_id=${user?.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          pregnancy_status: medicalProfile.pregnancyStatus,
-          last_menstrual_period: medicalProfile.lastMenstrualPeriod || null,
-          due_date: medicalProfile.dueDate || null,
-          current_weight_kg: medicalProfile.currentWeightKg ? parseFloat(medicalProfile.currentWeightKg) : null,
+          name: babyData.name,
+          gender: babyData.gender || null,
+          // Chỉ gửi lmp/edd — tuần thai tính live ở backend, không lưu gestation_weeks
+          lmp: babyData.status === 'pregnant' && babyData.lmp ? babyData.lmp : null,
+          edd: babyData.status === 'pregnant' && babyData.edd ? babyData.edd : null,
+          date_of_birth: babyData.status === 'born' && babyData.dateOfBirth ? babyData.dateOfBirth : null,
+          weight_at_birth: babyData.weightAtBirth ? parseFloat(babyData.weightAtBirth) : null,
+          height_at_birth: babyData.heightAtBirth ? parseFloat(babyData.heightAtBirth) : null,
+          blood_type: babyData.bloodType || null,
+          notes: babyData.notes || null,
         }),
       });
 
-      if (res.ok) {
-        setMessage({ type: 'success', text: 'Cập nhật hồ sơ thai kỳ thành công' });
+      if (response.ok) {
+        const updated = await response.json();
+        // Cập nhật local state
+        setBabies(babies.map(b => b.id === editingBabyId ? updated.data : b));
+        setEditingBabyId(null);
+        setBabyData({
+          name: '',
+          status: 'pregnant',
+          dateOfBirth: '',
+          lmp: '',
+          edd: '',
+          gender: '',
+          weightAtBirth: '',
+          heightAtBirth: '',
+          bloodType: '',
+          notes: '',
+        });
+        setMessage({ type: 'success', text: 'Cập nhật thông tin bé thành công' });
         setTimeout(() => setMessage(null), 3000);
-        fetchUserData(); // Refresh global context
-        fetchMedicalProfile(); // Refresh local state
+        // Đồng bộ lại context nếu là thai kỳ
+        if (updated.data.status === 'pregnant') {
+          fetchUserData();
+        }
       } else {
-        throw new Error('Không thể cập nhật hồ sơ thai kỳ');
+        const error = await response.json();
+        throw new Error(error.detail || 'Không thể cập nhật thông tin bé');
       }
     } catch (err) {
-      setMessage({
-        type: 'error',
-        text: err instanceof Error ? err.message : 'Đã xảy ra lỗi',
-      });
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Đã xảy ra lỗi' });
     } finally {
       setLoading(false);
     }
   };
 
+  const startEditing = (baby: any) => {
+    setEditingBabyId(baby.id);
+    setBabyData({
+      name: baby.name,
+      status: baby.status || 'pregnant',
+      dateOfBirth: baby.date_of_birth ? baby.date_of_birth.split('T')[0] : '',
+      lmp: baby.lmp || '',
+      edd: baby.edd || '',
+      gender: baby.gender || '',
+      weightAtBirth: baby.weight_at_birth?.toString() || '',
+      heightAtBirth: baby.height_at_birth?.toString() || '',
+      bloodType: baby.blood_type || '',
+      notes: baby.notes || '',
+    });
+  };
+
   return (
-    <MainLayout>
-      <div className="max-w-2xl mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6">
+    <MainLayout fullWidth>
+      <div className="space-y-8">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Trang cá nhân</h1>
           <p className="text-muted-foreground mt-1 text-sm">Quản lý thông tin cá nhân, mối quan hệ và bé</p>
@@ -407,19 +478,16 @@ function ProfilePageContent() {
           </div>
         )}
 
-        <Tabs defaultValue="profile" className="w-full">
-          {/* Mobile: horizontal scroll, Desktop: grid */}
-          <TabsList className="w-full flex overflow-x-auto gap-1 h-auto p-1 sm:grid sm:gap-0 sm:h-10 sm:p-0.5"
-            style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}
-          >
-            <TabsTrigger value="profile" className="shrink-0 sm:shrink text-xs sm:text-sm">Cá nhân</TabsTrigger>
-            <TabsTrigger value="partnership" className="shrink-0 sm:shrink text-xs sm:text-sm">Quan hệ</TabsTrigger>
-            <TabsTrigger value="babies" className="shrink-0 sm:shrink text-xs sm:text-sm whitespace-nowrap">Thai nhi / Bé</TabsTrigger>
+        <Tabs defaultValue="personal" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 h-12 p-1 bg-muted/50">
+            <TabsTrigger value="personal" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Thông tin cá nhân</TabsTrigger>
+            <TabsTrigger value="partnership" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Kết nối gia đình</TabsTrigger>
+            <TabsTrigger value="babies" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Thai nhi / Bé</TabsTrigger>
           </TabsList>
 
-          {/* Profile Tab */}
-          <TabsContent value="profile">
-            <Card>
+          {/* Personal Tab */}
+          <TabsContent value="personal" className="outline-none">
+            <Card className="border-none shadow-sm">
               <CardHeader>
                 <CardTitle>Thông tin cá nhân</CardTitle>
                 <CardDescription>Thông tin tài khoản của bạn</CardDescription>
@@ -532,57 +600,60 @@ function ProfilePageContent() {
           </TabsContent>
 
           {/* Partnership Tab */}
-          <TabsContent value="partnership">
+          <TabsContent value="partnership" className="space-y-6 outline-none">
             {loadingPartnership ? (
-              <Card>
-                <CardContent className="flex justify-center py-10">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              <Card className="border-none shadow-sm">
+                <CardContent className="flex justify-center py-20">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
                 </CardContent>
               </Card>
             ) : activePartnership ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Heart className="h-5 w-5 text-primary" />
-                    Mối quan hệ gia đình
-                  </CardTitle>
-                  <CardDescription>Đã kết nối với {user.role === 'mother' ? 'bố' : 'mẹ'}</CardDescription>
+              <Card className="border-none shadow-sm overflow-hidden">
+                <div className="bg-primary/10 h-24 w-full flex items-center justify-center">
+                   <Heart className="h-10 w-10 text-primary animate-pulse" />
+                </div>
+                <CardHeader className="text-center -mt-6">
+                  <div className="mx-auto bg-background p-2 rounded-full shadow-md w-fit">
+                    <User className="h-8 w-8 text-primary" />
+                  </div>
+                  <CardTitle className="mt-2">Mối quan hệ gia đình</CardTitle>
+                  <CardDescription>Bạn đã kết nối thành công với {user.role === 'mother' ? 'bố' : 'mẹ'}</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Họ và tên</Label>
-                      <p className="font-semibold">{activePartnership.partner?.full_name || 'Chưa có tên'}</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span>{activePartnership.partner?.email}</span>
-                    </div>
-                    {activePartnership.partner?.phone && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span>{activePartnership.partner.phone}</span>
+                <CardContent className="space-y-6 pb-10">
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="p-4 rounded-xl bg-muted/30 border border-border/50 space-y-4">
+                      <div className="flex justify-between items-center border-b border-border/50 pb-2">
+                        <span className="text-sm text-muted-foreground">Họ và tên</span>
+                        <span className="font-bold">{activePartnership.partner?.full_name}</span>
                       </div>
-                    )}
+                      <div className="flex justify-between items-center border-b border-border/50 pb-2">
+                        <span className="text-sm text-muted-foreground">Email</span>
+                        <span className="font-medium text-primary">{activePartnership.partner?.email}</span>
+                      </div>
+                      {activePartnership.partner?.phone && (
+                        <div className="flex justify-between items-center border-b border-border/50 pb-2">
+                          <span className="text-sm text-muted-foreground">Số điện thoại</span>
+                          <span>{activePartnership.partner.phone}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             ) : (
-              <Card>
+              <Card className="border-none shadow-sm">
                 <CardHeader>
                   <CardTitle>Kết nối gia đình</CardTitle>
                   <CardDescription>
                     {user.role === 'father'
-                      ? 'Nhập thông tin của mẹ để gửi yêu cầu kết nối'
-                      : 'Nhập thông tin của bố để gửi yêu cầu kết nối'}
+                      ? 'Nhập thông tin của mẹ để cùng nhau theo dõi hành trình của bé'
+                      : 'Nhập thông tin của bố để cùng nhau theo dõi hành trình của bé'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleUpdatePartnership} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="partnerEmail">
-                        Email của {user.role === 'father' ? 'mẹ' : 'bố'}
-                      </Label>
+                  <form onSubmit={handleUpdatePartnership} className="space-y-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="partnerEmail">Email của {user.role === 'father' ? 'mẹ' : 'bố'}</Label>
                       <Input
                         id="partnerEmail"
                         name="partnerEmail"
@@ -591,12 +662,11 @@ function ProfilePageContent() {
                         onChange={handlePartnerChange}
                         disabled={loading}
                         placeholder="partner@email.com"
+                        className="h-11"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="partnerPhone">
-                        Hoặc số điện thoại của {user.role === 'father' ? 'mẹ' : 'bố'}
-                      </Label>
+                    <div className="space-y-3">
+                      <Label htmlFor="partnerPhone">Hoặc Số điện thoại</Label>
                       <Input
                         id="partnerPhone"
                         name="partnerPhone"
@@ -605,14 +675,14 @@ function ProfilePageContent() {
                         onChange={handlePartnerChange}
                         disabled={loading}
                         placeholder="+84 9xx xxx xxx"
+                        className="h-11"
                       />
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {user.role === 'father'
-                        ? 'Mẹ sẽ nhận được yêu cầu kết nối trong tab Thông báo'
-                        : 'Bố sẽ nhận được yêu cầu kết nối trong tab Thông báo'}
-                    </p>
-                    <Button type="submit" disabled={loading} className="w-full">
+                    <div className="p-4 rounded-lg bg-primary/5 text-xs text-primary/80 flex gap-3">
+                      <Sparkles className="h-4 w-4 shrink-0" />
+                      <p>Khi kết nối, {user.role === 'father' ? 'mẹ' : 'bố'} sẽ thấy được các thông số sức khỏe và hành trình của bé mà bạn cập nhật.</p>
+                    </div>
+                    <Button type="submit" disabled={loading} className="w-full h-11">
                       {loading ? 'Đang gửi...' : 'Gửi yêu cầu kết nối'}
                     </Button>
                   </form>
@@ -623,75 +693,7 @@ function ProfilePageContent() {
 
           {/* Babies Tab */}
           <TabsContent value="babies" className="space-y-6">
-            {/* Pregnancy Profile Section (Only for mothers) */}
-            {user.role === 'mother' && (
-              <Card className="border-primary/20 bg-primary/5">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-primary">
-                    <Sparkles className="h-5 w-5" />
-                    Hồ sơ thai kỳ (Dành cho mẹ)
-                  </CardTitle>
-                  <CardDescription>Cài đặt để hệ thống tự động tính toán tuần thai và ngày dự sinh</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleUpdateMedicalProfile} className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Tình trạng</Label>
-                        <select
-                          value={medicalProfile.pregnancyStatus}
-                          onChange={(e) => setMedicalProfile(prev => ({ ...prev, pregnancyStatus: e.target.value }))}
-                          className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm"
-                        >
-                          <option value="not_pregnant">Chưa mang thai</option>
-                          <option value="pregnant">Đang mang thai</option>
-                          <option value="postpartum">Sau sinh</option>
-                        </select>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label>Cân nặng hiện tại (kg)</Label>
-                        <Input
-                          type="number"
-                          step="0.1"
-                          value={medicalProfile.currentWeightKg}
-                          onChange={(e) => setMedicalProfile(prev => ({ ...prev, currentWeightKg: e.target.value }))}
-                          placeholder="60.5"
-                        />
-                      </div>
-                    </div>
 
-                    {medicalProfile.pregnancyStatus === 'pregnant' && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-lg bg-white/50 dark:bg-slate-900/50 border border-primary/10">
-                        <div className="space-y-2">
-                          <Label>Ngày kinh cuối (LMP)</Label>
-                          <Input
-                            type="date"
-                            value={medicalProfile.lastMenstrualPeriod}
-                            onChange={(e) => setMedicalProfile(prev => ({ ...prev, lastMenstrualPeriod: e.target.value }))}
-                          />
-                          <p className="text-[10px] text-muted-foreground">Hệ thống sẽ tự tính tuần thai dựa trên ngày này</p>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Hoặc Ngày dự sinh (EDD)</Label>
-                          <Input
-                            type="date"
-                            value={medicalProfile.dueDate}
-                            onChange={(e) => setMedicalProfile(prev => ({ ...prev, dueDate: e.target.value }))}
-                          />
-                          <p className="text-[10px] text-muted-foreground">Nhập nếu bạn đã có ngày dự sinh từ bác sĩ</p>
-                        </div>
-                      </div>
-                    )}
-
-                    <Button type="submit" disabled={loading} className="w-full">
-                      {loading ? 'Đang lưu...' : 'Lưu hồ sơ thai kỳ'}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            )}
 
             <div className="pt-2 border-t">
               <h3 className="font-bold text-lg mb-4">Danh sách các bé</h3>
@@ -706,39 +708,150 @@ function ProfilePageContent() {
             ) : (
               <div className="space-y-4">
                 {babies.map((baby) => (
-                  <Card key={baby.id}>
+                  <Card key={baby.id} className={`border-none shadow-sm ${editingBabyId === baby.id ? 'ring-2 ring-primary' : ''}`}>
                     <CardContent className="pt-6">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-2">
-                          <h3 className="font-semibold text-lg">{baby.name}</h3>
-                          {baby.date_of_birth ? (
-                            <p className="text-sm text-muted-foreground">
-                              Ngày sinh: {new Date(baby.date_of_birth).toLocaleDateString('vi-VN')}
-                            </p>
-                          ) : baby.gestation_weeks ? (
-                            <p className="text-sm text-muted-foreground">
-                              Tuần thai: {baby.gestation_weeks} tuần
-                            </p>
-                          ) : null}
-                          {baby.weight_at_birth && (
-                            <p className="text-sm text-muted-foreground">
-                              Cân nặng: {baby.weight_at_birth} kg
-                            </p>
+                      {editingBabyId === baby.id ? (
+                        <form onSubmit={handleUpdateBaby} className="space-y-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-bold">Đang sửa: {baby.name}</h4>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setEditingBabyId(null)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="edit-name">Tên bé</Label>
+                              <Input
+                                id="edit-name"
+                                name="name"
+                                value={babyData.name}
+                                onChange={handleBabyChange}
+                                disabled={loading}
+                              />
+                            </div>
+                            
+                            {baby.status === 'born' && (
+                              <div className="space-y-2">
+                                <Label htmlFor="edit-dob">Ngày sinh</Label>
+                                <Input
+                                  id="edit-dob"
+                                  name="dateOfBirth"
+                                  type="date"
+                                  value={babyData.dateOfBirth}
+                                  onChange={handleBabyChange}
+                                  disabled={loading}
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {baby.status === 'pregnant' && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 rounded bg-primary/5 border border-primary/10">
+                              <div className="space-y-2">
+                                <Label htmlFor="edit-lmp">Ngày kinh cuối (LMP)</Label>
+                                <Input
+                                  id="edit-lmp"
+                                  name="lmp"
+                                  type="date"
+                                  value={babyData.lmp}
+                                  onChange={handleBabyChange}
+                                  disabled={loading}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="edit-edd">Ngày dự sinh (EDD)</Label>
+                                <Input
+                                  id="edit-edd"
+                                  name="edd"
+                                  type="date"
+                                  value={babyData.edd}
+                                  onChange={handleBabyChange}
+                                  disabled={loading}
+                                />
+                              </div>
+                            </div>
                           )}
-                          {baby.height_at_birth && (
-                            <p className="text-sm text-muted-foreground">
-                              Chiều cao: {baby.height_at_birth} cm
-                            </p>
-                          )}
+
+                          <div className="flex gap-2">
+                            <Button type="submit" size="sm" disabled={loading} className="flex-1">
+                              {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setEditingBabyId(null)}
+                            >
+                              Hủy
+                            </Button>
+                          </div>
+                        </form>
+                      ) : (
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold text-lg">{baby.name}</h3>
+                              {baby.status === 'pregnant' && (
+                                <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                                  ĐANG MANG THAI
+                                </span>
+                              )}
+                            </div>
+                            {baby.date_of_birth ? (
+                              <p className="text-sm text-muted-foreground">
+                                Ngày sinh: {new Date(baby.date_of_birth).toLocaleDateString('vi-VN')}
+                              </p>
+                            ) : baby.gestation_weeks != null ? (
+                              // gestation_weeks được tính live từ backend (từ lmp/edd)
+                              <p className="text-sm text-muted-foreground">
+                                Tuần thai:{' '}
+                                <span className="font-semibold text-primary">
+                                  {formatGestationAge(baby.gestation_weeks, baby.days_in_week)}
+                                </span>
+                                {baby.edd ? ` · Dự sinh: ${new Date(baby.edd).toLocaleDateString('vi-VN')}` : ''}
+                              </p>
+                            ) : baby.lmp || baby.edd ? (
+                              <p className="text-sm text-muted-foreground">
+                                {baby.edd ? `Dự sinh: ${new Date(baby.edd).toLocaleDateString('vi-VN')}` : ''}
+                                {baby.lmp ? ` · LMP: ${new Date(baby.lmp).toLocaleDateString('vi-VN')}` : ''}
+                              </p>
+                            ) : null}
+                            {baby.weight_at_birth && (
+                              <p className="text-sm text-muted-foreground">
+                                Cân nặng: {baby.weight_at_birth} kg
+                              </p>
+                            )}
+                            {baby.height_at_birth && (
+                              <p className="text-sm text-muted-foreground">
+                                Chiều cao: {baby.height_at_birth} cm
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => startEditing(baby)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => handleDeleteBaby(baby.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteBaby(baby.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
@@ -755,7 +868,7 @@ function ProfilePageContent() {
                 Thêm bé mới
               </Button>
             ) : (
-              <Card>
+              <Card className="border-none shadow-sm">
                 <CardHeader>
                   <CardTitle>Thêm bé mới</CardTitle>
                   <CardDescription>Nhập thông tin của bé</CardDescription>
@@ -804,25 +917,42 @@ function ProfilePageContent() {
                         />
                       </div>
                     ) : (
-                      <div className="space-y-2">
-                        <Label htmlFor="gestationWeeks">Tuần thai</Label>
-                        <Input
-                          id="gestationWeeks"
-                          name="gestationWeeks"
-                          type="number"
-                          min="0"
-                          max="42"
-                          value={babyData.gestationWeeks}
-                          onChange={handleBabyChange}
-                          disabled={loading}
-                          placeholder="Nhập tuần thai (0-42)"
-                        />
+                      <div className="space-y-4 p-4 rounded-lg bg-primary/5 border border-primary/10">
+                        <p className="text-xs font-medium text-primary">
+                          Nhập ít nhất một trong hai để hệ thống tự tính tuần thai chính xác theo ngày
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="lmp">Ngày kinh cuối (LMP) <span className="text-primary">*</span></Label>
+                            <Input
+                              id="lmp"
+                              name="lmp"
+                              type="date"
+                              value={babyData.lmp}
+                              onChange={handleBabyChange}
+                              disabled={loading}
+                            />
+                            <p className="text-[10px] text-muted-foreground">Ưu tiên — tính tuần thai chính xác nhất</p>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="edd">Ngày dự sinh (EDD)</Label>
+                            <Input
+                              id="edd"
+                              name="edd"
+                              type="date"
+                              value={babyData.edd}
+                              onChange={handleBabyChange}
+                              disabled={loading}
+                            />
+                            <p className="text-[10px] text-muted-foreground">Dùng nếu bác sĩ đã cho ngày dự sinh</p>
+                          </div>
+                        </div>
                       </div>
                     )}
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="gender">Giới tính</Label>
+                        <Label htmlFor="gender">Giới tính <span className="text-muted-foreground text-xs">(cập nhật sau)</span></Label>
                         <select
                           id="gender"
                           name="gender"
@@ -831,6 +961,7 @@ function ProfilePageContent() {
                           disabled={loading}
                           className="w-full px-3 py-2 border border-input rounded-md bg-background"
                         >
+                          <option value="">Chưa biết</option>
                           <option value="male">Nam</option>
                           <option value="female">Nữ</option>
                         </select>

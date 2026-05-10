@@ -13,7 +13,6 @@ import {
   HeartPulse,
   Bell,
   ShoppingCart,
-  Calendar,
   Settings,
   Camera,
   BookOpen
@@ -75,7 +74,7 @@ const navigationItems: NavItem[] = [
 
   // Father
   { href: '/nutrimart', label: 'NutriMart', icon: ShoppingCart, roles: ['father'] },
-  { href: '/planner', label: 'Kế Hoạch', icon: Calendar, roles: ['father'] },
+  { href: '/nutrition-report', label: 'Báo cáo Dinh dưỡng', icon: Utensils, roles: ['father'] },
 
   // Admin
   { href: '/admin', label: 'Quản trị', icon: Settings, roles: ['admin'] },

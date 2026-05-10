@@ -1,6 +1,7 @@
 'use client';
 
 import { useApp } from '@/lib/context';
+import { formatGestationAge } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BudgetTracker } from '@/components/metrics/budget-tracker';
 import { Button } from '@/components/ui/button';
@@ -138,7 +139,9 @@ export function DadDashboard() {
 
   if (!user) return null;
 
-  const babyStatus = baby?.status ?? 'born';
+  // Ưu tiên babyStatus từ context (đã được tính qua medical profile + baby API)
+  // Fallback sang baby local state nếu context chưa load xong
+  const babyStatus = user.babyStatus ?? baby?.status ?? 'born';
   const completedTasks = tasks.filter(t => t.completed).length;
   const totalTasks = tasks.length;
 
@@ -192,8 +195,10 @@ export function DadDashboard() {
           {
             icon: <Baby className="h-4 w-4 text-blue-500" />,
             label: babyStatus === 'pregnant' ? 'Tuần thai' : 'Tuần sau sinh',
-            value: babyStatus === 'pregnant' ? (baby?.gestation_weeks ?? user.gestationWeeks ?? '—') : (user.weeksPostpartum ?? '—'),
-            suffix: ' tuần',
+            value: babyStatus === 'pregnant'
+              ? formatGestationAge(user.gestationWeeks, user.daysInWeek)
+              : user.weeksPostpartum != null ? `${user.weeksPostpartum} tuần` : '—',
+            suffix: '',
             color: 'bg-blue-50 text-blue-700 border-blue-100',
           },
           {
@@ -226,7 +231,7 @@ export function DadDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <DadDashboardTimeline
               weeksPostpartum={babyStatus === 'born' ? (user.weeksPostpartum || 0) : undefined}
-              weeksPregnant={babyStatus === 'pregnant' ? (baby?.gestation_weeks || 0) : undefined}
+              weeksPregnant={babyStatus === 'pregnant' ? (user.gestationWeeks || baby?.gestation_weeks || 0) : undefined}
               babyStatus={babyStatus}
             />
 

@@ -7,7 +7,7 @@ import { LogOut, Menu } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
+import { cn, formatGestationAge } from '@/lib/utils';
 import { UserMenu } from '@/components/navigation/user-menu';
 import { NotificationBell } from '@/components/navigation/notification-bell';
 
@@ -85,11 +85,11 @@ export function Header({ onMenuClick }: HeaderProps) {
               <span className="text-sm font-semibold text-foreground leading-tight">{user.name}</span>
               <span className="text-xs text-muted-foreground font-medium">
                 {user.babyStatus === 'pregnant' && user.gestationWeeks != null
-                  ? `Tuan ${user.gestationWeeks} thai`
+                  ? formatGestationAge(user.gestationWeeks, user.daysInWeek)
                   : user.babyStatus === 'born' && user.weeksPostpartum != null
-                  ? `Tuan ${user.weeksPostpartum} sau sinh`
+                  ? `Tuần ${user.weeksPostpartum} sau sinh`
                   : user.age != null
-                  ? `${user.age} tuoi`
+                  ? `${user.age} tuổi`
                   : user.role === 'admin'
                   ? 'Admin'
                   : ''}

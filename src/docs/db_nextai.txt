@@ -19,6 +19,47 @@ CREATE TABLE public.admin_logs (
   CONSTRAINT admin_logs_pkey PRIMARY KEY (id),
   CONSTRAINT admin_logs_admin_id_fkey FOREIGN KEY (admin_id) REFERENCES public.users(id)
 );
+CREATE TABLE public.algorithm_config_history (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  algorithm_id character varying NOT NULL,
+  version character varying NOT NULL,
+  change_description text NOT NULL,
+  config_changes jsonb,
+  performance_changes jsonb,
+  changed_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  changed_by uuid NOT NULL,
+  CONSTRAINT algorithm_config_history_pkey PRIMARY KEY (id),
+  CONSTRAINT algorithm_config_history_algorithm_id_fkey FOREIGN KEY (algorithm_id) REFERENCES public.algorithm_configs(id),
+  CONSTRAINT algorithm_config_history_changed_by_fkey FOREIGN KEY (changed_by) REFERENCES public.users(id)
+);
+CREATE TABLE public.algorithm_configs (
+  id character varying NOT NULL,
+  name character varying NOT NULL,
+  description text,
+  algorithm_type character varying NOT NULL CHECK (algorithm_type::text = ANY (ARRAY['menu_recommendation'::character varying, 'food_recognition'::character varying]::text[])),
+  status character varying NOT NULL DEFAULT 'active'::character varying CHECK (status::text = ANY (ARRAY['active'::character varying, 'inactive'::character varying, 'testing'::character varying]::text[])),
+  current_version character varying NOT NULL,
+  model_checkpoint character varying,
+  config_json jsonb NOT NULL DEFAULT '{}'::jsonb,
+  last_evaluation_date date,
+  accuracy numeric,
+  precision_score numeric,
+  recall_score numeric,
+  f1_score numeric,
+  calls_this_month integer DEFAULT 0,
+  success_rate numeric,
+  avg_response_time_ms integer,
+  last_training_date timestamp with time zone,
+  training_dataset_size integer,
+  training_duration_hours numeric,
+  deployed_at timestamp with time zone,
+  deprecated_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_by uuid,
+  CONSTRAINT algorithm_configs_pkey PRIMARY KEY (id),
+  CONSTRAINT algorithm_configs_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.users(id)
+);
 CREATE TABLE public.babies (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   partnership_id uuid,
@@ -31,13 +72,14 @@ CREATE TABLE public.babies (
   notes text,
   created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  status text DEFAULT 'born'::text,
-  gestation_weeks integer,
-  user_id uuid,
+  status text DEFAULT 'pregnant'::text,
   created_by uuid,
+  lmp date,
+  edd date,
+  mother_name character varying,
+  father_name character varying,
   CONSTRAINT babies_pkey PRIMARY KEY (id),
   CONSTRAINT babies_partnership_id_fkey FOREIGN KEY (partnership_id) REFERENCES public.partnerships(id),
-  CONSTRAINT babies_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
   CONSTRAINT babies_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
 );
 CREATE TABLE public.badges (
@@ -50,6 +92,46 @@ CREATE TABLE public.badges (
   created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT badges_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.blog_categories (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name character varying NOT NULL,
+  slug character varying NOT NULL UNIQUE,
+  description text,
+  icon_url character varying,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT blog_categories_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.blog_comments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  post_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  parent_id uuid,
+  content text NOT NULL,
+  is_hidden boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT blog_comments_pkey PRIMARY KEY (id),
+  CONSTRAINT blog_comments_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.cms_items(id),
+  CONSTRAINT blog_comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT blog_comments_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.blog_comments(id)
+);
+CREATE TABLE public.blog_post_categories (
+  post_id uuid NOT NULL,
+  category_id uuid NOT NULL,
+  CONSTRAINT blog_post_categories_pkey PRIMARY KEY (post_id, category_id),
+  CONSTRAINT blog_post_categories_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.cms_items(id),
+  CONSTRAINT blog_post_categories_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.blog_categories(id)
+);
+CREATE TABLE public.blog_reactions (
+  post_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  reaction_type character varying DEFAULT 'like'::character varying,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT blog_reactions_pkey PRIMARY KEY (post_id, user_id),
+  CONSTRAINT blog_reactions_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.cms_items(id),
+  CONSTRAINT blog_reactions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
 CREATE TABLE public.chat_histories (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -191,6 +273,8 @@ END,
   updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   created_by uuid,
   updated_by uuid,
+  last_menstrual_period date,
+  days_in_week integer DEFAULT 0 CHECK (days_in_week >= 0 AND days_in_week <= 6),
   CONSTRAINT medical_profiles_pkey PRIMARY KEY (id),
   CONSTRAINT medical_profiles_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
   CONSTRAINT medical_profiles_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id),
@@ -324,6 +408,30 @@ CREATE TABLE public.quests (
   updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT quests_pkey PRIMARY KEY (id)
 );
+CREATE TABLE public.rag_documents (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  title character varying NOT NULL,
+  content text NOT NULL,
+  category character varying NOT NULL CHECK (category::text = ANY (ARRAY['nutrition'::character varying, 'pregnancy'::character varying, 'general'::character varying, 'medical'::character varying, 'postpartum'::character varying]::text[])),
+  source character varying,
+  source_url character varying,
+  embedding_status character varying DEFAULT 'pending'::character varying CHECK (embedding_status::text = ANY (ARRAY['pending'::character varying, 'processing'::character varying, 'done'::character varying, 'failed'::character varying]::text[])),
+  embedding_model character varying,
+  embedding_id character varying,
+  tokens_count integer,
+  language character varying DEFAULT 'vi'::character varying,
+  tags jsonb DEFAULT '[]'::jsonb,
+  usage_count integer DEFAULT 0,
+  last_used_at timestamp with time zone,
+  status character varying DEFAULT 'active'::character varying CHECK (status::text = ANY (ARRAY['active'::character varying, 'archived'::character varying, 'deprecated'::character varying]::text[])),
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  created_by uuid,
+  updated_by uuid,
+  CONSTRAINT rag_documents_pkey PRIMARY KEY (id),
+  CONSTRAINT rag_documents_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id),
+  CONSTRAINT rag_documents_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.users(id)
+);
 CREATE TABLE public.recommendation_logs (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
@@ -430,6 +538,22 @@ CREATE TABLE public.tasks (
   CONSTRAINT tasks_partnership_id_fkey FOREIGN KEY (partnership_id) REFERENCES public.partnerships(id),
   CONSTRAINT tasks_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id)
 );
+CREATE TABLE public.token_usage_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  date_at date NOT NULL,
+  model_name character varying NOT NULL,
+  feature character varying,
+  input_tokens integer DEFAULT 0,
+  output_tokens integer DEFAULT 0,
+  total_tokens integer DEFAULT 0,
+  input_cost_usd numeric DEFAULT 0,
+  output_cost_usd numeric DEFAULT 0,
+  total_cost_usd numeric DEFAULT 0,
+  request_count integer DEFAULT 0,
+  error_count integer DEFAULT 0,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT token_usage_logs_pkey PRIMARY KEY (id)
+);
 CREATE TABLE public.user_badges (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
@@ -485,4 +609,45 @@ CREATE TABLE public.users (
   condition text DEFAULT 'none'::text,
   food_preference text DEFAULT 'no_pref'::text,
   CONSTRAINT users_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.wellness_challenges (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  challenge_type character varying NOT NULL,
+  challenge_text text NOT NULL,
+  challenge_date date NOT NULL,
+  completed boolean DEFAULT false,
+  completed_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT wellness_challenges_pkey PRIMARY KEY (id),
+  CONSTRAINT wellness_challenges_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.wellness_entries (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  entry_date date NOT NULL,
+  milk_score integer DEFAULT 0 CHECK (milk_score >= 0 AND milk_score <= 100),
+  mood integer DEFAULT 3 CHECK (mood >= 1 AND mood <= 5),
+  sleep_hours numeric DEFAULT 0,
+  water_intake_ml integer DEFAULT 0,
+  energy_level integer DEFAULT 3 CHECK (energy_level >= 1 AND energy_level <= 5),
+  notes text,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT wellness_entries_pkey PRIMARY KEY (id),
+  CONSTRAINT wellness_entries_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.wellness_profiles (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL UNIQUE,
+  health_focus jsonb DEFAULT '[]'::jsonb,
+  last_sleep_hours numeric DEFAULT 0,
+  current_mood integer DEFAULT 3 CHECK (current_mood >= 1 AND current_mood <= 5),
+  health_concerns text,
+  reminder_time time without time zone,
+  personalization_completed boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT wellness_profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT wellness_profiles_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );

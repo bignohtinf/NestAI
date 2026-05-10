@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.config import settings
-from app.api.routes import auth, users, partnerships, nutrition, health, missions, admin, baby, tasks, food_recommendations, bot_pregnant, chat_history, wellness, blog, medical_profile
+from app.api.routes import auth, users, partnerships, nutrition, health, missions, admin, baby, tasks, food_recommendations, bot_pregnant, chat_history, wellness, blog, medical_profile, stores
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -47,6 +47,7 @@ app.include_router(chat_history.router, prefix="/api/chat-history", tags=["chat-
 app.include_router(wellness.router, prefix="/api/wellness", tags=["wellness"])
 app.include_router(blog.router, prefix="/api/blog", tags=["blog"])
 app.include_router(medical_profile.router, prefix="/api/medical-profile", tags=["medical-profile"])
+app.include_router(stores.router, prefix="/api/stores", tags=["stores"])
 app.include_router(bot_pregnant.router)
 
 @app.get("/health")

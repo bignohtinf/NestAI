@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/lib/context';
+import { formatGestationAge } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -139,7 +140,7 @@ export function MomDashboard() {
   let weekNumber = 0;
   let totalWeeks = 40;
   if (babyStatus === 'pregnant' && user.gestationWeeks != null) {
-    weekLabel = `Tuần ${user.gestationWeeks} thai kỳ`;
+    weekLabel = formatGestationAge(user.gestationWeeks, user.daysInWeek);
     weekNumber = user.gestationWeeks;
     totalWeeks = 40;
   } else if (babyStatus === 'born' && user.weeksPostpartum != null) {

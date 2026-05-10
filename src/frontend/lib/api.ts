@@ -157,6 +157,36 @@ export const nutritionApi = {
     );
   },
 
+  // ─── Nutrition Report ──────────────────────────────────────────────────
+
+  async getSummary(userId: string, days = 7) {
+    return apiCall<{
+      summary: { avg_calories: number; total_protein: number; total_carbs: number; total_fat: number; log_count: number };
+      history: { date: string; calories: number }[];
+      macro_ratios: { name: string; value: number; color: string }[];
+      micro_nutrients: { name: string; value: number; target: number; unit: string; icon: string }[];
+      nutrition_score: number;
+      ai_insights: { type: string; title: string; message: string }[];
+    }>(`/api/nutrition/summary?user_id=${userId}&days=${days}`);
+  },
+
+  async getLogs(userId: string, limit = 30) {
+    return apiCall<{
+      logs: {
+        id: string;
+        meal_name: string;
+        calories: number;
+        protein: number;
+        carbs: number;
+        fat: number;
+        image_url: string | null;
+        source: string;
+        meal_type: string | null;
+        created_at: string;
+      }[];
+    }>(`/api/nutrition/logs?user_id=${userId}&limit=${limit}`);
+  },
+
   // ─── Users & Babies ───────────────────────────────────────────────────
 
   async getMe(userId: string) {
@@ -169,6 +199,9 @@ export const nutritionApi = {
 };
 
 export const adminApi = {
+  // Expose generic apiCall for custom admin endpoints
+  apiCall,
+
   // Stats
   async getStats() {
     return apiCall<any>('/api/admin/stats');
@@ -234,12 +267,55 @@ export const adminApi = {
   },
 
   // Stores
-  async getStores(options: { limit?: number; offset?: number; search?: string } = {}) {
+  async getStores(options: { limit?: number; offset?: number; search?: string; status?: string; city?: string } = {}) {
     const params = new URLSearchParams();
     if (options.limit) params.append('limit', String(options.limit));
     if (options.offset) params.append('offset', String(options.offset));
     if (options.search) params.append('search', options.search);
+    if (options.status) params.append('status', options.status);
+    if (options.city) params.append('city', options.city);
     return apiCall<any>(`/api/admin/stores?${params}`);
+  },
+
+  async createStore(data: any) {
+    return apiCall<any>('/api/admin/stores', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async updateStore(storeId: string, data: any) {
+    return apiCall<any>(`/api/admin/stores/${storeId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deleteStore(storeId: string) {
+    return apiCall<any>(`/api/admin/stores/${storeId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async getStoreMappings(options: { storeId?: string; limit?: number; offset?: number } = {}) {
+    const params = new URLSearchParams();
+    if (options.storeId) params.append('storeId', options.storeId);
+    if (options.limit) params.append('limit', String(options.limit));
+    if (options.offset) params.append('offset', String(options.offset));
+    return apiCall<any>(`/api/admin/stores/mapping?${params}`);
+  },
+
+  async addStoreMapping(data: { store_id: string; dish_stt: number; price_at_store?: number; availability?: boolean }) {
+    return apiCall<any>('/api/admin/stores/mapping', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deleteStoreMapping(mappingId: string) {
+    return apiCall<any>(`/api/admin/stores/mapping/${mappingId}`, {
+      method: 'DELETE',
+    });
   },
 
   // AI Hub
@@ -373,6 +449,29 @@ export const adminApi = {
     if (options.limit) params.append('limit', String(options.limit));
     if (options.offset) params.append('offset', String(options.offset));
     return apiCall<any>(`/api/admin/ai-logs/recommendations?${params}`);
+  },
+};
+
+// ── Public Stores API ────────────────────────────────────────────────────────
+export const storesApi = {
+  async searchNearby(options: {
+    dish?: string;
+    lat: number;
+    lng: number;
+    radius?: number;
+    limit?: number;
+  }) {
+    const params = new URLSearchParams();
+    if (options.dish) params.append('dish', options.dish);
+    params.append('lat', String(options.lat));
+    params.append('lng', String(options.lng));
+    if (options.radius) params.append('radius', String(options.radius));
+    if (options.limit) params.append('limit', String(options.limit));
+    return apiCall<any>(`/api/stores/nearby?${params}`);
+  },
+
+  async getStoreDetail(storeId: string) {
+    return apiCall<any>(`/api/stores/${storeId}`);
   },
 };
 

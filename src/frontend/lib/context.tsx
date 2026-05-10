@@ -69,20 +69,51 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const res = await fetch(`/api/babies/?user_id=${userId}`);
       if (!res.ok) return;
       const data = await res.json();
-      const babies: { date_of_birth?: string; gestation_weeks?: number }[] = data.babies || [];
+      const babies: {
+        status?: string;
+        date_of_birth?: string;
+        gestation_weeks?: number;
+        days_in_week?: number;
+        lmp?: string;
+        edd?: string;
+      }[] = data.babies || [];
       if (babies.length === 0) return;
 
-      const baby = babies[0];
-      if (baby.date_of_birth) {
+      // Ưu tiên baby đang mang thai, nếu không có thì lấy baby đầu tiên
+      const pregnantBaby = babies.find(b => b.status === 'pregnant');
+      const baby = pregnantBaby ?? babies[0];
+
+      if (baby.status === 'born' && baby.date_of_birth) {
         const now = new Date();
         const birthDate = new Date(baby.date_of_birth);
         const weeks = Math.floor((now.getTime() - birthDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
         if (mountedRef.current) {
-          setUser((prev) => prev ? { ...prev, babyStatus: 'born', weeksPostpartum: weeks, babyDob: baby.date_of_birth } : prev);
+          setUser((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              babyStatus: 'born',
+              weeksPostpartum: prev.weeksPostpartum ?? weeks,
+              babyDob: prev.babyDob ?? baby.date_of_birth,
+            };
+          });
         }
-      } else if (baby.gestation_weeks != null) {
+      } else if (baby.status === 'pregnant') {
+        // gestation_weeks được tính live từ backend (từ lmp/edd), có thể null nếu chưa có anchor dates
         if (mountedRef.current) {
-          setUser((prev) => prev ? { ...prev, babyStatus: 'pregnant', gestationWeeks: baby.gestation_weeks } : prev);
+          setUser((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              babyStatus: 'pregnant',
+              // Chỉ set nếu medical profile chưa set (medical profile sẽ override sau)
+              gestationWeeks: prev.gestationWeeks ?? baby.gestation_weeks ?? undefined,
+              daysInWeek: prev.daysInWeek ?? baby.days_in_week ?? undefined,
+              // Extract dueDate + trimester từ baby data (enrich_baby trả về)
+              dueDate: prev.dueDate ?? baby.due_date ?? baby.edd ?? undefined,
+              trimester: prev.trimester ?? baby.trimester ?? undefined,
+            };
+          });
         }
       }
     } catch {
@@ -98,17 +129,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (data.profile) {
         const p = data.profile;
         if (mountedRef.current) {
-          setUser((prev) => prev ? { 
-            ...prev, 
-            babyStatus: p.pregnancy_status === 'pregnant' ? 'pregnant' : (p.pregnancy_status === 'postpartum' ? 'born' : prev.babyStatus),
-            gestationWeeks: p.week_of_pregnancy,
-            daysInWeek: p.days_in_week,
-            dueDate: p.due_date,
-            lastMenstrualPeriod: p.last_menstrual_period,
-            trimester: p.trimester,
-            weightGain: p.weight_gain_kg,
-            bmi: p.bmi
-          } : prev);
+          setUser((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              babyStatus: p.pregnancy_status === 'pregnant'
+                ? 'pregnant'
+                : p.pregnancy_status === 'postpartum'
+                ? 'born'
+                : prev.babyStatus,
+              gestationWeeks: p.week_of_pregnancy ?? prev.gestationWeeks,
+              // days_in_week: dùng ?? để null từ API (khi không tính được) KHÔNG ghi đè giá trị đúng từ baby API
+              // Giá trị 0 hợp lệ (ngày 0 trong tuần) vẫn được giữ nhờ ?? chỉ skip null/undefined
+              daysInWeek: p.days_in_week ?? prev.daysInWeek,
+              dueDate: p.due_date ?? prev.dueDate,
+              lastMenstrualPeriod: p.last_menstrual_period ?? prev.lastMenstrualPeriod,
+              trimester: p.trimester ?? prev.trimester,
+              weightGain: p.weight_gain_kg ?? prev.weightGain,
+              bmi: p.bmi ?? prev.bmi,
+            };
+          });
         }
       }
     } catch (err) {

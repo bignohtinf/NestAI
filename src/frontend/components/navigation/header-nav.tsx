@@ -82,9 +82,9 @@ export function HeaderNav() {
     },
   ];
 
-  // Father direct link to Planner (without dropdown)
+  // Father direct link to Nutrition Report (without dropdown)
   const fatherDirectLinks: NavItem[] = [
-    { href: '/planner', label: 'Planner', icon: <Wallet className="h-4 w-4" /> },
+    { href: '/nutrition-report', label: 'Báo cáo DD', icon: <Wallet className="h-4 w-4" /> },
   ];
 
   const isActive = (href: string) => pathname === href;
