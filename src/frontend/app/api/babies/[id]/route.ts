@@ -4,10 +4,10 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:800
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const babyId = params.id;
+    const { id: babyId } = await params;
 
     const response = await fetch(`${BACKEND_URL}/api/babies/${babyId}`, {
       method: 'GET',
@@ -33,10 +33,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const babyId = params.id;
+    const { id: babyId } = await params;
     const body = await request.json();
 
     const response = await fetch(`${BACKEND_URL}/api/babies/${babyId}`, {
@@ -64,10 +64,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const babyId = params.id;
+    const { id: babyId } = await params;
 
     const response = await fetch(`${BACKEND_URL}/api/babies/${babyId}`, {
       method: 'DELETE',
