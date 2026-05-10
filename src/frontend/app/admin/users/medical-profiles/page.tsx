@@ -14,35 +14,38 @@ export default function MedicalProfilesPage() {
   const [total, setTotal] = useState(0);
   const pageSize = 20;
 
+  // Khi search/filter thay đổi → reset về trang 1
   useEffect(() => {
-    async function fetchProfiles() {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus]);
+
+  // Fetch data — debounce 300ms, huỷ request cũ nếu deps thay đổi trước khi xong
+  useEffect(() => {
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      if (cancelled) return;
       try {
         setLoading(true);
-        const offset = (currentPage - 1) * pageSize;
         const data = await adminApi.getMedicalProfiles({
           limit: pageSize,
-          offset: offset,
-          search: searchTerm,
-          pregnancyStatus: filterStatus === 'all' ? undefined : filterStatus
+          offset: (currentPage - 1) * pageSize,
+          search: searchTerm || undefined,
+          pregnancyStatus: filterStatus === 'all' ? undefined : filterStatus,
         });
-        setProfiles(data.profiles);
-        setTotal(data.total);
+        if (!cancelled) {
+          setProfiles(data.profiles || []);
+          setTotal(data.total || 0);
+        }
       } catch (err) {
-        console.error('Failed to fetch medical profiles:', err);
+        if (!cancelled) console.error('Failed to fetch medical profiles:', err);
       } finally {
-        setLoading(false);
-      }
-    }
-
-    const timer = setTimeout(() => {
-      // Reset to page 1 when searching or filtering
-      if (currentPage !== 1 && (searchTerm !== '' || filterStatus !== 'all')) {
-        setCurrentPage(1);
-      } else {
-        fetchProfiles();
+        if (!cancelled) setLoading(false);
       }
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [searchTerm, filterStatus, currentPage]);
 
   const totalPages = Math.ceil(total / pageSize);
@@ -110,7 +113,7 @@ export default function MedicalProfilesPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800">
                 <tr>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400">Người dùng</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400">User ID</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400">Trạng thái</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400">Giai đoạn</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400">Dự sinh</th>
@@ -129,15 +132,21 @@ export default function MedicalProfilesPage() {
                   profiles.map((p) => (
                     <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
                       <td className="px-4 py-4">
-                        <div className="font-medium text-gray-900 dark:text-white">{p.userName}</div>
+                        <div className="font-medium text-gray-900 dark:text-white font-mono text-xs">
+                          {p.userId}
+                        </div>
                         <div className="text-xs text-gray-500">{p.bloodType || 'N/A'} Rh{p.rhFactor || ''}</div>
                       </td>
                       <td className="px-4 py-4">{getStatusBadge(p.pregnancyStatus)}</td>
                       <td className="px-4 py-4">
                         {p.pregnancyStatus === 'pregnant' ? (
                           <div>
-                            <div className="font-medium">Tuần {p.weekOfPregnancy}</div>
-                            <div className="text-xs text-gray-500">Tam cá nguyệt {p.trimester}</div>
+                            <div className="font-medium">
+                              {p.weekOfPregnancy != null ? `Tuần ${p.weekOfPregnancy}` : 'Chưa rõ tuần'}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {p.trimester != null ? `Tam cá nguyệt ${p.trimester}` : '—'}
+                            </div>
                           </div>
                         ) : '-'}
                       </td>

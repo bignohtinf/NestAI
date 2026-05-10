@@ -471,10 +471,13 @@ export function IngredientScanner() {
   // ─── Lịch sử quét ────────────────────────────────────────────────────────
   const HistoryPanel = () => (
     <div className="space-y-3">
-      {/* Header */}
-      <button
+      {/* Header — dùng div thay vì button để tránh nested button (hydration error) */}
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setShowHistory(v => !v)}
-        className="w-full flex items-center justify-between px-1 group"
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setShowHistory(v => !v); }}
+        className="w-full flex items-center justify-between px-1 group cursor-pointer"
       >
         <div className="flex items-center gap-2">
           <History className="w-4 h-4 text-green-600" />
@@ -498,7 +501,7 @@ export function IngredientScanner() {
             : <ChevronDown className="w-4 h-4 text-muted-foreground" />
           }
         </div>
-      </button>
+      </div>
 
       {showHistory && (
         historyLoading ? (

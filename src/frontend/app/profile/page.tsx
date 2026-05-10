@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MainLayout } from '@/components/layouts/main-layout';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AlertCircle, CheckCircle, Plus, Trash2, Heart, Mail, Phone, Sparkles, Pencil, X, User } from 'lucide-react';
-import { formatGestationAge } from '@/lib/utils';
+import { formatGestationAge, calculateGestationAge } from '@/lib/utils';
 
 const PREDEFINED_ALLERGIES = [
   'Hải sản', 'Đậu phộng', 'Các loại hạt', 'Sữa bò', 'Trứng', 'Đậu nành', 'Lúa mì (Gluten)'
@@ -707,7 +707,16 @@ function ProfilePageContent() {
               </div>
             ) : (
               <div className="space-y-4">
-                {babies.map((baby) => (
+                {babies.map((baby) => {
+                  // Tính tuần thai client-side (browser JS) để đồng nhất với header.
+                  // Tránh lệch kết quả do Python server (FastAPI) dùng timezone server
+                  // khác với browser/Next.js khi tính date.today().
+                  const { weeks: clientWeeks, daysInWeek: clientDays } =
+                    baby.status === 'pregnant' && !baby.date_of_birth
+                      ? calculateGestationAge(baby.lmp, baby.edd)
+                      : { weeks: null, daysInWeek: null };
+
+                  return (
                   <Card key={baby.id} className={`border-none shadow-sm ${editingBabyId === baby.id ? 'ring-2 ring-primary' : ''}`}>
                     <CardContent className="pt-6">
                       {editingBabyId === baby.id ? (
@@ -807,12 +816,12 @@ function ProfilePageContent() {
                               <p className="text-sm text-muted-foreground">
                                 Ngày sinh: {new Date(baby.date_of_birth).toLocaleDateString('vi-VN')}
                               </p>
-                            ) : baby.gestation_weeks != null ? (
-                              // gestation_weeks được tính live từ backend (từ lmp/edd)
+                            ) : clientWeeks != null ? (
+                              // Tuần thai tính client-side (browser) từ lmp/edd — đồng nhất với header
                               <p className="text-sm text-muted-foreground">
                                 Tuần thai:{' '}
                                 <span className="font-semibold text-primary">
-                                  {formatGestationAge(baby.gestation_weeks, baby.days_in_week)}
+                                  {formatGestationAge(clientWeeks, clientDays)}
                                 </span>
                                 {baby.edd ? ` · Dự sinh: ${new Date(baby.edd).toLocaleDateString('vi-VN')}` : ''}
                               </p>
@@ -854,7 +863,8 @@ function ProfilePageContent() {
                       )}
                     </CardContent>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
             )}
 

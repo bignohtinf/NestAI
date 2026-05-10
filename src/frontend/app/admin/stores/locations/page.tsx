@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   Map as MapIcon, MapPin, Loader2, Search,
   Globe, CheckCircle2, Edit3, Save, X, AlertCircle,
+  ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { adminApi } from '@/lib/api';
@@ -38,6 +39,27 @@ interface StoreLocation {
   status: string;
 }
 
+// ── Fetch tất cả stores theo batch (vượt giới hạn Supabase) ──────────────────
+async function fetchAllStores(params: { search?: string; status?: string } = {}) {
+  const BATCH = 500;
+  const first = await adminApi.getStores({ ...params, limit: BATCH, offset: 0 });
+  const total: number = first.total || 0;
+  let items: any[] = first.stores || first.items || [];
+
+  if (total <= BATCH) return items;
+
+  const remainingPages = Math.ceil(total / BATCH) - 1;
+  const rest = await Promise.all(
+    Array.from({ length: remainingPages }, (_, i) =>
+      adminApi.getStores({ ...params, limit: BATCH, offset: (i + 1) * BATCH })
+    )
+  );
+  for (const r of rest) {
+    items = [...items, ...(r.stores || r.items || [])];
+  }
+  return items;
+}
+
 export default function LocationsPage() {
   const [stores, setStores] = useState<StoreLocation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,6 +70,10 @@ export default function LocationsPage() {
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState(false);
 
+  // Phân trang sidebar
+  const [listPage, setListPage] = useState(0);
+  const LIST_PAGE_SIZE = 25;
+
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -57,13 +83,14 @@ export default function LocationsPage() {
   // Keep ref in sync
   useEffect(() => { editingCoordsRef.current = editingCoords; }, [editingCoords]);
 
-  // Fetch stores
+  // Fetch ALL stores (vượt giới hạn 100 của Supabase bằng cách loop theo batch)
   useEffect(() => {
     async function fetch() {
       try {
         setLoading(true);
-        const data = await adminApi.getStores({ limit: 100, search: searchTerm });
-        const items = (data.items || data.stores || []).map((s: any) => ({
+        setListPage(0); // reset sidebar page khi search thay đổi
+        const raw = await fetchAllStores(searchTerm ? { search: searchTerm } : {});
+        const items = raw.map((s: any) => ({
           id: s.id,
           name: s.name,
           address: s.address || '',
@@ -205,6 +232,10 @@ export default function LocationsPage() {
   const storesWithCoords = stores.filter(s => s.latitude != null && s.longitude != null);
   const storesWithoutCoords = stores.filter(s => s.latitude == null || s.longitude == null);
 
+  // Phân trang sidebar list
+  const listTotalPages = Math.ceil(stores.length / LIST_PAGE_SIZE);
+  const pagedStores = stores.slice(listPage * LIST_PAGE_SIZE, (listPage + 1) * LIST_PAGE_SIZE);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -333,6 +364,11 @@ export default function LocationsPage() {
               <CardTitle className="text-sm flex items-center gap-2">
                 <Globe className="w-4 h-4 text-emerald-500" />
                 Tất cả cửa hàng ({stores.length})
+                {listTotalPages > 1 && (
+                  <span className="ml-auto text-[10px] font-normal text-gray-400">
+                    Trang {listPage + 1}/{listTotalPages}
+                  </span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -341,45 +377,77 @@ export default function LocationsPage() {
                   <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
                 </div>
               ) : (
-                <div className="divide-y divide-gray-100 dark:divide-gray-800 max-h-[400px] overflow-y-auto">
-                  {stores.map(store => (
-                    <button key={store.id}
-                      onClick={() => {
-                        setSelectedStore(store);
-                        if (store.latitude != null && store.longitude != null && mapInstanceRef.current) {
-                          mapInstanceRef.current.panTo({ lat: store.latitude, lng: store.longitude });
-                          mapInstanceRef.current.setZoom(16);
-                        }
-                      }}
-                      className={`w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${
-                        selectedStore?.id === store.id ? 'bg-emerald-50/50 dark:bg-emerald-900/10 border-l-2 border-l-emerald-500' : ''
-                      }`}>
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${
-                        store.latitude != null
-                          ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600'
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                      }`}>
-                        {store.name[0]}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{store.name}</p>
-                        <p className="text-[10px] text-gray-500 truncate">
-                          {store.latitude != null ? `${store.latitude.toFixed(4)}, ${store.longitude?.toFixed(4)}` : 'Chưa có tọa độ'}
-                        </p>
-                      </div>
-                      <button
-                        onClick={e => {
-                          e.stopPropagation();
+                <>
+                  <div className="divide-y divide-gray-100 dark:divide-gray-800 max-h-[350px] overflow-y-auto">
+                    {pagedStores.map(store => (
+                      // Dùng div thay button để tránh lồng <button> trong <button> (hydration error)
+                      <div
+                        key={store.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
                           setSelectedStore(store);
-                          setEditingCoords({ lat: String(store.latitude ?? 21.0285), lng: String(store.longitude ?? 105.8542) });
+                          if (store.latitude != null && store.longitude != null && mapInstanceRef.current) {
+                            mapInstanceRef.current.panTo({ lat: store.latitude, lng: store.longitude });
+                            mapInstanceRef.current.setZoom(16);
+                          }
                         }}
-                        className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600"
-                        title="Chỉnh sửa tọa độ">
-                        <Edit3 className="w-3.5 h-3.5" />
-                      </button>
-                    </button>
-                  ))}
-                </div>
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
+                        className={`w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer ${
+                          selectedStore?.id === store.id ? 'bg-emerald-50/50 dark:bg-emerald-900/10 border-l-2 border-l-emerald-500' : ''
+                        }`}>
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                          store.latitude != null
+                            ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                        }`}>
+                          {store.name[0]}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{store.name}</p>
+                          <p className="text-[10px] text-gray-500 truncate">
+                            {store.latitude != null ? `${store.latitude.toFixed(4)}, ${store.longitude?.toFixed(4)}` : 'Chưa có tọa độ'}
+                          </p>
+                        </div>
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            setSelectedStore(store);
+                            setEditingCoords({ lat: String(store.latitude ?? 21.0285), lng: String(store.longitude ?? 105.8542) });
+                          }}
+                          className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 shrink-0"
+                          title="Chỉnh sửa tọa độ">
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Phân trang sidebar */}
+                  {listTotalPages > 1 && (
+                    <div className="flex items-center justify-between px-3 py-2 border-t border-gray-100 dark:border-gray-800">
+                      <span className="text-[10px] text-gray-400">
+                        {listPage * LIST_PAGE_SIZE + 1}–{Math.min((listPage + 1) * LIST_PAGE_SIZE, stores.length)} / {stores.length}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setListPage(p => Math.max(0, p - 1))}
+                          disabled={listPage === 0}
+                          className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30"
+                        >
+                          <ChevronLeft className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setListPage(p => Math.min(listTotalPages - 1, p + 1))}
+                          disabled={listPage >= listTotalPages - 1}
+                          className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30"
+                        >
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>

@@ -67,10 +67,12 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
 // ── Add Mapping Modal ────────────────────────────────────────────────────────
 function AddMappingModal({
   stores,
+  storesLoading,
   onClose,
   onSave,
 }: {
   stores: StoreOption[];
+  storesLoading?: boolean;
   onClose: () => void;
   onSave: (data: { store_id: string; dish_stt: number; price_at_store?: number; availability: boolean }) => void;
 }) {
@@ -124,15 +126,23 @@ function AddMappingModal({
           {/* Store select */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Cửa hàng</label>
-            <select
-              value={selectedStoreId}
-              onChange={(e) => setSelectedStoreId(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {stores.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}{s.city ? ` (${s.city})` : ''}</option>
-              ))}
-            </select>
+            {storesLoading ? (
+              <div className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 text-sm text-gray-500">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Đang tải danh sách cửa hàng...
+              </div>
+            ) : (
+              <select
+                value={selectedStoreId}
+                onChange={(e) => setSelectedStoreId(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                {stores.length === 0 && <option value="">-- Không có cửa hàng --</option>}
+                {stores.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}{s.city ? ` (${s.city})` : ''}</option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Dish search */}
@@ -272,6 +282,29 @@ function DeleteConfirmModal({
   );
 }
 
+// ── Fetch tất cả stores theo batch (vượt giới hạn Supabase) ──────────────────
+async function fetchAllActiveStores(): Promise<StoreOption[]> {
+  const BATCH = 500;
+  const first = await adminApi.getStores({ limit: BATCH, offset: 0, status: 'active' });
+  const total: number = first.total || 0;
+  let items: any[] = first.stores || first.items || [];
+
+  if (total <= BATCH) {
+    return items.map((s: any) => ({ id: s.id, name: s.name, city: s.city }));
+  }
+
+  const remainingPages = Math.ceil(total / BATCH) - 1;
+  const rest = await Promise.all(
+    Array.from({ length: remainingPages }, (_, i) =>
+      adminApi.getStores({ limit: BATCH, offset: (i + 1) * BATCH, status: 'active' })
+    )
+  );
+  for (const r of rest) {
+    items = [...items, ...(r.stores || r.items || [])];
+  }
+  return items.map((s: any) => ({ id: s.id, name: s.name, city: s.city }));
+}
+
 // ── Main Page ────────────────────────────────────────────────────────────────
 export default function StoreMappingPage() {
   const [mappings, setMappings] = useState<MappingItem[]>([]);
@@ -284,6 +317,7 @@ export default function StoreMappingPage() {
 
   const [stores, setStores] = useState<StoreOption[]>([]);
   const [storesLoaded, setStoresLoaded] = useState(false);
+  const [storesLoading, setStoresLoading] = useState(false);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<MappingItem | null>(null);
@@ -291,20 +325,20 @@ export default function StoreMappingPage() {
 
   const LIMIT = 15;
 
-  // Load store list for dropdown
-  useEffect(() => {
-    async function loadStores() {
-      try {
-        const res = await adminApi.getStores({ limit: 100, status: 'active' });
-        setStores((res.stores || []).map((s: any) => ({ id: s.id, name: s.name, city: s.city })));
-      } catch (err) {
-        console.error('Failed to load stores:', err);
-      } finally {
-        setStoresLoaded(true);
-      }
+  // Lazy-load stores — chỉ fetch khi thực sự cần (mở modal hoặc dùng filter)
+  const ensureStoresLoaded = useCallback(async () => {
+    if (storesLoaded || storesLoading) return;
+    setStoresLoading(true);
+    try {
+      const allStores = await fetchAllActiveStores();
+      setStores(allStores);
+      setStoresLoaded(true);
+    } catch (err) {
+      console.error('Failed to load stores:', err);
+    } finally {
+      setStoresLoading(false);
     }
-    loadStores();
-  }, []);
+  }, [storesLoaded, storesLoading]);
 
   // Load mappings
   const fetchMappings = useCallback(async () => {
@@ -373,7 +407,12 @@ export default function StoreMappingPage() {
     <div className="space-y-6">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {showAddModal && (
-        <AddMappingModal stores={stores} onClose={() => setShowAddModal(false)} onSave={handleAddMapping} />
+        <AddMappingModal
+          stores={stores}
+          storesLoading={storesLoading}
+          onClose={() => setShowAddModal(false)}
+          onSave={handleAddMapping}
+        />
       )}
       {deleteTarget && (
         <DeleteConfirmModal mapping={deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDeleteMapping} />
@@ -389,7 +428,7 @@ export default function StoreMappingPage() {
           <p className="text-gray-500 mt-1">Quan ly thuc pham co san tai cac he thong sieu thi</p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={() => { ensureStoresLoaded(); setShowAddModal(true); }}
           className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
@@ -457,10 +496,13 @@ export default function StoreMappingPage() {
         </div>
         <select
           value={filterStoreId}
+          onFocus={ensureStoresLoaded}
           onChange={(e) => { setFilterStoreId(e.target.value); setPage(1); }}
           className="px-3 py-2 border rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 outline-none focus:ring-2 focus:ring-indigo-500 min-w-[200px]"
         >
-          <option value="">Tat ca cua hang</option>
+          <option value="">
+            {storesLoading ? 'Đang tải...' : 'Tất cả cửa hàng'}
+          </option>
           {stores.map((s) => (
             <option key={s.id} value={s.id}>{s.name}</option>
           ))}

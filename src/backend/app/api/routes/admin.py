@@ -185,7 +185,7 @@ async def get_user_medical_profile(user_id: str, supabase = Depends(get_supabase
 
 @router.get("/stores", response_model=StoreListResponse)
 async def get_stores(
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(20, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     city: Optional[str] = None,
     district: Optional[str] = None,
@@ -204,7 +204,7 @@ async def create_store(store_data: StoreCreate, supabase = Depends(get_supabase)
 
 @router.get("/stores/mapping", response_model=StoreFoodMappingListResponse)
 async def get_store_mappings(
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(20, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     storeId: Optional[str] = None,
     dishStt: Optional[int] = None,

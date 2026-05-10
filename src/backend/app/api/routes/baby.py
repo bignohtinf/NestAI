@@ -412,7 +412,12 @@ async def update_baby(baby_id: str, baby: BabyUpdate, supabase=Depends(get_supab
 
 @router.delete("/{baby_id}")
 async def delete_baby(baby_id: str, supabase=Depends(get_supabase)):
-    """Xóa hồ sơ bé."""
+    """
+    Xóa hồ sơ bé.
+    Sau khi xóa, re-sync medical_profiles:
+    - Nếu còn baby pregnant khác → sync lmp/edd của baby đó lên medical_profiles
+    - Nếu không còn baby pregnant nào → xóa anchor dates, set pregnancy_status = not_pregnant
+    """
     if not baby_id or baby_id == "undefined":
         raise HTTPException(status_code=400, detail="Invalid baby ID")
 
@@ -423,10 +428,101 @@ async def delete_baby(baby_id: str, supabase=Depends(get_supabase)):
         raise HTTPException(status_code=400, detail=f"Invalid UUID format: {baby_id}")
 
     try:
+        # Xóa daily_entries trước để tránh FK constraint violation
+        supabase.table("daily_entries").delete().eq("baby_id", baby_id).execute()
+
         result = supabase.table("babies").delete().eq("id", baby_id).execute()
 
         if not result.data:
             raise HTTPException(status_code=404, detail="Baby not found")
+
+        deleted_baby = result.data[0]
+
+        # Re-sync medical_profiles sau khi xóa baby pregnant
+        if deleted_baby.get("status") == "pregnant":
+            try:
+                creator_id = deleted_baby.get("created_by")
+                partnership_id = deleted_baby.get("partnership_id")
+
+                # Xác định mother_id
+                mother_id = None
+                if creator_id:
+                    user_res = supabase.table("users").select("role").eq("id", creator_id).single().execute()
+                    if user_res.data:
+                        if user_res.data["role"] == "mother":
+                            mother_id = creator_id
+                        elif user_res.data["role"] == "father":
+                            if partnership_id:
+                                p_res = supabase.table("partnerships") \
+                                    .select("mother_id") \
+                                    .eq("id", partnership_id) \
+                                    .execute()
+                                if p_res.data:
+                                    mother_id = p_res.data[0]["mother_id"]
+                            else:
+                                p_res = supabase.table("partnerships") \
+                                    .select("mother_id") \
+                                    .eq("father_id", creator_id) \
+                                    .eq("status", "accepted") \
+                                    .execute()
+                                if p_res.data:
+                                    mother_id = p_res.data[0]["mother_id"]
+
+                if mother_id:
+                    # Tìm baby pregnant còn lại (đã xóa rồi nên query này sẽ không trả về baby vừa xóa)
+                    remaining_query = supabase.table("babies") \
+                        .select("*") \
+                        .eq("status", "pregnant")
+                    if partnership_id:
+                        remaining_query = remaining_query.eq("partnership_id", partnership_id)
+                    else:
+                        remaining_query = remaining_query.eq("created_by", creator_id)
+
+                    remaining_res = remaining_query.execute()
+                    remaining_babies = remaining_res.data or []
+
+                    if remaining_babies:
+                        # Còn baby pregnant khác → sync lmp/edd của baby đó lên medical_profiles
+                        primary_baby = remaining_babies[0]
+                        profile_update: dict = {
+                            "user_id": mother_id,
+                            "pregnancy_status": "pregnant",
+                            "updated_at": datetime.utcnow().isoformat(),
+                        }
+                        if primary_baby.get("lmp"):
+                            profile_update["last_menstrual_period"] = primary_baby["lmp"]
+                        else:
+                            profile_update["last_menstrual_period"] = None
+                        if primary_baby.get("edd"):
+                            profile_update["due_date"] = primary_baby["edd"]
+                        else:
+                            profile_update["due_date"] = None
+
+                        supabase.table("medical_profiles").upsert(
+                            profile_update, on_conflict="user_id"
+                        ).execute()
+                        logger.info(
+                            f"Re-synced medical_profile for mother {mother_id} "
+                            f"to baby {primary_baby['id']} after deleting baby {baby_id}"
+                        )
+                    else:
+                        # Không còn baby pregnant → clear pregnancy anchor dates
+                        supabase.table("medical_profiles").upsert(
+                            {
+                                "user_id": mother_id,
+                                "pregnancy_status": "not_pregnant",
+                                "last_menstrual_period": None,
+                                "due_date": None,
+                                "updated_at": datetime.utcnow().isoformat(),
+                            },
+                            on_conflict="user_id"
+                        ).execute()
+                        logger.info(
+                            f"Cleared medical_profile pregnancy data for mother {mother_id} "
+                            f"after deleting last pregnant baby {baby_id}"
+                        )
+            except Exception as sync_err:
+                logger.warning(f"Re-sync medical_profile after delete failed: {sync_err}")
 
         return {"status": "deleted"}
     except HTTPException:

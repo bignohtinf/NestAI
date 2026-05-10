@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 from app.schemas.admin_stores import (
     StoreCreate,
     StoreUpdate,
@@ -66,23 +66,37 @@ class AdminStoresService:
         dish_stt: Optional[int] = None,
         search: Optional[str] = None
     ) -> StoreFoodMappingListResponse:
-        # Join with stores and nutrition_database for names
+        # Bước 1: Nếu có search, tìm store_ids và dish_stts phù hợp trước
+        store_id_filter: Optional[List[str]] = None
+        dish_stt_filter: Optional[List[int]] = None
+
+        if search and not store_id and not dish_stt:
+            store_res = self.supabase.table("stores").select("id").ilike("name", f"%{search}%").execute()
+            dish_res = self.supabase.table("nutrition_database").select("stt").ilike("dish_name_vi", f"%{search}%").execute()
+            matched_store_ids = [s["id"] for s in (store_res.data or [])]
+            matched_dish_stts = [d["stt"] for d in (dish_res.data or [])]
+            if not matched_store_ids and not matched_dish_stts:
+                return StoreFoodMappingListResponse(mappings=[], total=0, limit=limit, offset=offset)
+            store_id_filter = matched_store_ids or None
+            dish_stt_filter = matched_dish_stts or None
+
+        # Bước 2: Query chỉ các cột cần thiết — không SELECT *
         query = self.supabase.table("store_food_mappings").select(
-            "*, stores(name), nutrition_database(dish_name_vi)",
+            "id, store_id, dish_stt, availability, price_at_store, notes, updated_at, "
+            "stores(name), nutrition_database(dish_name_vi)",
             count="exact"
         )
-        
+
         if store_id:
             query = query.eq("store_id", store_id)
+        elif store_id_filter:
+            query = query.in_("store_id", store_id_filter)
+
         if dish_stt:
             query = query.eq("dish_stt", dish_stt)
-        
-        # Search is tricky with joins in Supabase/PostgREST direct query
-        # Usually requires a view or specialized RPC for deep filters
-        # For now, search in notes if provided
-        if search:
-            query = query.ilike("notes", f"%{search}%")
-            
+        elif dish_stt_filter:
+            query = query.in_("dish_stt", dish_stt_filter)
+
         res = query.order("updated_at", desc=True).range(offset, offset + limit - 1).execute()
         
         mappings = []

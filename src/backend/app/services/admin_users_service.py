@@ -23,9 +23,6 @@ class AdminUsersService:
         sort_by: str = "created_at",
         sort_order: str = "desc"
     ) -> UserListResponse:
-        print(f"[DEBUG] get_users_list called - role: {role}, status: {status}, search: {search}")
-        
-        # Start with a clean query to see if ANY users exist
         query = self.supabase.table("users").select("*", count="exact")
         
         # Apply filters only if provided
@@ -42,9 +39,7 @@ class AdminUsersService:
         
         try:
             res = query.order(db_sort_by, desc=(sort_order == "desc")).range(offset, offset + limit - 1).execute()
-            print(f"[DEBUG] Supabase result - count: {res.count}, data_len: {len(res.data or [])}")
         except Exception as e:
-            print(f"[ERROR] Supabase query failed: {str(e)}")
             return UserListResponse(users=[], total=0, limit=limit, offset=offset)
 
         users = []
@@ -60,8 +55,8 @@ class AdminUsersService:
                     lastLogin=u.get("last_login"),
                     activeStatus=u.get("is_active", False)
                 ))
-            except Exception as map_err:
-                print(f"[ERROR] Mapping user {u.get('id')} failed: {str(map_err)}")
+            except Exception:
+                pass
             
         return UserListResponse(
             users=users,
@@ -117,97 +112,70 @@ class AdminUsersService:
         trimester: Optional[int] = None,
         search: Optional[str] = None
     ) -> MedicalProfileListResponse:
-        # Query medical profiles with user data
-        print(f"[DEBUG] get_medical_profiles called - pregnancy: {pregnancy_status}, trimester: {trimester}")
-
         try:
-            # Use admin client to bypass RLS (service key required)
-            # Note: If supabase doesn't have service key, this will fall back to anon client
-            admin_client = self.supabase
-
-            # Try to access supabase_admin if available (imported in calling route)
-            # For now, we'll use the current client and handle RLS gracefully
-
-            # Try with explicit fkey join first (required if multiple relations exist)
-            try:
-                query = admin_client.table("medical_profiles").select(
-                    "id, user_id, pregnancy_status, trimester, week_of_pregnancy, due_date, "
-                    "pre_pregnancy_weight_kg, current_weight_kg, weight_gain_kg, height_cm, bmi, "
-                    "blood_type, rh_factor, chronic_diseases, allergies, medical_history, last_checkup_date, "
-                    "next_checkup_date, updated_at, users!medical_profiles_user_id_fkey(id, full_name, email)",
-                    count="exact"
-                )
-                print(f"[DEBUG] Querying medical_profiles with explicit fkey join")
-            except Exception as join_err:
-                print(f"[WARNING] Explicit join failed, trying implicit: {join_err}")
-                query = admin_client.table("medical_profiles").select(
-                    "id, user_id, pregnancy_status, trimester, week_of_pregnancy, due_date, "
-                    "pre_pregnancy_weight_kg, current_weight_kg, weight_gain_kg, height_cm, bmi, "
-                    "blood_type, rh_factor, chronic_diseases, allergies, medical_history, last_checkup_date, "
-                    "next_checkup_date, updated_at, users(id, full_name, email)",
-                    count="exact"
+            # Bước 1: Lấy danh sách non-admin user IDs — loại bỏ role 'admin' khỏi bảng này
+            # Chỉ cần 'id' vì frontend hiển thị ID (không hiển thị tên để bảo vệ quyền riêng tư)
+            # Search vẫn dùng full_name/email để user có thể tìm kiếm, nhưng kết quả chỉ hiện ID
+            user_query = (
+                self.supabase.table("users")
+                .select("id" + (", full_name, email" if search else ""))
+                .neq("role", "admin")
+            )
+            if search:
+                user_query = user_query.or_(
+                    f"full_name.ilike.%{search}%,email.ilike.%{search}%"
                 )
 
-            # Only apply pregnancy_status filter if it's specified and not "all"
+            user_res = user_query.limit(5000).execute()
+            # Dùng set các IDs được phép (non-admin)
+            user_map: dict = {u["id"]: u["id"] for u in (user_res.data or [])}
+
+            if not user_map:
+                return MedicalProfileListResponse(profiles=[], total=0, limit=limit, offset=offset)
+
+            # Bước 2: Query medical_profiles, chỉ lấy profiles của non-admin users
+            query = self.supabase.table("medical_profiles").select(
+                "id, user_id, pregnancy_status, trimester, week_of_pregnancy, due_date, "
+                "current_weight_kg, height_cm, bmi, blood_type, rh_factor, updated_at",
+                count="exact"
+            ).in_("user_id", list(user_map.keys()))
+
             if pregnancy_status and pregnancy_status != "all":
-                print(f"[DEBUG] Applying filter: pregnancy_status = '{pregnancy_status}'")
                 query = query.eq("pregnancy_status", pregnancy_status)
-
-            # Only apply trimester filter if it's specified
             if trimester:
-                print(f"[DEBUG] Applying filter: trimester = {trimester}")
                 query = query.eq("trimester", trimester)
 
-            # Apply search filter if provided
-            if search:
-                print(f"[DEBUG] Applying search filter: '{search}'")
-                # Supabase doesn't support searching in joined fields
-                # We'll fetch and filter in Python if needed
-
-            # Execute query
-            print(f"[DEBUG] Executing query with limit={limit}, offset={offset}")
             res = query.order("updated_at", desc=True).range(offset, offset + limit - 1).execute()
 
-            print(f"[DEBUG] Supabase query result - count: {res.count}, data_len: {len(res.data or [])}")
-
-            if res.data and len(res.data) > 0:
-                print(f"[DEBUG] Sample record: ID={res.data[0].get('id')}, User={res.data[0].get('user_id')}, Status={res.data[0].get('pregnancy_status')}")
-            else:
-                print(f"[DEBUG] No medical_profiles records found (or RLS blocked access)")
-
         except Exception as e:
-            print(f"[ERROR] get_medical_profiles query failed: {type(e).__name__}: {str(e)}")
             import traceback
-            print("[ERROR] Full traceback:")
             traceback.print_exc()
             return MedicalProfileListResponse(profiles=[], total=0, limit=limit, offset=offset)
 
         profiles = []
         for p in (res.data or []):
-            # Handle both view response and direct query response
-            user_name = p.get("user_name") or (p.get("users", {}).get("full_name") if isinstance(p.get("users"), dict) else "Unknown")
-
+            user_id = p["user_id"]
             profiles.append(MedicalProfileSummary(
                 id=p["id"],
-                userId=p["user_id"],
-                userName=user_name,
+                userId=user_id,
+                userName=user_map.get(user_id, "Unknown"),
                 pregnancyStatus=p["pregnancy_status"],
                 trimester=p.get("trimester"),
                 weekOfPregnancy=p.get("week_of_pregnancy"),
                 dueDate=p.get("due_date"),
-                prePregnancyWeight=p.get("pre_pregnancy_weight_kg"),
+                prePregnancyWeight=None,
                 currentWeight=p.get("current_weight_kg"),
-                weightGain=p.get("weight_gain_kg"),
+                weightGain=None,
                 heightCm=p.get("height_cm"),
                 bmi=p.get("bmi"),
                 bloodType=p.get("blood_type"),
-                chronicDiseases=p.get("chronic_diseases") or [],
-                allergies=p.get("allergies") or [],
-                medicalHistory=p.get("medical_history"),
-                lastCheckupDate=p.get("last_checkup_date"),
-                nextCheckupDate=p.get("next_checkup_date")
+                chronicDiseases=[],
+                allergies=[],
+                medicalHistory=None,
+                lastCheckupDate=None,
+                nextCheckupDate=None
             ))
-            
+
         return MedicalProfileListResponse(
             profiles=profiles,
             total=res.count or 0,

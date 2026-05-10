@@ -240,43 +240,14 @@ async def update_my_medical_profile(
             print(f"Partner sync failed: {str(e)}")
 
         # ---------------------------------------------------
-        # SYNC ANCHOR DATES SANG BABIES (nếu đang pregnant)
-        # Chỉ sync lmp và edd — KHÔNG sync gestation_weeks
+        # NOTE: Không sync anchor dates từ medical_profiles về babies.
+        # Mỗi baby lưu lmp/edd riêng trong bảng babies và là nguồn sự thật
+        # của chính baby đó. Việc sync ngược (medical_profiles → babies) sẽ
+        # gây lỗi khi có nhiều baby với tuần thai khác nhau — lmp của baby A
+        # bị ghi đè bởi lmp của baby B khi user cập nhật medical_profiles.
+        # Chiều sync hợp lệ duy nhất: baby → medical_profiles (xảy ra tại
+        # create_baby, update_baby, và delete_baby).
         # ---------------------------------------------------
-        if profile.get("pregnancy_status") == "pregnant":
-            try:
-                baby_anchor_update: dict = {
-                    "updated_at": datetime.utcnow().isoformat()
-                }
-                if profile.get("last_menstrual_period"):
-                    baby_anchor_update["lmp"] = profile["last_menstrual_period"]
-                if profile.get("due_date"):
-                    baby_anchor_update["edd"] = profile["due_date"]
-
-                if len(baby_anchor_update) > 1:
-                    # Tìm partnership_id nếu có
-                    partnership_id = None
-                    p_res2 = supabase.table("partnerships") \
-                        .select("id") \
-                        .or_(f"mother_id.eq.{user_id},father_id.eq.{user_id}") \
-                        .eq("status", "accepted") \
-                        .execute()
-                    if p_res2.data:
-                        partnership_id = p_res2.data[0]["id"]
-
-                    query = supabase.table("babies") \
-                        .update(baby_anchor_update) \
-                        .eq("status", "pregnant")
-
-                    if partnership_id:
-                        query = query.eq("partnership_id", partnership_id)
-                    else:
-                        query = query.eq("created_by", user_id)
-
-                    query.execute()
-
-            except Exception as e:
-                print(f"Sync anchor dates to babies failed: {str(e)}")
 
         return {"status": "updated", "profile": profile}
 
