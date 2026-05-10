@@ -38,7 +38,7 @@ interface NearbyStore {
   latitude: number;
   longitude: number;
   operating_hours?: string;
-  food_items_count: number;
+  food_items_count?: number;
   distance_km: number;
   available_dishes?: {
     stt: number;
@@ -52,6 +52,16 @@ interface NearbyStore {
     duration_text: string;
     duration_value: number;
   } | null;
+  // Hybrid fields
+  source?: 'partner' | 'google';
+  is_partner?: boolean;
+  google_place_id?: string;
+  rating?: number;
+  user_ratings_total?: number;
+  is_open_now?: boolean | null;
+  photo_url?: string;
+  price_level?: string;
+  types?: string[];
 }
 
 interface MatchedDish {
@@ -202,6 +212,8 @@ function StoreMap({
       bounds.extend(pos);
 
       const isSelected = store.id === selectedStoreId;
+      const isPartner = store.is_partner;
+      const pinColor = isSelected ? '#EF4444' : isPartner ? '#F59E0B' : '#10B981';
       const marker = new google.maps.Marker({
         position: pos,
         map,
@@ -214,7 +226,7 @@ function StoreMap({
         },
         icon: {
           path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z',
-          fillColor: isSelected ? '#EF4444' : '#10B981',
+          fillColor: pinColor,
           fillOpacity: 1,
           strokeColor: '#fff',
           strokeWeight: 2,
@@ -222,16 +234,23 @@ function StoreMap({
           anchor: new google.maps.Point(12, 22),
           labelOrigin: new google.maps.Point(12, 10),
         },
-        zIndex: isSelected ? 100 : 50 - idx,
+        zIndex: isSelected ? 100 : isPartner ? 80 : 50 - idx,
       });
 
+      const partnerBadge = store.is_partner
+        ? '<span style="display:inline-block;font-size:9px;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px;margin-left:6px;font-weight:700;text-transform:uppercase">Đối tác</span>'
+        : '';
+      const ratingHtml = store.rating
+        ? `<span style="font-size:11px;color:#D97706;margin-left:8px">★ ${store.rating}</span>`
+        : '';
       const infoContent = `
-        <div style="padding:8px;max-width:260px;font-family:system-ui">
-          <h3 style="margin:0 0 4px;font-size:14px;font-weight:600">${store.name}</h3>
+        <div style="padding:8px;max-width:280px;font-family:system-ui">
+          <h3 style="margin:0 0 4px;font-size:14px;font-weight:600">${store.name}${partnerBadge}</h3>
           <p style="margin:0 0 4px;font-size:12px;color:#666">${store.address}</p>
           <p style="margin:0;font-size:12px;color:#059669;font-weight:500">
             ${store.distance_km} km
             ${store.travel_info ? ` · ${store.travel_info.duration_text}` : ''}
+            ${ratingHtml}
           </p>
           ${store.available_dishes?.length ? `<p style="margin:4px 0 0;font-size:11px;color:#888">${store.available_dishes.length} món có sẵn</p>` : ''}
         </div>
@@ -567,12 +586,18 @@ export function SmartShopping() {
           {hasSearched && !nearbyLoading && (
             <div className="space-y-4">
               {/* Result header */}
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Tìm thấy <span className="font-bold text-foreground">{nearbyStores.length}</span> cửa hàng
-                  {dishSearch && <span> có <span className="font-medium text-primary">"{dishSearch}"</span></span>}
-                  {' '}trong bán kính {searchRadius} km
-                </p>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="text-sm text-muted-foreground">
+                  <span>Tìm thấy <span className="font-bold text-foreground">{nearbyStores.length}</span> kết quả</span>
+                  {dishSearch && <span> cho <span className="font-medium text-primary">&ldquo;{dishSearch}&rdquo;</span></span>}
+                  {' '}trong {searchRadius} km
+                  {nearbyStores.filter(s => s.is_partner).length > 0 && (
+                    <span className="ml-2 inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 font-medium">
+                      <Star className="w-3 h-3" />
+                      {nearbyStores.filter(s => s.is_partner).length} đối tác
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={() => setShowMap(!showMap)}
                   className="flex items-center gap-1.5 text-xs text-primary hover:underline"
@@ -606,56 +631,108 @@ export function SmartShopping() {
                   ) : (
                     <Card className="overflow-hidden">
                       <div className="divide-y divide-border">
-                        {nearbyStores.map((store, idx) => (
-                          <button
-                            key={store.id}
-                            onClick={() => setSelectedNearbyStore(
-                              selectedNearbyStore === store.id ? null : store.id
-                            )}
-                            className={`w-full text-left px-5 py-4 flex items-center gap-4 hover:bg-secondary/40 transition-colors ${
-                              selectedNearbyStore === store.id ? 'bg-primary/5 border-l-2 border-l-primary' : ''
-                            }`}
-                          >
-                            {/* Number badge */}
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
-                              {idx + 1}
-                            </div>
+                        {/* Partner stores section */}
+                        {nearbyStores.filter(s => s.is_partner).length > 0 && (
+                          <div className="px-5 py-2.5 bg-amber-50/50 dark:bg-amber-900/10 border-b border-amber-200/50 dark:border-amber-800/30">
+                            <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                              <Star className="w-3.5 h-3.5" />
+                              Cửa hàng đối tác NestAI — Ưu tiên hiển thị
+                            </p>
+                          </div>
+                        )}
+                        {nearbyStores.map((store, idx) => {
+                          // Show separator before Google results
+                          const isFirstGoogle = !store.is_partner &&
+                            (idx === 0 || nearbyStores[idx - 1]?.is_partner);
 
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                                <span className="font-semibold text-sm text-foreground">{store.name}</span>
-                                {store.travel_info && (
-                                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                                    {store.travel_info.duration_text}
-                                  </span>
+                          return (
+                            <div key={store.id}>
+                              {isFirstGoogle && (
+                                <div className="px-5 py-2.5 bg-secondary/30 border-b border-border">
+                                  <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                                    <Globe className="w-3.5 h-3.5" />
+                                    Kết quả từ Google Maps
+                                  </p>
+                                </div>
+                              )}
+                              <button
+                                onClick={() => setSelectedNearbyStore(
+                                  selectedNearbyStore === store.id ? null : store.id
                                 )}
-                              </div>
-                              <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
-                                <MapPin className="w-3 h-3 shrink-0" />
-                                {store.address}
-                              </p>
-                              <div className="flex items-center gap-3 mt-1">
-                                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                                  {store.distance_km} km
-                                </span>
-                                {store.available_dishes && store.available_dishes.length > 0 && (
-                                  <span className="text-xs text-muted-foreground">
-                                    {store.available_dishes.length} món có sẵn
-                                  </span>
-                                )}
-                                {store.food_items_count > 0 && (
-                                  <span className="text-xs text-muted-foreground">
-                                    {store.food_items_count} sản phẩm
-                                  </span>
-                                )}
-                              </div>
-                            </div>
+                                className={`w-full text-left px-5 py-4 flex items-center gap-4 hover:bg-secondary/40 transition-colors ${
+                                  selectedNearbyStore === store.id ? 'bg-primary/5 border-l-2 border-l-primary' : ''
+                                } ${store.is_partner ? 'bg-amber-50/30 dark:bg-amber-900/5' : ''}`}
+                              >
+                                {/* Number badge */}
+                                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 ${
+                                  store.is_partner
+                                    ? 'bg-gradient-to-br from-amber-400 to-orange-500'
+                                    : 'bg-gradient-to-br from-green-400 to-emerald-600'
+                                }`}>
+                                  {idx + 1}
+                                </div>
 
-                            <ChevronRight className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform ${
-                              selectedNearbyStore === store.id ? 'rotate-90' : ''
-                            }`} />
-                          </button>
-                        ))}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                                    <span className="font-semibold text-sm text-foreground">{store.name}</span>
+                                    {store.is_partner && (
+                                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 uppercase tracking-wide">
+                                        Đối tác
+                                      </span>
+                                    )}
+                                    {store.travel_info && (
+                                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                        {store.travel_info.duration_text}
+                                      </span>
+                                    )}
+                                    {store.is_open_now === true && (
+                                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                                        Đang mở
+                                      </span>
+                                    )}
+                                    {store.is_open_now === false && (
+                                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                                        Đã đóng
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                                    <MapPin className="w-3 h-3 shrink-0" />
+                                    {store.address}
+                                  </p>
+                                  <div className="flex items-center gap-3 mt-1">
+                                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                      {store.distance_km} km
+                                    </span>
+                                    {store.rating && (
+                                      <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                                        <Star className="w-3 h-3 fill-current" />
+                                        {store.rating}
+                                        {store.user_ratings_total && (
+                                          <span className="text-muted-foreground ml-0.5">({store.user_ratings_total})</span>
+                                        )}
+                                      </span>
+                                    )}
+                                    {store.available_dishes && store.available_dishes.length > 0 && (
+                                      <span className="text-xs text-muted-foreground">
+                                        {store.available_dishes.length} món có sẵn
+                                      </span>
+                                    )}
+                                    {store.food_items_count && store.food_items_count > 0 && (
+                                      <span className="text-xs text-muted-foreground">
+                                        {store.food_items_count} sản phẩm
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <ChevronRight className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform ${
+                                  selectedNearbyStore === store.id ? 'rotate-90' : ''
+                                }`} />
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
                     </Card>
                   )}
@@ -665,17 +742,41 @@ export function SmartShopping() {
                 <div className="space-y-4">
                   {selectedNearby ? (
                     <Card className="overflow-hidden">
+                      {/* Photo from Google Places */}
+                      {selectedNearby.photo_url && (
+                        <div className="h-36 w-full overflow-hidden">
+                          <img src={selectedNearby.photo_url} alt={selectedNearby.name} className="w-full h-full object-cover" />
+                        </div>
+                      )}
                       <CardHeader className="pb-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-xl shrink-0">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-xl shrink-0 ${
+                            selectedNearby.is_partner
+                              ? 'bg-gradient-to-br from-amber-400 to-orange-500'
+                              : 'bg-gradient-to-br from-green-400 to-emerald-600'
+                          }`}>
                             {selectedNearby.name[0]}
                           </div>
                           <div className="min-w-0">
-                            <CardTitle className="text-base truncate">{selectedNearby.name}</CardTitle>
-                            <p className="text-xs text-emerald-600 font-medium">
-                              {selectedNearby.distance_km} km
-                              {selectedNearby.travel_info && ` · ${selectedNearby.travel_info.duration_text}`}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <CardTitle className="text-base truncate">{selectedNearby.name}</CardTitle>
+                              {selectedNearby.is_partner && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 uppercase shrink-0">
+                                  Đối tác
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <p className="text-xs text-emerald-600 font-medium">
+                                {selectedNearby.distance_km} km
+                                {selectedNearby.travel_info && ` · ${selectedNearby.travel_info.duration_text}`}
+                              </p>
+                              {selectedNearby.rating && (
+                                <span className="text-xs text-amber-600 flex items-center gap-0.5">
+                                  <Star className="w-3 h-3 fill-current" /> {selectedNearby.rating}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </CardHeader>
