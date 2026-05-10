@@ -14,9 +14,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Dữ liệu không hợp lệ' }, { status: 400 });
     }
 
+    const newStatus = action === 'accept' ? 'accepted' : 'rejected';
+
     const { data, error } = await supabaseService
       .from('partnerships')
-      .update({ status: action === 'accept' ? 'accepted' : 'rejected' })
+      .update({ status: newStatus, responded_at: new Date().toISOString(), responded_by: userId })
       .eq('id', partnershipId)
       .select()
       .single();
@@ -24,6 +26,26 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Partnership respond error:', error);
       return NextResponse.json({ message: 'Không thể xử lý yêu cầu' }, { status: 500 });
+    }
+
+    // Khi ACCEPTED: tự động gắn partnership_id cho các babies solo của cả mẹ lẫn bố
+    // (babies được tạo trước khi có partnership sẽ không có partnership_id)
+    if (newStatus === 'accepted' && data) {
+      const motherId = data.mother_id;
+      const fatherId = data.father_id;
+
+      const userIds = [motherId, fatherId].filter(Boolean);
+      for (const uid of userIds) {
+        const { error: linkErr } = await supabaseService
+          .from('babies')
+          .update({ partnership_id: partnershipId })
+          .eq('created_by', uid)
+          .is('partnership_id', null);
+
+        if (linkErr) {
+          console.error(`Failed to link babies for user ${uid}:`, linkErr);
+        }
+      }
     }
 
     return NextResponse.json({

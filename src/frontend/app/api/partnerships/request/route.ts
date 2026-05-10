@@ -11,7 +11,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { partnerEmail, partnerPhone, fatherId } = body;
+    // requesterId = người đang đăng nhập (có thể là mẹ hoặc bố)
+    const { partnerEmail, partnerPhone, requesterId } = body;
 
     if (!partnerEmail && !partnerPhone) {
       return NextResponse.json(
@@ -20,22 +21,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!fatherId) {
+    if (!requesterId) {
       return NextResponse.json(
         { message: 'Không tìm thấy thông tin người dùng' },
         { status: 400 }
       );
     }
 
-    // Find partner by email or phone
-    let query = supabaseService.from('users').select('id, role');
-    if (partnerEmail) {
-      query = query.eq('email', partnerEmail);
-    } else {
-      query = query.eq('phone', partnerPhone);
+    // Lấy role của người gửi
+    const { data: requesterData, error: requesterError } = await supabaseService
+      .from('users')
+      .select('id, role')
+      .eq('id', requesterId)
+      .single();
+
+    if (requesterError || !requesterData) {
+      return NextResponse.json(
+        { message: 'Không tìm thấy thông tin người dùng' },
+        { status: 404 }
+      );
     }
 
-    const { data: partnerData, error: partnerError } = await query.single();
+    // Tìm đối phương
+    let partnerQuery = supabaseService.from('users').select('id, role');
+    if (partnerEmail) {
+      partnerQuery = partnerQuery.eq('email', partnerEmail);
+    } else {
+      partnerQuery = partnerQuery.eq('phone', partnerPhone);
+    }
+
+    const { data: partnerData, error: partnerError } = await partnerQuery.single();
 
     if (partnerError || !partnerData) {
       return NextResponse.json(
@@ -44,38 +59,58 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (partnerData.id === fatherId) {
+    if (partnerData.id === requesterId) {
       return NextResponse.json(
         { message: 'Không thể kết nối với chính mình' },
         { status: 400 }
       );
     }
 
-    // Check for existing partnership
+    // Xác định father_id / mother_id theo role
+    let fatherId: string;
+    let motherId: string;
+
+    if (requesterData.role === 'father' && partnerData.role === 'mother') {
+      fatherId = requesterId;
+      motherId = partnerData.id;
+    } else if (requesterData.role === 'mother' && partnerData.role === 'father') {
+      fatherId = partnerData.id;
+      motherId = requesterId;
+    } else {
+      return NextResponse.json(
+        {
+          message: `Kết nối cần 1 tài khoản "Bố" và 1 tài khoản "Mẹ". Bạn là "${requesterData.role === 'mother' ? 'Mẹ' : 'Bố'}", đối phương là "${partnerData.role === 'mother' ? 'Mẹ' : 'Bố'}".`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Kiểm tra đã có partnership chưa
     const { data: existing } = await supabaseService
       .from('partnerships')
       .select('id, status')
       .or(
-        `and(father_id.eq.${fatherId},mother_id.eq.${partnerData.id}),and(father_id.eq.${partnerData.id},mother_id.eq.${fatherId})`
+        `and(father_id.eq.${fatherId},mother_id.eq.${motherId}),and(father_id.eq.${motherId},mother_id.eq.${fatherId})`
       )
       .in('status', ['pending', 'accepted'])
       .maybeSingle();
 
     if (existing) {
-      const msg = existing.status === 'accepted'
-        ? 'Đã có mối quan hệ với người dùng này'
-        : 'Đã có yêu cầu kết nối đang chờ xử lý';
+      const msg =
+        existing.status === 'accepted'
+          ? 'Đã có mối quan hệ với người dùng này'
+          : 'Đã có yêu cầu kết nối đang chờ xử lý';
       return NextResponse.json({ message: msg }, { status: 400 });
     }
 
-    // Create partnership
+    // Tạo partnership request
     const { data, error } = await supabaseService
       .from('partnerships')
       .insert({
         father_id: fatherId,
-        mother_id: partnerData.id,
+        mother_id: motherId,
         status: 'pending',
-        requested_by: fatherId,
+        requested_by: requesterId,
       })
       .select()
       .single();
@@ -89,7 +124,10 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { message: 'Yêu cầu kết nối đã được gửi. Vui lòng chờ đối phương chấp nhận.', partnership: data },
+      {
+        message: 'Yêu cầu kết nối đã được gửi. Vui lòng chờ đối phương chấp nhận.',
+        partnership: data,
+      },
       { status: 201 }
     );
   } catch (error) {
