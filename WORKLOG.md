@@ -102,6 +102,23 @@ Ghi lại các quyết định kỹ thuật, phân công, và brainstorming củ
 
 ---
 
+### [ADR-4] Thay đổi công nghệ nhận diện món ăn (Smart Scan) — 27/04/2026
+
+**Bối cảnh:** Cần phát triển tính năng Smart Scan giúp mẹ bầu chụp ảnh bữa ăn để tự động tính lượng calo và vi chất. Ban đầu dự kiến tự fine-tune một model vision để nhận diện các món ăn Việt Nam.
+
+**Các lựa chọn đã xem xét:**
+- **Tự fine-tune vision model:** Cần thu thập lượng lớn dataset ảnh món ăn Việt Nam (tốn thời gian dán nhãn), chi phí huấn luyện cao, khó mở rộng cho các món ăn mới.
+- **Sử dụng LLM Vision kết hợp cơ sở dữ liệu dinh dưỡng:** Gọi API LLM để phân tích ảnh, trích xuất tên món ăn, ước lượng khẩu phần. Sau đó tự động map với bộ cơ sở dữ liệu dinh dưỡng (database) để tính toán calo và vi chất.
+
+**Quyết định:** Chọn **Sử dụng LLM Vision kết hợp cơ sở dữ liệu dinh dưỡng**. 
+
+**Hệ quả:** 
+- Rút ngắn đáng kể thời gian phát triển (time-to-market).
+- Không tốn chi phí và công sức thu thập/dán nhãn dữ liệu.
+- Đánh đổi: Phụ thuộc vào API bên ngoài và cần kỹ năng prompt engineering tốt để tránh hallucination.
+
+---
+
 ### Sprint 1 — 06/04 → 13/04/2026
 
 | Task | Người làm | Deadline | Trạng thái |
@@ -137,6 +154,28 @@ Ghi lại các quyết định kỹ thuật, phân công, và brainstorming củ
 | Tích hợp food_recommendations route | Thông | 27/04 | ✅ Xong |
 | Fix dialog Nori (kích thước, truncate text) | Huyền | 28/04 | ✅ Xong |
 | Cập nhật JOURNAL và WORKLOG | Huyền | 28/04 | ✅ Xong |
+
+---
+
+### Sprint 4 — 28/04 → 05/05/2026
+
+| Task | Người làm | Deadline | Trạng thái |
+|---|---|---|---|
+| Nghiên cứu & tích hợp LLM Vision cho Smart Scan | Thông | 01/05 | ✅ Xong |
+| Xây dựng thuật toán mapping LLM output với Nutrition DB | Quân | 02/05 | ✅ Xong |
+| Cập nhật UI/UX cho màn hình Smart Scan | Huyền | 04/05 | ✅ Xong |
+| Tối ưu prompt để chống hallucination và lấy format JSON | Quân | 05/05 | ✅ Xong |
+
+---
+
+### Sprint 5 — 05/05 → 12/05/2026
+
+| Task | Người làm | Deadline | Trạng thái |
+|---|---|---|---|
+| Hoàn thiện Dashboard hiển thị dinh dưỡng cá nhân hoá | Huyền | 08/05 | ✅ Xong |
+| Viết kịch bản Demo theo AIDA framework | Huyền | 09/05 | ✅ Xong |
+| Security test (Prompt injection) & AI Governance docs | Quân | 10/05 | ✅ Xong |
+| Freeze code, test toàn bộ luồng, dry-run demo | Cả nhóm | 11/05 | ✅ Xong |
 
 ---
 
