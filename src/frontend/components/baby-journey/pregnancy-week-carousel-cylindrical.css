@@ -463,6 +463,67 @@
   border: 1px solid #fff0f3;
 }
 
+/* ── Mom tip & Blog link ─────────────────────────────────────────────────── */
+.mom-tip-section {
+  background: #fff9f0;
+  border-left: 4px solid #ffb347;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 4px;
+}
+
+.mom-tip-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #c9720a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.mom-tip-text {
+  margin: 0;
+  font-size: 13px;
+  color: #6a4a1a;
+  line-height: 1.65;
+}
+
+.journey-blog-link {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #ff8da1 0%, #ff6b81 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 20px;
+  text-decoration: none;
+  transition: opacity 0.2s, transform 0.2s;
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.journey-blog-link:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.journey-blog-link-soon {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 8px 16px;
+  background: #f5f0f0;
+  color: #b09090;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 20px;
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+  border: 1px dashed #ddd0d0;
+}
+
 /* ── Dark mode ───────────────────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
   .cylindrical-carousel-container {
@@ -507,6 +568,25 @@
   .stat-row,
   .progress-label {
     color: #d1c1c1;
+  }
+
+  .mom-tip-section {
+    background: #2a1e0e;
+    border-color: #c87020;
+  }
+
+  .mom-tip-label {
+    color: #f5a030;
+  }
+
+  .mom-tip-text {
+    color: #d4a870;
+  }
+
+  .journey-blog-link-soon {
+    background: #2a2020;
+    color: #806060;
+    border-color: #3a2a2a;
   }
 
   .progress-track {

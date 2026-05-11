@@ -1,0 +1,92 @@
+{
+    "document_id": "1470_QD-BYT",
+    "filename": "1470_QD-BYT.md",
+    "title": "Hướng dẫn quốc gia về sàng lọc và quản lý đái tháo đường thai kỳ",
+    "document_type": "Quyết định ban hành tài liệu chuyên môn",
+    "issuing_agency": "Bộ Y tế",
+    "decision_number": "1470/QĐ-BYT",
+    "issue_date": "2024-05-29",
+    "effective_date": "2024-05-29",
+    "signatory": "Thứ trưởng Trần Văn Thuấn",
+    "replaced_document": "Quyết định số 6173/QĐ-BYT ngày 12/10/2018",
+    "target_audience": [
+        "Phụ nữ có thai",
+        "Cán bộ y tế",
+        "Cơ sở khám bệnh, chữa bệnh toàn quốc"
+    ],
+    "applicability": "Các cơ sở khám bệnh, chữa bệnh trong phạm vi toàn quốc",
+    "keywords": [
+        "đái tháo đường thai kỳ",
+        "ĐTĐTK",
+        "sàng lọc",
+        "quản lý",
+        "glucose huyết",
+        "insulin",
+        "phụ nữ mang thai"
+    ],
+    "main_sections": [
+        "Chương 1: Đại cương về đái tháo đường và đái tháo đường thai kỳ",
+        "Chương 2: Sàng lọc và chẩn đoán đái tháo đường thai kỳ",
+        "Chương 3: Quản lý đái tháo đường thai kỳ trong giai đoạn mang thai",
+        "Chương 4: Quản lý đái tháo đường thai kỳ sau sinh"
+    ],
+    "medical_conditions_covered": [
+        "Đái tháo đường thai kỳ",
+        "Rối loạn chuyển hóa glucose sau sinh"
+    ],
+    "chunks": [
+        {
+            "chunk_id": "1470_QD-BYT_chunk_001",
+            "chapter": "Chương 1",
+            "section": "2.4. Yếu tố nguy cơ",
+            "topic": "Các yếu tố nguy cơ mắc đái tháo đường thai kỳ",
+            "keywords": [
+                "thừa cân",
+                "béo phì",
+                "tiền sử gia đình",
+                "sinh con to",
+                "tuổi mang thai trên 35"
+            ],
+            "content": "Các thai phụ có yếu tố nguy cơ sau đây dễ mắc ĐTĐTK: Thừa cân hay béo phì... Tiền sử gia đình có người ĐTĐ thế hệ thứ nhất... Tiền sử sinh con to ≥ 4000 gam..."
+        },
+        {
+            "chunk_id": "1470_QD-BYT_chunk_002",
+            "chapter": "Chương 2",
+            "section": "1.2.2. Trong 3 tháng giữa thai kỳ",
+            "topic": "Sàng lọc bằng nghiệm pháp dung nạp 75gram glucose",
+            "keywords": [
+                "tuần 24 - 28",
+                "nghiệm pháp dung nạp glucose",
+                "3 tháng giữa thai kỳ",
+                "nhịn đói 8 giờ"
+            ],
+            "content": "Thực hiện tầm soát ĐTĐTK cho mọi thai phụ từ tuần thứ 24 - 28 của tuổi thai... Uống ly nước đường hoặc dung dịch pha sẵn 75g glucose, uống trong vòng 5 phút..."
+        },
+        {
+            "chunk_id": "1470_QD-BYT_chunk_003",
+            "chapter": "Chương 3",
+            "section": "4. Liệu pháp dinh dưỡng",
+            "topic": "Liệu pháp dinh dưỡng cho thai phụ có nguy cơ",
+            "keywords": [
+                "chế độ ăn",
+                "glucid",
+                "chỉ số glucose huyết tương",
+                "chất xơ",
+                "vận động 30 phút"
+            ],
+            "content": "Chế độ ăn Glucid chiếm khoảng 55% - 60% năng lượng khẩu phần... Sử dụng trên 400g rau/ ngày... Duy trì chế độ luyện tập tối thiểu 30 phút/ ngày..."
+        },
+        {
+            "chunk_id": "1470_QD-BYT_chunk_004",
+            "chapter": "Chương 4",
+            "section": "2.4. Đánh giá rối loạn chuyển hóa glucose sau sinh",
+            "topic": "Xét nghiệm dung nạp glucose sau sinh",
+            "keywords": [
+                "sau sinh 4 - 12 tuần",
+                "xét nghiệm 75 gram glucose",
+                "chuyển hóa glucose"
+            ],
+            "content": "Thực hiện sau sinh 4 - 12 tuần: với xét nghiệm 75 ram glucose uống - 2 giờ. Chuẩn bị: nhịn ăn (có thể uống nước lọc) 12 giờ trước xét nghiệm..."
+        }
+    ]
+}

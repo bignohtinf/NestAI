@@ -1,0 +1,105 @@
+{
+    "document_id": "776_QD-BYT",
+    "filename": "776_QD-BYT.md",
+    "title": "Hướng dẫn quốc gia về dinh dưỡng cho Phụ nữ có thai và bà mẹ cho con bú",
+    "document_type": "Quyết định phê duyệt tài liệu hướng dẫn quốc gia",
+    "issuing_agency": "Bộ Y tế",
+    "decision_number": "776/QĐ-BYT",
+    "issue_date": "2017-03-08",
+    "effective_date": "2017-03-08",
+    "signatory": "Thứ trưởng Nguyễn Viết Tiến",
+    "replaced_document": null,
+    "target_audience": [
+        "Phụ nữ có thai",
+        "Bà mẹ cho con bú",
+        "Cán bộ y tế",
+        "Nhân viên tư vấn dinh dưỡng"
+    ],
+    "applicability": "Các Sở Y tế tỉnh/thành phố, các Bệnh viện, Viện có giường bệnh, Học viện, các trường có đào tạo nhân lực y tế và các đơn vị liên quan trên toàn quốc",
+    "keywords": [
+        "dinh dưỡng",
+        "phụ nữ có thai",
+        "bà mẹ cho con bú",
+        "nhu cầu dinh dưỡng",
+        "sữa và chế phẩm sữa",
+        "bệnh lý thai nghén",
+        "tư vấn dinh dưỡng"
+    ],
+    "main_sections": [
+        "Tầm quan trọng của chăm sóc dinh dưỡng cho phụ nữ có thai và bà mẹ cho con bú",
+        "Nhu cầu dinh dưỡng của phụ nữ có thai và bà mẹ cho con bú",
+        "Khuyến nghị sử dụng sữa và chế phẩm sữa cho phụ nữ có thai và bà mẹ cho con bú",
+        "Dinh dưỡng cho phụ nữ có thai và bà mẹ cho con bú",
+        "Dinh dưỡng trong trường hợp bệnh lý khi mang thai",
+        "Tư vấn dinh dưỡng cho phụ nữ có thai và bà mẹ cho con bú",
+        "Phụ lục: Bảng tóm tắt nhu cầu dinh dưỡng khuyến nghị"
+    ],
+    "medical_conditions_covered": [
+        "Thiếu máu và thiếu vi chất dinh dưỡng",
+        "Bệnh tim",
+        "Bệnh gan (Viêm gan B)",
+        "Tiền sản giật",
+        "Tiểu đường thai kỳ"
+    ],
+    "chunks": [
+        {
+            "chunk_id": "776_QD-BYT_chunk_001",
+            "chapter": "TẦM QUAN TRỌNG CỦA CHĂM SÓC DINH DƯỠNG CHO PHỤ NỮ CÓ THAI VÀ BÀ MẸ CHO CON BÚ",
+            "section": "1. Dinh dưỡng của người mẹ trong thời kỳ mang thai có vai trò quan trọng đối với sự phát triển của thai nhi",
+            "topic": "Vai trò của dinh dưỡng đối với cân nặng, trí tuệ thai nhi và phòng dị tật bẩm sinh",
+            "keywords": [
+                "cân nặng khi sinh",
+                "nhẹ cân",
+                "dị tật bẩm sinh",
+                "axit folic",
+                "trí tuệ của trẻ",
+                "phát triển não bộ"
+            ],
+            "content": "Chế độ dinh dưỡng của mẹ trong thời gian mang thai là yếu tố liên quan rõ rệt nhất đến cân nặng của trẻ khi đẻ. Thiếu axit folic là nguyên nhân chính gây dị tật ống thần kinh ở trẻ sơ sinh. Thời điểm 20 tuần tuổi là cột mốc quan trọng trong sự phát triển của thai nhi, khi não bộ thai nhi tăng mạnh về khối lượng và dần hoàn thiện về chức năng. Giai đoạn 3 tháng cuối thai kỳ là giai đoạn não bộ tăng trưởng và trưởng thành nhanh nhất."
+        },
+        {
+            "chunk_id": "776_QD-BYT_chunk_002",
+            "chapter": "NHU CẦU DINH DƯỠNG CỦA PHỤ NỮ CÓ THAI VÀ BÀ MẸ CHO CON BÚ",
+            "section": "1. Nhu cầu khuyến nghị năng lượng",
+            "topic": "Khuyến nghị tăng thêm năng lượng trong thai kỳ và khi cho con bú",
+            "keywords": [
+                "nhu cầu năng lượng",
+                "3 tháng đầu",
+                "3 tháng giữa",
+                "3 tháng cuối",
+                "bà mẹ cho con bú",
+                "kcal/ngày"
+            ],
+            "content": "Đối với phụ nữ có thai và bà mẹ cho con bú, nhu cầu năng lượng khuyến nghị được tính dựa theo Bảng nhu cầu năng lượng khuyến nghị cho người Việt Nam năm 2016. Phụ nữ có thai 3 tháng đầu cần cộng thêm 50 kcal/ngày, 3 tháng giữa cộng thêm 250 kcal/ngày, 3 tháng cuối cộng thêm 450 kcal/ngày. Bà mẹ cho con bú cần cung cấp thêm 500 kcal/ngày."
+        },
+        {
+            "chunk_id": "776_QD-BYT_chunk_003",
+            "chapter": "KHUYẾN NGHỊ SỬ DỤNG SỮA VÀ CHẾ PHẨM SỮA",
+            "section": "2. Khuyến nghị sử dụng sữa và chế phẩm sữa cho phụ nữ có thai và bà mẹ cho con bú",
+            "topic": "Đơn vị quy đổi canxi từ sữa và mức sử dụng khuyến nghị",
+            "keywords": [
+                "đơn vị ăn của sữa",
+                "canxi",
+                "sữa lỏng",
+                "phô mai",
+                "sữa chua",
+                "khuyến nghị sử dụng"
+            ],
+            "content": "Một đơn vị ăn của sữa và chế phẩm sữa cung cấp 100mg can xi tương đương: 1 miếng phô mai (15g), 1 hộp sữa chua (100g) hoặc 1 cốc sữa dạng lỏng (100ml). Phụ nữ có thai mỗi ngày nên sử dụng 6 đơn vị ăn sữa và chế phẩm sữa. Bà mẹ cho con bú mỗi ngày nên sử dụng 6,5 đơn vị ăn sữa và chế phẩm sữa."
+        },
+        {
+            "chunk_id": "776_QD-BYT_chunk_004",
+            "chapter": "DINH DƯỠNG TRONG TRƯỜNG HỢP BỆNH LÝ KHI MANG THAI",
+            "section": "V. Dinh dưỡng đối với thai phụ bị tiểu đường",
+            "topic": "Nguyên tắc ăn uống và vận động cho thai phụ tiểu đường thai kỳ",
+            "keywords": [
+                "tiểu đường thai kỳ",
+                "chỉ số đường huyết",
+                "TĐTK",
+                "vận động hợp lý",
+                "hạ đường huyết"
+            ],
+            "content": "Một chế độ dinh dưỡng và vận động hợp lý có thể kiểm soát tốt đường huyết mà không cần dùng thuốc. Nên ăn nhiều bữa trong ngày để không làm tăng đường máu quá nhiều sau ăn (3 bữa chính và 2 đến 3 bữa phụ). Giảm ăn các thực phẩm có chỉ số đường huyết cao làm tăng cao đường máu sau ăn như bánh, kẹo, kem, chè. Nên luyện tập ở mức độ vừa phải để làm tăng nhạy cảm với insulin."
+        }
+    ]
+}

@@ -1,0 +1,109 @@
+{
+    "document_id": "4128_QD-BYT",
+    "filename": "4128_QD-BYT.md",
+    "title": "Hướng dẫn quốc gia về các dịch vụ chăm sóc sức khỏe sinh sản",
+    "document_type": "Quyết định ban hành tài liệu chuyên môn",
+    "issuing_agency": "Bộ Y tế",
+    "decision_number": "4128/QĐ-BYT",
+    "issue_date": "2016-07-29",
+    "effective_date": "2016-07-29",
+    "signatory": "Thứ trưởng Nguyễn Viết Tiến",
+    "replaced_document": "Hướng dẫn quốc gia về các dịch vụ chăm sóc SKSS ban hành năm 2009",
+    "target_audience": [
+        "Cán bộ y tế",
+        "Phụ nữ và thai phụ",
+        "Trẻ sơ sinh",
+        "Vị thành niên và thanh niên",
+        "Nam giới",
+        "Cơ sở khám bệnh, chữa bệnh toàn quốc"
+    ],
+    "applicability": "Tất cả các cơ sở y tế bao gồm cả y tế nhà nước và tư nhân, đặc biệt là tuyến y tế cơ sở",
+    "keywords": [
+        "chăm sóc sức khỏe sinh sản",
+        "làm mẹ an toàn",
+        "chăm sóc sơ sinh",
+        "phụ khoa",
+        "kế hoạch hóa gia đình",
+        "phá thai an toàn",
+        "nam học",
+        "nhiễm khuẩn đường sinh sản"
+    ],
+    "main_sections": [
+        "Phần 1: Những qui định chung",
+        "Phần 2: Làm mẹ an toàn",
+        "Phần 3: Phụ khoa",
+        "Phần 4: Chăm sóc sơ sinh",
+        "Phần 5: Kế hoạch hóa gia đình",
+        "Phần 6: Nhiễm khuẩn đường sinh sản và nhiễm khuẩn lây truyền qua đường tình dục",
+        "Phần 7: Sức khỏe sinh sản vị thành niên và thanh niên",
+        "Phần 8: Phá thai an toàn",
+        "Phần 9: Nam học",
+        "Phần 10: Những nội dung khác"
+    ],
+    "medical_conditions_covered": [
+        "Thai nghén và các biến chứng",
+        "Đái tháo đường thai kỳ",
+        "Nhiễm khuẩn sinh sản và bệnh lây truyền qua đường tình dục",
+        "Suy hô hấp và các bệnh lý sơ sinh",
+        "Vô sinh nam và nữ",
+        "Mãn dục nam",
+        "Rối loạn cương dương"
+    ],
+    "chunks": [
+        {
+            "chunk_id": "4128_QD-BYT_chunk_001",
+            "chapter": "Phần 2",
+            "section": "Đái tháo đường thai kỳ",
+            "topic": "Các yếu tố nguy cơ và chẩn đoán đái tháo đường thai kỳ",
+            "keywords": [
+                "đái tháo đường thai kỳ",
+                "thừa cân",
+                "béo phì",
+                "sinh con to",
+                "glucose"
+            ],
+            "content": "Đái tháo đường thai kỳ là tình trạng rối loạn dung nạp glucose ở bất kỳ mức độ nào, khởi phát hoặc được phát hiện lần đầu tiên trong lúc mang thai... Các yếu tố nguy cơ: Thừa cân, béo phì, tiền sử gia đình có người bị đái tháo đường, tiền sử đẻ con ≥ 4000g, tuổi ≥ 35..."
+        },
+        {
+            "chunk_id": "4128_QD-BYT_chunk_002",
+            "chapter": "Phần 4",
+            "section": "Chăm sóc trẻ sơ sinh non tháng/nhẹ cân",
+            "topic": "Tiêu chuẩn xuất viện với trẻ đẻ non",
+            "keywords": [
+                "trẻ đẻ non",
+                "xuất viện",
+                "tăng cân",
+                "thân nhiệt",
+                "ngừng thở"
+            ],
+            "content": "Tiêu chuẩn xuất viện với trẻ đẻ non: Trẻ hồng hào, có khả năng bú mẹ hoặc ăn đủ lượng sữa mà không bị suy hô hấp. Tăng cân 10-15 g/kg trọng lượng cơ thể mỗi ngày trong 3 ngày liên tục. Thân nhiệt ổn định với nhiệt độ phòng. Không có cơn ngừng thở nặng..."
+        },
+        {
+            "chunk_id": "4128_QD-BYT_chunk_003",
+            "chapter": "Phần 5",
+            "section": "Tư vấn kế hoạch hóa gia đình",
+            "topic": "Mười quyền cơ bản của khách hàng trong KHHGĐ",
+            "keywords": [
+                "quyền khách hàng",
+                "thông tin",
+                "lựa chọn",
+                "bí mật",
+                "tôn trọng"
+            ],
+            "content": "Mười quyền cơ bản của khách hàng: Quyền được thông tin. Quyền được tiếp cận dịch vụ và thông tin. Quyền tự do lựa chọn BPTT... Quyền được nhận dịch vụ an toàn. Quyền được đảm bảo bí mật. Quyền được đảm bảo kín đáo... Quyền được tôn trọng."
+        },
+        {
+            "chunk_id": "4128_QD-BYT_chunk_004",
+            "chapter": "Phần 8",
+            "section": "Phá thai bằng thuốc đến hết 9 tuần và từ tuần thứ 10 đến hết 12 tuần",
+            "topic": "Chỉ định và chống chỉ định phá thai bằng thuốc",
+            "keywords": [
+                "phá thai bằng thuốc",
+                "mifepriston",
+                "misoprostol",
+                "chống chỉ định"
+            ],
+            "content": "Là phương pháp chấm dứt thai kỳ trong tử cung bằng cách sử dụng phối hợp mifepriston và misoprostol gây sẩy thai, cho tuổi thai đến hết 12 tuần (84 ngày)... Chống chỉ định tuyệt đối: Hẹp van 2 lá, tắc mạch, rối loạn đông máu, dị ứng mifepriston hay misoprostol, thai ngoài tử cung..."
+        }
+    ]
+}

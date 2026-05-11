@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import './pregnancy-week-carousel-cylindrical.css';
+import journeyData from './journey.json';
 
 interface WeekData {
   week: number;
@@ -10,6 +11,9 @@ interface WeekData {
   size: string;
   weight: string;
   image: string;
+  videoUrl?: string;
+  momTip?: string;
+  blogUrl?: string;
 }
 
 const getImagePath = (week: number) => {
@@ -65,6 +69,65 @@ const weeklyData: WeekData[] = [
   { week: 39, icon: '🍼', description: 'Bé sắp chào đời! Nhau thai vẫn cung cấp kháng thể cho bé.', size: 'Quả dưa hấu', weight: '3.2kg+', image: getImagePath(39) },
   { week: 40, icon: '👶', description: 'Ngày dự sinh - Bé đã sẵn sàng để gặp ba mẹ rồi!', size: 'Quả dưa hấu', weight: '3.2kg+', image: getImagePath(40) },
 ];
+
+// ── Mom tips từ hanh_trinh_thai_ky_40_tuan.md ────────────────────────────────
+const momTips: Record<number, string> = {
+  5:  'Trễ kinh. Mẹ đi khám có thể xác định được túi thai.',
+  6:  'Ốm nghén có thể xuất hiện và rõ hơn.',
+  7:  'Cảm xúc xáo trộn, dễ thèm/chán ăn. Có thể nghe thấy tim thai lần đầu tiên rồi mẹ ơi!',
+  8:  'Bầu ngực bắt đầu thay đổi ở một số người.',
+  9:  'Ốm nghén đạt đỉnh, có thể sụt cân nhẹ. Mẹ hãy thử các biện pháp giảm ốm nghén. Cân nhắc chọn phòng khám/bệnh viện để theo dõi thai kỳ.',
+  10: 'Mẹ có thể bị đầy bụng, khó tiêu hoặc táo bón. Làm xét nghiệm Double Test hoặc NIPT.',
+  11: 'Cân nhắc báo tin có thai cho Sếp và đồng nghiệp thôi nào! Tìm hiểu về bảo hiểm xã hội và chế độ thai sản.',
+  12: 'Bụng bắt đầu nhô ra. Sạm da có thể xuất hiện. Siêu âm đo độ mờ da gáy.',
+  13: 'Mẹ mua sắm chút quần áo bầu và đồ nội y nhé! Tham khảo, chọn bệnh viện sinh.',
+  14: 'Lên kế hoạch chuẩn bị tài chính đi sinh.',
+  15: 'Xét nghiệm Triple Test nếu chưa làm Double Test.',
+  16: 'Tăng cân nhẹ. Cùng tìm hiểu thai giáo và thư giãn thai kỳ nào!',
+  17: 'Bước vào giai đoạn ổn định. Bắt đầu đo chiều cao tử cung khi đi khám.',
+  18: 'Bụng nhô ra rõ. Mẹ hạnh phúc khi lần đầu cảm nhận thai máy! Siêu âm hình thái thai nhi.',
+  19: 'Có thể bị đau lưng hoặc chuột rút nhẹ. Đăng kí lớp học tiền sản.',
+  20: 'Lên kế hoạch đi du lịch ngắn ngày cùng chồng. Cảm nhận em bé nấc cục, thú vị lắm đấy!',
+  21: 'Có thể xuất hiện mụn, da dầu hơn. Tập các bài tập thể dục vừa sức.',
+  22: 'Bụng to nặng hơn, mẹ dễ bị đau lưng. Rạn da có thể bắt đầu xuất hiện.',
+  23: 'Bắt đầu suy nghĩ và lên kế hoạch sinh nở. Một số mẹ có thể xuất hiện giãn tĩnh mạch.',
+  24: 'Thai nặng và bụng to hơn, mẹ có thể dùng đai đỡ bụng để giảm áp lực. Xét nghiệm Glucose tiểu đường thai kỳ.',
+  25: 'Mẹ có thể bị khó ngủ, chuột rút.',
+  26: 'Tìm hiểu về các phương pháp sinh nở và các thủ tục của bệnh viện sẽ sinh.',
+  27: 'Bụng đã bắt đầu nhô cao. Mẹ thấy đau lưng và khó ngủ hơn.',
+  28: 'Mẹ quyết định xem có nên chụp một bộ ảnh bầu làm kỉ niệm không nào? Tìm hiểu và đếm cử động thai.',
+  29: 'Trò chuyện với những mẹ đã sinh ở bệnh viện mà bạn dự định sinh.',
+  30: 'Bắt đầu tìm hiểu, mua sắm đồ dùng cần thiết cho mẹ và bé. Suy nghĩ, chọn/đặt tên cho con.',
+  31: 'Bé đã quen với giọng mẹ. Mẹ nên duy trì thai giáo bằng âm nhạc, kể chuyện cho con.',
+  32: 'Giữ tinh thần thư giãn.',
+  33: 'Chuẩn bị giỏ đồ đi sinh thôi nào!',
+  34: 'Lên kế hoạch chăm sóc sau sinh. Nói chuyện với chồng hoặc người sẽ có mặt để hỗ trợ bạn khi chuyển dạ.',
+  35: 'Chuẩn bị xong không gian cho bé: giường/nôi, phòng ngủ. Xét nghiệm GBS.',
+  36: 'Chuẩn bị hồ sơ, giấy tờ, sẵn sàng chào đón bé.',
+  37: 'Bé đã đủ tháng, các cơn gò rõ và thường xuyên hơn. Chuẩn bị sẵn tinh thần thoải mái.',
+  38: 'Một số mẹ có thể rò rỉ sữa non. Một số người có thể chuyển dạ sớm.',
+  39: 'Mẹ dễ vỡ ối hoặc đau bụng báo hiệu chuyển dạ.',
+  40: 'Ngày dự sinh! Nếu chưa chuyển dạ, bác sĩ sẽ theo dõi sát sao và có thể chỉ định giục sinh. Mẹ háo hức chờ phút giây gặp con.',
+};
+
+// ── Journey video map (only Cloudinary URLs, a20.vn are blog links) ─────────
+const journeyVideoMap = new Map<number, string>(
+  (journeyData as Array<{ week: number; journey_url: string }>)
+    .filter(j => j.journey_url.includes('cloudinary.com'))
+    .map(j => [j.week, j.journey_url])
+);
+weeklyData.forEach(w => { w.videoUrl = journeyVideoMap.get(w.week); });
+
+// ── Blog URL map (only a20.vn published posts) ────────────────────────────────
+const journeyBlogMap = new Map<number, string>(
+  (journeyData as Array<{ week: number; journey_url: string }>)
+    .filter(j => j.journey_url.includes('a20.vn'))
+    .map(j => [j.week, j.journey_url])
+);
+weeklyData.forEach(w => {
+  w.momTip = momTips[w.week];
+  w.blogUrl = journeyBlogMap.get(w.week);
+});
 
 // ── Constants ──────────────────────────────────────────────────────────────
 const NUM_CELLS = weeklyData.length; // 40
@@ -275,7 +338,20 @@ export function PregnancyWeekCarouselCylindrical({
         >
           <div className="card-inner">
             <div className="card-image-container">
-              <img src={week.image} alt={`Tuần ${week.week}`} className="baby-image" loading="lazy" />
+              {week.videoUrl ? (
+                <video
+                  src={week.videoUrl}
+                  className="baby-image"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="none"
+                  poster={week.videoUrl.replace('.mp4', '.jpg')}
+                />
+              ) : (
+                <img src={week.image} alt={`Tuần ${week.week}`} className="baby-image" loading="lazy" />
+              )}
               <div className="week-badge">Tuần {week.week}</div>
             </div>
           </div>
@@ -380,6 +456,28 @@ export function PregnancyWeekCarouselCylindrical({
                 <span className="stat-tag">Gắn kết mẹ con</span>
               </div>
             </div>
+
+            {/* Mom tip từ hành trình thai kỳ */}
+            {currentWeekData.momTip && (
+              <div className="mom-tip-section">
+                <div className="mom-tip-label">🤱 Mẹ tuần này</div>
+                <p className="mom-tip-text">{currentWeekData.momTip}</p>
+              </div>
+            )}
+
+            {/* Blog link */}
+            {currentWeekData.blogUrl ? (
+              <a
+                href={currentWeekData.blogUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="journey-blog-link"
+              >
+                Xem bài viết chi tiết →
+              </a>
+            ) : (
+              <span className="journey-blog-link-soon">📝 Bài viết sắp ra mắt</span>
+            )}
           </div>
         )}
       </div>

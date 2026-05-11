@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import { Send, Loader2, Sparkles, Apple, ChefHat, HeartPulse, Stethoscope, Phone, Star, Clock } from 'lucide-react';
+import { Send, Loader2, Sparkles, Apple, ChefHat, HeartPulse, Stethoscope, Phone, Star, Clock, Mic, Volume2, Square } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useChatHistory, ChatMessage } from '@/hooks/useChatHistory';
 import { ChatHistoryToggle } from '@/components/chat/chat-history-toggle';
@@ -106,6 +106,126 @@ export default function NoriPage() {
   const chatIdFromUrl = searchParams.get('id');
   const [isBotReady, setIsBotReady] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Voice Input (STT - FPT.AI ASR via MediaRecorder)
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  // Voice Output (TTS - FPT.AI)
+  const [playingMsgId, setPlayingMsgId] = useState<string | null>(null);
+  const [isTtsLoading, setIsTtsLoading] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const stopTTS = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current = null;
+    }
+    setPlayingMsgId(null);
+    setIsTtsLoading(false);
+  };
+
+  const handleSpeak = async (msgId: string, text: string) => {
+    if (playingMsgId === msgId) {
+      stopTTS();
+      return;
+    }
+    stopTTS();
+    setIsTtsLoading(true);
+    setPlayingMsgId(msgId);
+    try {
+      const res = await fetch('/api/nori/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voice: 'banmai' }),
+      });
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        console.error('[TTS] Failed:', res.status, errJson);
+        throw new Error('TTS failed');
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      setIsTtsLoading(false);
+      audio.onended = () => { setPlayingMsgId(null); URL.revokeObjectURL(url); };
+      audio.onerror = () => { setPlayingMsgId(null); URL.revokeObjectURL(url); };
+      audio.play();
+    } catch (err) {
+      console.error('[TTS] Error:', err);
+      stopTTS();
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : 'audio/webm';
+      const recorder = new MediaRecorder(stream, { mimeType });
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        await sendAudioToSTT(audioBlob);
+      };
+
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('[STT] Microphone error:', err);
+      alert('Không thể truy cập microphone. Vui lòng cấp quyền và thử lại.');
+    }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
+    setIsTranscribing(true);
+  };
+
+  const sendAudioToSTT = async (audioBlob: Blob) => {
+    try {
+      const res = await fetch('/api/nori/stt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body: audioBlob,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error('[STT] Failed:', res.status, err);
+        throw new Error('STT failed');
+      }
+      const { transcript } = await res.json();
+      if (transcript) {
+        setInput(transcript);
+        setTimeout(() => handleSend(transcript), 300);
+      }
+    } catch (err) {
+      console.error('[STT] Error:', err);
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopTTS();
+      mediaRecorderRef.current?.stop();
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -595,9 +715,30 @@ export default function NoriPage() {
                       : { background: '#dcfce7' }}
                   >
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-                    <p className={`text-xs mt-1 ${msg.type === 'user' ? 'text-rose-400 text-right' : 'text-green-600'}`}>
-                      {msg.timestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
+                    <div className={`flex items-center mt-1 gap-1.5 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <p className={`text-xs ${msg.type === 'user' ? 'text-rose-400' : 'text-green-600'}`}>
+                        {msg.timestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                      {msg.type === 'bot' && msg.content && (
+                        <button
+                          onClick={() => handleSpeak(msg.id, msg.content)}
+                          disabled={isTtsLoading && playingMsgId !== msg.id}
+                          title={playingMsgId === msg.id ? 'Dừng đọc' : 'Đọc tin nhắn'}
+                          className={`h-5 w-5 rounded-full flex items-center justify-center transition-all disabled:opacity-40 ${
+                            playingMsgId === msg.id
+                              ? 'bg-green-500 text-white'
+                              : 'text-green-600 hover:bg-green-200'
+                          }`}
+                        >
+                          {isTtsLoading && playingMsgId === msg.id
+                            ? <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                            : playingMsgId === msg.id
+                              ? <Square className="h-2.5 w-2.5 fill-current" />
+                              : <Volume2 className="h-2.5 w-2.5" />
+                          }
+                        </button>
+                      )}
+                    </div>
                   </div>
                   {msg.type === 'user' && (
                     <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm shrink-0 mb-0.5">
@@ -626,20 +767,57 @@ export default function NoriPage() {
 
             {/* Input Area */}
             <div className="border-t border-border/50 bg-background/50 p-3">
+              {isRecording && (
+                <div className="flex items-center gap-2 mb-2 px-1">
+                  <div className="flex gap-0.5 items-center">
+                    {[0, 1, 2, 3].map(i => (
+                      <div key={i} className="w-1 rounded-full bg-red-400 animate-bounce" style={{ height: `${8 + (i % 2) * 8}px`, animationDelay: `${i * 100}ms` }} />
+                    ))}
+                  </div>
+                  <span className="text-xs text-red-500 font-medium">Đang ghi âm... bấm lại để dừng 🎙️</span>
+                </div>
+              )}
+              {isTranscribing && (
+                <div className="flex items-center gap-2 mb-2 px-1">
+                  <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                  <span className="text-xs text-primary font-medium">Đang nhận dạng giọng nói...</span>
+                </div>
+              )}
               <form
                 onSubmit={(e) => { e.preventDefault(); handleSend(); }}
                 className="flex gap-2 items-center"
               >
+                {/* Mic button */}
+                <button
+                  type="button"
+                  onClick={isRecording ? stopRecording : startRecording}
+                  disabled={loading || isTranscribing}
+                  title={isRecording ? 'Dừng ghi âm' : 'Nói chuyện với Nori'}
+                  className={`h-10 w-10 rounded-xl flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 border ${
+                    isRecording
+                      ? 'bg-red-500 border-red-500 text-white animate-pulse'
+                      : 'border-rose-200 text-rose-500 hover:bg-rose-100'
+                  }`}
+                  style={isRecording ? {} : { background: '#fff1f2' }}
+                >
+                  {isTranscribing
+                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                    : isRecording
+                      ? <Square className="h-3.5 w-3.5 fill-current" />
+                      : <Mic className="h-4 w-4" />
+                  }
+                </button>
+
                 <input
                   className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/15 transition-all placeholder:text-muted-foreground"
-                  placeholder="Hỏi về dinh dưỡng thai kỳ..."
+                  placeholder={isRecording ? '🎙️ Đang ghi âm...' : isTranscribing ? '⏳ Đang xử lý...' : 'Hỏi về dinh dưỡng thai kỳ...'}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  disabled={loading}
+                  disabled={loading || isRecording || isTranscribing}
                 />
                 <button
                   type="submit"
-                  disabled={loading || !input.trim()}
+                  disabled={loading || !input.trim() || isRecording || isTranscribing}
                   className="h-10 w-10 rounded-xl flex items-center justify-center text-violet-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-violet-200 active:scale-95 shrink-0 border border-violet-200"
                   style={{ background: '#ede9fe' }}
                 >
