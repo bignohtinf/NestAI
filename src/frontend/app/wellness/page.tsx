@@ -4,14 +4,14 @@ import { MainLayout } from '@/components/layouts/main-layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApp } from '@/lib/context';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { DashboardSection } from './components/sections/DashboardSection';
 import { TrackingLayoutSection } from './components/sections/TrackingLayoutSection';
 import { SupportSection } from './components/sections/SupportSection';
 import { PersonalizationDialog } from './components/PersonalizationDialog';
 import { useWellnessData } from './hooks/useWellnessData';
 
-export default function WellnessPage() {
+function WellnessPageInner() {
   const { user } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -80,5 +80,13 @@ export default function WellnessPage() {
         )}
       </div>
     </MainLayout>
+  );
+}
+
+export default function WellnessPage() {
+  return (
+    <Suspense fallback={null}>
+      <WellnessPageInner />
+    </Suspense>
   );
 }

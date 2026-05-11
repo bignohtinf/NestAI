@@ -5,10 +5,10 @@ import { SmartShopping } from '@/components/metrics/smart-shopping';
 import { IngredientScanner } from '@/components/metrics/ingredient-scanner';
 import { useApp } from '@/lib/context';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export default function NutrimartPage() {
+function NutrimartPageInner() {
   const { user } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -66,5 +66,13 @@ export default function NutrimartPage() {
         </Tabs>
       </div>
     </MainLayout>
+  );
+}
+
+export default function NutrimartPage() {
+  return (
+    <Suspense fallback={null}>
+      <NutrimartPageInner />
+    </Suspense>
   );
 }

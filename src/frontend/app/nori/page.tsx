@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 import { Send, Loader2, Sparkles, Apple, ChefHat, HeartPulse, Stethoscope, Phone, Star, Clock, Mic, Volume2, Square } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useChatHistory, ChatMessage } from '@/hooks/useChatHistory';
@@ -89,7 +89,7 @@ function BotAvatar({ size = 28 }: { size?: number }) {
   );
 }
 
-export default function NoriPage() {
+function NoriPageInner() {
   const { user } = useApp();
   const router = useRouter();
   const { createChatHistory, updateChatHistory, generateChatTitle, getChatHistory, addMessagesToChat } = useChatHistory();
@@ -858,5 +858,13 @@ export default function NoriPage() {
         <MobileBottomNav />
       </div>
     </OnboardingGuard>
+  );
+}
+
+export default function NoriPage() {
+  return (
+    <Suspense fallback={null}>
+      <NoriPageInner />
+    </Suspense>
   );
 }

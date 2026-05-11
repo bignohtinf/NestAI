@@ -4,13 +4,13 @@ import { MainLayout } from '@/components/layouts/main-layout';
 import { useApp } from '@/lib/context';
 import { formatGestationAge } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NutritionDashboard } from '@/components/metrics/nutrition-dashboard';
 import { MealLogHistory } from '@/components/metrics/meal-log-history';
 import { LayoutDashboard, ClipboardList } from 'lucide-react';
 
-export default function NutritionReportPage() {
+function NutritionReportPageInner() {
   const { user } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -114,5 +114,13 @@ export default function NutritionReportPage() {
         </Tabs>
       </div>
     </MainLayout>
+  );
+}
+
+export default function NutritionReportPage() {
+  return (
+    <Suspense fallback={null}>
+      <NutritionReportPageInner />
+    </Suspense>
   );
 }
