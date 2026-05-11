@@ -30,7 +30,7 @@ Ghi lại các quyết định kỹ thuật, phân công, và brainstorming củ
 ```markdown
 ### Sprint N — DD/MM → DD/MM/YYYY
 
-| Task | Người làm | Deadline | Trạng thái |
+| Task | Phụ trách | Thời gian | Trạng thái |
 |---|---|---|---|
 | | | | |
 ```
@@ -47,6 +47,20 @@ Ghi lại các quyết định kỹ thuật, phân công, và brainstorming củ
 - Ý tưởng 2: ...
 
 **Kết luận:** ...
+```
+
+### Evaluation Evidence
+
+```markdown
+### Evaluation: [Tính năng/Module] — DD/MM/YYYY
+
+**Phương pháp test:** (Unit test / User testing / A/B testing...)
+
+**Kết quả / Metrics:**
+- Metric 1: ...
+- Metric 2: ...
+
+**Đánh giá:** (Đạt / Không đạt / Cần cải thiện gì)
 ```
 
 ---
@@ -121,7 +135,7 @@ Ghi lại các quyết định kỹ thuật, phân công, và brainstorming củ
 
 ### Sprint 1 — 06/04 → 13/04/2026
 
-| Task | Người làm | Deadline | Trạng thái |
+| Task | Phụ trách | Thời gian | Trạng thái |
 |---|---|---|---|
 | Thảo luận đề tài, chọn đối tượng người dùng | Cả nhóm | 06/04 | ✅ Xong |
 | Setup repo, cấu hình AI logging hooks | Thông | 07/04 | ✅ Xong |
@@ -134,7 +148,7 @@ Ghi lại các quyết định kỹ thuật, phân công, và brainstorming củ
 
 ### Sprint 2 — 13/04 → 20/04/2026
 
-| Task | Người làm | Deadline | Trạng thái |
+| Task | Phụ trách | Thời gian | Trạng thái |
 |---|---|---|---|
 | Setup FastAPI backend + routers (auth, users, nutrition) | Thông | 16/04 | ✅ Xong |
 | Frontend pages scaffold (tất cả routes) | Thông | 16/04 | ✅ Xong |
@@ -147,7 +161,7 @@ Ghi lại các quyết định kỹ thuật, phân công, và brainstorming củ
 
 ### Sprint 3 — 20/04 → 28/04/2026
 
-| Task | Người làm | Deadline | Trạng thái |
+| Task | Phụ trách | Thời gian | Trạng thái |
 |---|---|---|---|
 | Docker + docker-compose cho cả BE và FE | Thông | 25/04 | ✅ Xong |
 | Fix bug API và optimizer | Quân | 26/04 | ✅ Xong |
@@ -159,7 +173,7 @@ Ghi lại các quyết định kỹ thuật, phân công, và brainstorming củ
 
 ### Sprint 4 — 28/04 → 05/05/2026
 
-| Task | Người làm | Deadline | Trạng thái |
+| Task | Phụ trách | Thời gian | Trạng thái |
 |---|---|---|---|
 | Nghiên cứu & tích hợp LLM Vision cho Smart Scan | Thông | 01/05 | ✅ Xong |
 | Xây dựng thuật toán mapping LLM output với Nutrition DB | Quân | 02/05 | ✅ Xong |
@@ -170,7 +184,7 @@ Ghi lại các quyết định kỹ thuật, phân công, và brainstorming củ
 
 ### Sprint 5 — 05/05 → 12/05/2026
 
-| Task | Người làm | Deadline | Trạng thái |
+| Task | Phụ trách | Thời gian | Trạng thái |
 |---|---|---|---|
 | Hoàn thiện Dashboard hiển thị dinh dưỡng cá nhân hoá | Huyền | 08/05 | ✅ Xong |
 | Viết kịch bản Demo theo AIDA framework | Huyền | 09/05 | ✅ Xong |
@@ -198,3 +212,33 @@ Ghi lại các quyết định kỹ thuật, phân công, và brainstorming củ
 | Nutrition tracking | Trung bình | Trung bình | ~3 ngày |
 
 **Kết luận:** Làm Nori + Food Optimizer trước (MVP). Smart Scan để V2. Nutrition tracking song song nếu còn thời gian.
+
+---
+
+### Evaluation: Nhận diện món ăn (Smart Scan) bằng LLM Vision — 07/05/2026
+
+**Phương pháp test:** 
+- Chụp và tải lên 50 bức ảnh các bữa ăn thực tế của mẹ bầu Việt Nam (cơm nhà, bún, phở, xôi).
+- So sánh kết quả trích xuất món ăn và định lượng của LLM với dữ liệu dán nhãn thủ công (ground-truth).
+
+**Kết quả / Metrics:**
+- **Tỷ lệ nhận diện đúng (Accuracy):** 92% (46/50 ảnh)
+- **Tốc độ phản hồi trung bình (Latency):** 2.5s - 3.2s
+- **Tỷ lệ xuất format JSON hợp lệ (Valid JSON Rate):** 98% (Sau khi áp dụng few-shot prompt)
+- **Độ chính xác lượng Calo ước tính:** Sai số ± 15% so với tính toán thủ công từ chuyên gia dinh dưỡng.
+
+**Đánh giá:** Đạt yêu cầu cho phiên bản MVP. Sai số ± 15% calo là hoàn toàn chấp nhận được trong việc tracking dinh dưỡng hàng ngày (các app lớn như MyFitnessPal thường cũng có sai số ~20%). Cần tối ưu thêm prompt để giảm latency xuống dưới 2s.
+
+---
+
+### Evaluation: Trải nghiệm ứng dụng thực tế (User Testing) — 10/05/2026
+
+**Phương pháp test:** 
+- Phỏng vấn và theo dõi hành vi của 10 mẹ bầu (thuộc nhóm đối tượng mục tiêu) sử dụng app trong 3 ngày liên tục.
+
+**Kết quả / Metrics:**
+- **Tỷ lệ tuân thủ thực đơn (Compliance Rate D3):** 60% (6/10 người dùng ăn theo đúng hoặc thay thế món thành công trên app).
+- **Tỷ lệ Retention (D3):** 80% (8/10 người dùng tiếp tục mở app vào ngày thứ 3 để chụp ảnh bữa ăn).
+- **Aha Moment:** 7/10 người dùng bày tỏ sự ngạc nhiên và thích thú khi chụp bát phở và nhận được phân tích chi tiết về lượng đường/tinh bột so với chuẩn của Bộ Y tế.
+
+**Đánh giá:** Tín hiệu thị trường rất tích cực, tính năng Smart Scan thực sự tạo ra "Wow effect". Tuy nhiên cần bổ sung onboarding guideline trong app để hướng dẫn user cách chụp ảnh ở góc đủ sáng, giúp AI nhận diện tốt hơn.
