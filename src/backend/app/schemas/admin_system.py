@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Literal
+from typing import Any, List, Optional, Dict, Literal
 from datetime import datetime
 
 class CMSItemBase(BaseModel):
@@ -48,7 +48,7 @@ class CMSItemListResponse(BaseModel):
     offset: int
 
 class SystemSettingsResponse(BaseModel):
-    settings: Dict[str, Dict]
+    settings: Dict[str, Any]
 
 class AuditLogSummary(BaseModel):
     id: str

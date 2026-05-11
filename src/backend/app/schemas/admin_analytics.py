@@ -28,12 +28,16 @@ class ChatTrend(BaseModel):
     conversations: int
     messages: int
 
+class TopicStat(BaseModel):
+    name: str
+    count: int
+
 class ChatAnalyticsResponse(BaseModel):
     totalConversations: int
     totalMessages: int
     avgMessagesPerConversation: float
     avgDurationSeconds: float
-    topTopics: List[str]
+    topTopics: List[TopicStat]
     satisfactionScore: float
     trends: List[ChatTrend]
 

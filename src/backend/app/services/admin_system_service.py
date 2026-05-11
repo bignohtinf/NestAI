@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict
+from typing import Any, Optional, List, Dict
 from app.schemas.admin_system import (
     CMSItemCreate,
     CMSItemUpdate,
@@ -65,7 +65,7 @@ class AdminSystemService:
         self.supabase.table("cms_items").delete().eq("id", item_id).execute()
         return True
 
-    def get_system_settings(self) -> Dict[str, Dict]:
+    def get_system_settings(self) -> Dict[str, Any]:
         try:
             res = self.supabase.table("system_settings").select("key, value").execute()
             return {item["key"]: item["value"] for item in (res.data or [])}
@@ -73,7 +73,7 @@ class AdminSystemService:
             print(f"Warning: system_settings table not found: {e}")
             return {}
 
-    def update_system_settings(self, settings: Dict[str, Dict], admin_id: str) -> bool:
+    def update_system_settings(self, settings: Dict[str, Any], admin_id: str) -> bool:
         for key, value in settings.items():
             self.supabase.table("system_settings").upsert({
                 "key": key,

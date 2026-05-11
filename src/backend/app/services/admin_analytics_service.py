@@ -1,12 +1,74 @@
 from datetime import datetime, timedelta
 from typing import Optional
-from postgrest import SyncRequestBuilder
 from app.schemas.admin_analytics import (
-    AnalyticsPeriod, 
-    UserAnalyticsResponse, 
-    ChatAnalyticsResponse, 
-    HealthAnalyticsResponse
+    AnalyticsPeriod,
+    UserAnalyticsResponse,
+    ChatAnalyticsResponse,
+    HealthAnalyticsResponse,
+    TopicStat,
 )
+
+# ── Taxonomy chủ đề — keywords tiếng Việt theo domain app ─────────────────────
+TOPIC_KEYWORDS: dict[str, list[str]] = {
+    "Dinh dưỡng": [
+        "dinh dưỡng", "ăn gì", "nên ăn", "không nên ăn", "thực phẩm",
+        "chất dinh dưỡng", "vitamin", "protein", "canxi", "sắt", "dha",
+        "omega", "bổ sung", "khẩu phần", "calo", "kcal", "acid folic",
+        "khoáng chất", "vi chất",
+    ],
+    "Chế độ ăn": [
+        "chế độ ăn", "thực đơn", "bữa ăn", "ăn chay", "thực vật",
+        "menu", "món ăn", "nấu ăn", "kiêng", "ăn uống", "khẩu vị",
+        "cháo", "canh", "rau củ",
+    ],
+    "Thai kỳ": [
+        "thai kỳ", "mang thai", "bầu", "thai nhi", "thai phụ",
+        "tuần thai", "tam cá nguyệt", "siêu âm", "khám thai",
+        "ốm nghén", "thai", "tuần",
+    ],
+    "Sau sinh": [
+        "sau sinh", "hồi phục", "cho con bú", "sữa mẹ", "hậu sản",
+        "sản hậu", "lactation", "tăng sữa", "lợi sữa",
+    ],
+    "Sức khỏe": [
+        "sức khỏe", "triệu chứng", "đau", "buồn nôn", "mệt mỏi",
+        "phù", "chuột rút", "huyết áp", "tiểu đường", "thiếu máu",
+        "nhiễm trùng", "sốt", "ho", "bệnh",
+    ],
+    "Chuẩn bị sinh": [
+        "sinh nở", "chuyển dạ", "đẻ", "sinh thường", "mổ đẻ",
+        "chuẩn bị sinh", "túi đồ", "bệnh viện", "đặt lịch sinh",
+    ],
+    "Tâm lý": [
+        "lo lắng", "stress", "tâm lý", "cảm xúc", "trầm cảm",
+        "hồi hộp", "lo âu", "buồn", "khóc", "áp lực",
+    ],
+    "Vận động": [
+        "vận động", "tập thể dục", "yoga", "bơi", "đi bộ",
+        "thể dục", "thể thao", "vận động nhẹ",
+    ],
+}
+
+TOP_N = 5
+
+
+def _extract_topics(texts: list[str]) -> list[TopicStat]:
+    """Đếm số lần xuất hiện keyword của mỗi chủ đề trong danh sách text."""
+    counts: dict[str, int] = {topic: 0 for topic in TOPIC_KEYWORDS}
+    for text in texts:
+        text_lower = text.lower()
+        for topic, keywords in TOPIC_KEYWORDS.items():
+            for kw in keywords:
+                if kw in text_lower:
+                    counts[topic] += 1
+                    break  # Chỉ tính 1 lần / topic / text
+    # Lọc topic có count > 0, sắp xếp giảm dần
+    sorted_topics = sorted(
+        [(name, cnt) for name, cnt in counts.items() if cnt > 0],
+        key=lambda x: x[1],
+        reverse=True,
+    )
+    return [TopicStat(name=name, count=cnt) for name, cnt in sorted_topics[:TOP_N]]
 
 class AdminAnalyticsService:
     def __init__(self, supabase):
@@ -55,13 +117,24 @@ class AdminAnalyticsService:
                     "activeUsers": item["active_users"]
                 })
 
+        # Retention = % users có last_login trong kỳ / tổng users (loại trừ admin)
+        non_admin_users = [u for u in all_users if u["role"] != "admin"]
+        non_admin_total = len(non_admin_users)
+        if non_admin_total > 0:
+            active_non_admin = len([u for u in non_admin_users if u["last_login"] and u["last_login"] >= start_date])
+            retention_rate = round((active_non_admin / non_admin_total) * 100, 1)
+            churn_rate = round(100 - retention_rate, 1)
+        else:
+            retention_rate = 0.0
+            churn_rate = 0.0
+
         return UserAnalyticsResponse(
             totalUsers=total_users,
             newUsersThisPeriod=new_users,
             activeUsersThisPeriod=active_users_period,
             usersByRole=roles,
-            retentionRate=85.5, # Mock for now
-            churnRate=3.2,      # Mock for now
+            retentionRate=retention_rate,
+            churnRate=churn_rate,
             trends=trends_data
         )
 
@@ -75,14 +148,23 @@ class AdminAnalyticsService:
         else: # year
             days = 365
 
-        # Aggregate stats from conversations and messages
-        convs_res = self.supabase.table("conversations").select("id", count="exact").execute()
-        msgs_res = self.supabase.table("messages").select("id", count="exact").execute()
-        
+        # 1. Đếm tổng conversations + messages
+        convs_res = self.supabase.table("conversations").select("id, title", count="exact").execute()
+        msgs_res = self.supabase.table("messages").select("id, content, role", count="exact").execute()
+
         total_convs = convs_res.count or 0
         total_msgs = msgs_res.count or 0
-        
-        # Trends using DB function from Migration 018
+
+        # 2. Trích xuất top topics từ titles + user messages
+        texts: list[str] = []
+        if convs_res.data:
+            texts += [c["title"] for c in convs_res.data if c.get("title")]
+        if msgs_res.data:
+            texts += [m["content"] for m in msgs_res.data if m.get("role") == "user" and m.get("content")]
+
+        top_topics = _extract_topics(texts)
+
+        # 3. Trends từ DB function (Migration 018)
         trends_res = self.supabase.rpc("get_chat_stats_trend", {"days_back": days}).execute()
         trends_data = []
         if trends_res.data:
@@ -97,9 +179,9 @@ class AdminAnalyticsService:
             totalConversations=total_convs,
             totalMessages=total_msgs,
             avgMessagesPerConversation=round(total_msgs / total_convs, 1) if total_convs > 0 else 0,
-            avgDurationSeconds=420, # Mock
-            topTopics=["dinh dưỡng", "thai kỳ", "chế độ ăn"], # Mock
-            satisfactionScore=4.2, # Mock
+            avgDurationSeconds=0,   # Chưa track — không hiển thị
+            topTopics=top_topics,
+            satisfactionScore=0,    # Chưa track — không hiển thị
             trends=trends_data
         )
 

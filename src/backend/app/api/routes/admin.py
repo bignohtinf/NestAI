@@ -396,7 +396,7 @@ async def get_system_settings(supabase = Depends(get_supabase)):
     return {"settings": res}
 
 @router.put("/system/settings")
-async def update_system_settings(settings: Dict[str, Dict], admin_id: str = "admin_001", supabase = Depends(get_supabase)):
+async def update_system_settings(settings: Dict[str, Any], admin_id: str = "admin_001", supabase = Depends(get_supabase)):
     service = AdminSystemService(supabase)
     service.update_system_settings(settings, admin_id)
     return {"success": True}

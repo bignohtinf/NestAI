@@ -323,6 +323,28 @@ export const adminApi = {
     return apiCall<any[]>('/api/admin/ai-hub/algorithms');
   },
 
+  async getMenuRecommendationAlgo() {
+    return apiCall<any>('/api/admin/ai-hub/algorithms/menu-recommendation');
+  },
+
+  async updateMenuRecommendationAlgo(updates: { status?: string; configJson?: Record<string, any>; modelVersion?: string }) {
+    return apiCall<any>('/api/admin/ai-hub/algorithms/menu-recommendation', {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  },
+
+  async getFoodRecognitionAlgo() {
+    return apiCall<any>('/api/admin/ai-hub/algorithms/food-recognition');
+  },
+
+  async updateFoodRecognitionAlgo(updates: { status?: string; configJson?: Record<string, any>; modelVersion?: string }) {
+    return apiCall<any>('/api/admin/ai-hub/algorithms/food-recognition', {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  },
+
   async getAIMonitoring(period = 'month') {
     return apiCall<any>(`/api/admin/ai-hub/monitoring?period=${period}`);
   },

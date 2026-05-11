@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Target, Camera, Zap, Settings2, Loader2, Save, CheckCircle2 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useRouter } from 'next/navigation';
+import { Target, Camera, Zap, Settings2, Loader2, Plus } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { adminApi } from '@/lib/api';
 
 export default function AlgorithmsPage() {
+  const router = useRouter();
   const [algos, setAlgos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,7 +52,7 @@ export default function AlgorithmsPage() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-400">
-                  {algo.type === 'recommendation' ? <Target className="w-5 h-5" /> : <Camera className="w-5 h-5" />}
+                  {algo.algorithmType === 'menu_recommendation' ? <Target className="w-5 h-5" /> : <Camera className="w-5 h-5" />}
                 </div>
                 <span className={`px-2 py-0.5 text-[10px] rounded-full uppercase font-bold ${
                   algo.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
@@ -60,15 +61,20 @@ export default function AlgorithmsPage() {
                 </span>
               </div>
               <CardTitle className="mt-4 text-lg">{algo.name}</CardTitle>
-              <CardDescription className="text-xs">v{algo.version} • Cập nhật: {new Date(algo.updatedAt).toLocaleDateString('vi-VN')}</CardDescription>
+              <CardDescription className="text-xs">v{algo.currentVersion} • Cập nhật: {new Date(algo.lastUpdated).toLocaleDateString('vi-VN')}</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                 {algo.description || 'Không có mô tả cho phiên bản này.'}
               </p>
               <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                <span className="text-xs text-gray-500">Mô hình: {algo.modelName || 'Custom'}</span>
-                <button className="text-xs font-medium text-rose-500 hover:underline flex items-center gap-1">
+                <span className="text-xs text-gray-500">
+                  Độ chính xác: {algo.accuracy != null ? `${(algo.accuracy * 100).toFixed(1)}%` : 'N/A'}
+                </span>
+                <button
+                  onClick={() => router.push(`/admin/ai-hub/algorithms/${algo.algorithmType === 'menu_recommendation' ? 'menu-recommendation' : 'food-recognition'}`)}
+                  className="text-xs font-medium text-rose-500 hover:underline flex items-center gap-1"
+                >
                   <Settings2 className="w-3 h-3" />
                   Cấu hình
                 </button>
