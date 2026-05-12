@@ -234,11 +234,11 @@ Ghi lại các quyết định kỹ thuật, phân công, và brainstorming củ
 ### Evaluation: Trải nghiệm ứng dụng thực tế (User Testing) — 10/05/2026
 
 **Phương pháp test:** 
-- Phỏng vấn và theo dõi hành vi của 10 mẹ bầu (thuộc nhóm đối tượng mục tiêu) sử dụng app trong 3 ngày liên tục.
+- Phỏng vấn và theo dõi hành vi của 5 mẹ bầu (thuộc nhóm đối tượng mục tiêu) sử dụng app trong 3 ngày liên tục.
 
 **Kết quả / Metrics:**
-- **Tỷ lệ tuân thủ thực đơn (Compliance Rate D3):** 60% (6/10 người dùng ăn theo đúng hoặc thay thế món thành công trên app).
-- **Tỷ lệ Retention (D3):** 80% (8/10 người dùng tiếp tục mở app vào ngày thứ 3 để chụp ảnh bữa ăn).
-- **Aha Moment:** 7/10 người dùng bày tỏ sự ngạc nhiên và thích thú khi chụp bát phở và nhận được phân tích chi tiết về lượng đường/tinh bột so với chuẩn của Bộ Y tế.
+- **Tỷ lệ tuân thủ thực đơn (Compliance Rate D3):** 60% (3/5 người dùng ăn theo đúng hoặc thay thế món thành công trên app).
+- **Tỷ lệ Retention (D3):** 80% (4/5 người dùng tiếp tục mở app vào ngày thứ 3 để chụp ảnh bữa ăn).
+- **Aha Moment:** 3/5 người dùng bày tỏ sự ngạc nhiên và thích thú khi chụp bát phở và nhận được phân tích chi tiết về lượng đường/tinh bột so với chuẩn của Bộ Y tế.
 
 **Đánh giá:** Tín hiệu thị trường rất tích cực, tính năng Smart Scan thực sự tạo ra "Wow effect". Tuy nhiên cần bổ sung onboarding guideline trong app để hướng dẫn user cách chụp ảnh ở góc đủ sáng, giúp AI nhận diện tốt hơn.
