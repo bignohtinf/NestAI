@@ -3,14 +3,16 @@
 import { HomeLayout } from '@/components/layouts/home-layout';
 import { blogApi } from '@/lib/api';
 import { useApp } from '@/lib/context';
-import { 
-  Calendar, Clock, User, Tag, MessageCircle, Heart, Share2, 
-  ChevronLeft, Loader2, Send 
+import {
+  Calendar, Clock, User, Tag, MessageCircle, Heart, Share2,
+  ChevronLeft, Loader2, Send
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function BlogPostDetail() {
   const { slug } = useParams();
@@ -159,10 +161,11 @@ export default function BlogPostDetail() {
         )}
 
         {/* Content */}
-        <article 
-          className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-p:text-muted-foreground prose-p:leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
+        <article className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-p:text-muted-foreground prose-p:leading-relaxed">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {post.content}
+          </ReactMarkdown>
+        </article>
 
         {/* Tags */}
         {post.tags && post.tags.length > 0 && (
