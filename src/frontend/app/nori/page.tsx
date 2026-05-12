@@ -404,33 +404,82 @@ function NoriPageInner() {
         } : null,
       };
 
-      // Use EventSource for SSE streaming
-      const eventSource = new EventSource(
-        `/api/nori/stream?payload=${encodeURIComponent(JSON.stringify(requestPayload))}`
-      );
-
+      // Gọi thẳng Cloud Run backend (bỏ qua Vercel proxy để tránh timeout 10s)
+      const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       let fullResponse = '';
       let hasError = false;
 
-      eventSource.addEventListener('token', (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.content) {
-            fullResponse += data.content;
-            // Update bot message with streamed content
-            setMessages(prev =>
-              prev.map(m =>
-                m.id === botMsgId ? { ...m, content: fullResponse } : m
-              )
-            );
-          }
-        } catch (err) {
-          console.error('Error parsing token event:', err);
+      const timeoutController = new AbortController();
+      const timeoutId = setTimeout(() => timeoutController.abort(), 60000); // 60s timeout
+
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/bot-pregnant/stream`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestPayload),
+          signal: timeoutController.signal,
+        });
+
+        if (!response.ok || !response.body) {
+          throw new Error(`Backend error: ${response.status}`);
         }
-      });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let streamDone = false;
+
+        while (!streamDone) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith('data: ')) continue;
+            try {
+              const data = JSON.parse(trimmed.slice(6));
+              if (data.type === 'token' && data.content) {
+                fullResponse += data.content;
+                setMessages(prev =>
+                  prev.map(m =>
+                    m.id === botMsgId ? { ...m, content: fullResponse } : m
+                  )
+                );
+              } else if (data.type === 'done') {
+                streamDone = true;
+              } else if (data.type === 'error') {
+                hasError = true;
+                throw new Error(data.error || 'Stream error');
+              }
+            } catch (e) { /* bỏ qua dòng lỗi format */ }
+          }
+        }
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+          console.error('[Nori] Stream timeout after 60s');
+        } else {
+          console.error('[Nori] Stream error:', err);
+          hasError = true;
+        }
+        if (!fullResponse) {
+          const fallbackContent = generateFallback(msg);
+          setMessages(prev =>
+            prev.map(m =>
+              m.id === botMsgId ? { ...m, content: fallbackContent } : m
+            )
+          );
+          setLoading(false);
+          return;
+        }
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
       const onDone = async () => {
-        eventSource.close();
         console.log('[Nori] Stream done. fullResponse length:', fullResponse.length);
         
         const assistantMsg = { role: 'assistant' as const, content: fullResponse };
@@ -496,61 +545,7 @@ function NoriPageInner() {
         setLoading(false);
       };
 
-      eventSource.addEventListener('done', onDone);
-      
-      eventSource.onerror = (err) => {
-        console.error('[Nori] EventSource error:', err);
-        eventSource.close();
-        setLoading(false);
-      };
-
-      eventSource.addEventListener('error', (event) => {
-        eventSource.close();
-        hasError = true;
-        console.error('Streaming error event:', event);
-        
-        // Check if event has more info (though EventSource error events usually don't)
-        if (event.target && 'status' in event.target) {
-          console.error('Streaming status:', (event.target as any).status);
-        }
-
-
-        // If no content was received, show fallback
-        if (!fullResponse) {
-          const fallbackContent = generateFallback(msg);
-          setMessages(prev =>
-            prev.map(m =>
-              m.id === botMsgId ? { ...m, content: fallbackContent } : m
-            )
-          );
-        }
-
-        setLoading(false);
-      });
-
-      // Handle connection timeout
-      const timeoutId = setTimeout(() => {
-        if (eventSource.readyState !== EventSource.CLOSED) {
-          eventSource.close();
-          if (!fullResponse) {
-            const fallbackContent = generateFallback(msg);
-            setMessages(prev =>
-              prev.map(m =>
-                m.id === botMsgId ? { ...m, content: fallbackContent } : m
-              )
-            );
-          }
-          setLoading(false);
-        }
-      }, 30000); // 30 second timeout
-
-      // Clear timeout when stream completes
-      const originalClose = eventSource.close.bind(eventSource);
-      eventSource.close = function() {
-        console.log('[Nori] Closing EventSource stream');
-        clearTimeout(timeoutId);
-        originalClose();
-      };
+      await onDone();
 
 
     } catch (error) {
