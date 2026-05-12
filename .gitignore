@@ -124,5 +124,8 @@ Thumbs.db
 # ============================================================
 scripts/init-ollama.sh
 reference/
-baby-journey/
-baby-journey-cut/
+/baby-journey/
+/baby-journey-cut/
+backend-env.yaml
+deploy-backend.ps1
+deploy-bot.ps1
