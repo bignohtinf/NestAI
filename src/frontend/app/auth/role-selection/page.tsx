@@ -98,7 +98,7 @@ export default function RoleSelectionPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 overflow-hidden">
             <Image
-              src="/IMG_0174.PNG"
+              src="/img_0174.png"
               alt="NestAI Logo"
               width={64}
               height={64}

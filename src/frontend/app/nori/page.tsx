@@ -70,7 +70,7 @@ const quickSuggestions = [
   { icon: Stethoscope, text: 'Tôi muốn đặt lịch khám bác sĩ' },
 ];
 
-const BOT_FRAMES = ['/bot_1.PNG', '/bot_2.PNG', '/bot_3.PNG'];
+const BOT_FRAMES = ['/bot_1.png', '/bot_2.png', '/bot_3.png'];
 
 function BotAvatar({ size = 28 }: { size?: number }) {
   const [frame, setFrame] = useState(0);

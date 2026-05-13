@@ -55,7 +55,7 @@ function LandingNav() {
           <a href="#" className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl overflow-hidden shrink-0">
               <Image
-                src="/IMG_0174.PNG"
+                src="/img_0174.png"
                 alt="NestAI"
                 width={32}
                 height={32}
