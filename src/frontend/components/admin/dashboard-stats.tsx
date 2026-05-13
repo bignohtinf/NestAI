@@ -1,19 +1,15 @@
 'use client';
 
 import type React from 'react';
-import { useState, useEffect } from 'react';
 import {
   Users,
-  ShoppingCart,
-  DollarSign,
   Activity,
-  TrendingUp,
-  TrendingDown,
   Calendar,
   Package,
+  TrendingUp,
+  TrendingDown,
   Loader2,
 } from 'lucide-react';
-import { adminApi } from '@/lib/api';
 
 interface StatCard {
   title: string;
@@ -24,83 +20,21 @@ interface StatCard {
   description: string;
 }
 
-export default function DashboardStats() {
-  const [stats, setStats] = useState<StatCard[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface DashboardStatsProps {
+  data?: {
+    totalUsers: number;
+    totalMothers: number;
+    totalFathers: number;
+    totalConversations: number;
+    totalPartnerships: number;
+    totalBabies: number;
+    activePregnancies: number;
+    activeUsers: number;
+  };
+}
 
-  useEffect(() => {
-    async function fetchStats() {
-      try {
-        setLoading(true);
-        const data = await adminApi.getStats();
-        
-        // Map backend response to StatCard objects
-        const mappedStats: StatCard[] = [
-          {
-            title: 'Tổng người dùng',
-            value: data.totalUsers.toLocaleString(),
-            change: '+12.5%', // Mock change for now
-            changeType: 'increase',
-            icon: <Users className="h-4 w-4" />,
-            description: `${data.activeUsers} hoạt động`,
-          },
-          {
-            title: 'Mẹ bầu (Mothers)',
-            value: data.totalMothers.toLocaleString(),
-            change: '+5.2%',
-            changeType: 'increase',
-            icon: <Activity className="h-4 w-4" />,
-            description: `${data.activePregnancies || 0} đang mang thai`,
-          },
-          {
-            title: 'Người bố (Fathers)',
-            value: data.totalFathers.toLocaleString(),
-            change: '+8.2%',
-            changeType: 'increase',
-            icon: <Users className="h-4 w-4" />,
-            description: 'Đồng hành',
-          },
-          {
-            title: 'Hội thoại AI',
-            value: (data.totalConversations || 0).toLocaleString(),
-            change: '+15.7%',
-            changeType: 'increase',
-            icon: <Activity className="h-4 w-4" />,
-            description: 'Nori ChatBot',
-          },
-          {
-            title: 'Cặp đôi',
-            value: data.totalPartnerships.toLocaleString(),
-            change: '+3.1%',
-            changeType: 'increase',
-            icon: <Calendar className="h-4 w-4" />,
-            description: 'Đã kết nối',
-          },
-          {
-            title: 'Em bé',
-            value: data.totalBabies.toLocaleString(),
-            change: '+4.5%',
-            changeType: 'increase',
-            icon: <Package className="h-4 w-4" />,
-            description: 'Đang theo dõi',
-          },
-        ];
-        
-        setStats(mappedStats);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to fetch dashboard stats:', err);
-        setError('Không thể tải dữ liệu thống kê');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchStats();
-  }, []);
-
-  if (loading) {
+export default function DashboardStats({ data }: DashboardStatsProps) {
+  if (!data) {
     return (
       <div className="flex items-center justify-center h-32 bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800">
         <Loader2 className="w-6 h-6 animate-spin text-rose-500" />
@@ -109,13 +43,56 @@ export default function DashboardStats() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/50 rounded-xl text-red-600 text-sm">
-        {error}
-      </div>
-    );
-  }
+  const stats: StatCard[] = [
+    {
+      title: 'Tổng người dùng',
+      value: data.totalUsers.toLocaleString(),
+      change: '+12.5%',
+      changeType: 'increase',
+      icon: <Users className="h-4 w-4" />,
+      description: `${data.activeUsers} hoạt động`,
+    },
+    {
+      title: 'Mẹ bầu (Mothers)',
+      value: data.totalMothers.toLocaleString(),
+      change: '+5.2%',
+      changeType: 'increase',
+      icon: <Activity className="h-4 w-4" />,
+      description: `${data.activePregnancies || 0} đang mang thai`,
+    },
+    {
+      title: 'Người bố (Fathers)',
+      value: data.totalFathers.toLocaleString(),
+      change: '+8.2%',
+      changeType: 'increase',
+      icon: <Users className="h-4 w-4" />,
+      description: 'Đồng hành',
+    },
+    {
+      title: 'Hội thoại AI',
+      value: (data.totalConversations || 0).toLocaleString(),
+      change: '+15.7%',
+      changeType: 'increase',
+      icon: <Activity className="h-4 w-4" />,
+      description: 'Nori ChatBot',
+    },
+    {
+      title: 'Cặp đôi',
+      value: data.totalPartnerships.toLocaleString(),
+      change: '+3.1%',
+      changeType: 'increase',
+      icon: <Calendar className="h-4 w-4" />,
+      description: 'Đã kết nối',
+    },
+    {
+      title: 'Em bé',
+      value: data.totalBabies.toLocaleString(),
+      change: '+4.5%',
+      changeType: 'increase',
+      icon: <Package className="h-4 w-4" />,
+      description: 'Đang theo dõi',
+    },
+  ];
 
   return (
     <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">

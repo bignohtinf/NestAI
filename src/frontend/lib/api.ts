@@ -202,6 +202,16 @@ export const adminApi = {
   // Expose generic apiCall for custom admin endpoints
   apiCall,
 
+  // Consolidated dashboard — single request for all dashboard data
+  async getDashboard() {
+    return apiCall<{
+      stats: any;
+      analytics: { users: any; chat: any };
+      auditLogs: { logs: any[]; total: number };
+      recentPosts: { items: any[]; total: number };
+    }>('/api/admin/dashboard');
+  },
+
   // Stats
   async getStats() {
     return apiCall<any>('/api/admin/stats');
@@ -450,9 +460,9 @@ export const adminApi = {
   // AI Logs
   async getChatLogs(options: { limit?: number; offset?: number } = {}) {
     const params = new URLSearchParams();
-    if (options.limit) params.append('limit', String(options.limit));
-    if (options.offset) params.append('offset', String(options.offset));
-    return apiCall<any>(`/api/admin/ai-logs/chat?${params}`);
+    params.append('limit', String(options.limit || 20));
+    params.append('offset', String(options.offset || 0));
+    return apiCall<{ logs: any[]; total: number; limit: number; offset: number }>(`/api/admin/ai-logs/chat?${params}`);
   },
 
   async getChatMessages(chatId: string) {
@@ -461,16 +471,16 @@ export const adminApi = {
 
   async getScanLogs(options: { limit?: number; offset?: number } = {}) {
     const params = new URLSearchParams();
-    if (options.limit) params.append('limit', String(options.limit));
-    if (options.offset) params.append('offset', String(options.offset));
-    return apiCall<any>(`/api/admin/ai-logs/scan?${params}`);
+    params.append('limit', String(options.limit || 20));
+    params.append('offset', String(options.offset || 0));
+    return apiCall<{ logs: any[]; total: number; limit: number; offset: number }>(`/api/admin/ai-logs/scan?${params}`);
   },
 
   async getRecommendationLogs(options: { limit?: number; offset?: number } = {}) {
     const params = new URLSearchParams();
-    if (options.limit) params.append('limit', String(options.limit));
-    if (options.offset) params.append('offset', String(options.offset));
-    return apiCall<any>(`/api/admin/ai-logs/recommendations?${params}`);
+    params.append('limit', String(options.limit || 20));
+    params.append('offset', String(options.offset || 0));
+    return apiCall<{ logs: any[]; total: number; limit: number; offset: number }>(`/api/admin/ai-logs/recommendations?${params}`);
   },
 };
 

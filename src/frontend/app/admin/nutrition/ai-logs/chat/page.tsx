@@ -1,43 +1,36 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { MessageSquare, User, Bot } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { adminApi } from '@/lib/api';
 import { format } from 'date-fns';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogDescription
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { usePaginatedData } from '@/lib/use-api-data';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 
 export default function ChatLogsPage() {
-  const [logs, setLogs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  
-  // Dialog state
   const [selectedChat, setSelectedChat] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  useEffect(() => {
-    async function fetchLogs() {
-      try {
-        const data = await adminApi.getChatLogs();
-        setLogs(data.logs || []);
-      } catch (error) {
-        console.error('Failed to fetch chat logs:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchLogs();
-  }, []);
+  const { data: logs, total, page, pageSize, totalPages, loading, goToPage } = usePaginatedData({
+    key: ['admin', 'chat-logs'],
+    fetcher: async (limit, offset) => {
+      const res = await adminApi.getChatLogs({ limit, offset });
+      return { items: res.logs || [], total: res.total || 0 };
+    },
+    pageSize: 20,
+  });
 
   const handleRowClick = async (log: any) => {
     setSelectedChat(log);
@@ -66,7 +59,10 @@ export default function ChatLogsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Chat Conversations</CardTitle>
-          <CardDescription>Danh sách các cuộc hội thoại gần đây. Nhấn vào hàng để xem nội dung.</CardDescription>
+          <CardDescription>
+            Danh sách các cuộc hội thoại gần đây. Nhấn vào hàng để xem nội dung.
+            {total > 0 && <span className="ml-2 text-gray-400">({total} tổng)</span>}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -74,32 +70,42 @@ export default function ChatLogsPage() {
           ) : logs.length === 0 ? (
             <div className="text-center py-12 text-gray-500">Chưa có dữ liệu cuộc hội thoại nào.</div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID Phiên</TableHead>
-                  <TableHead>Tiêu đề</TableHead>
-                  <TableHead>Ngày tạo</TableHead>
-                  <TableHead>Cập nhật cuối</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {logs.map((log) => (
-                  <TableRow 
-                    key={log.id} 
-                    className="cursor-pointer hover:bg-gray-50 transition-colors"
-                    onClick={() => handleRowClick(log)}
-                  >
-                    <TableCell className="font-mono text-[10px] text-gray-400">
-                      {log.id.substring(0, 8)}...
-                    </TableCell>
-                    <TableCell className="font-medium">{log.title}</TableCell>
-                    <TableCell>{format(new Date(log.created_at), 'dd/MM/yyyy HH:mm')}</TableCell>
-                    <TableCell>{format(new Date(log.updated_at), 'dd/MM/yyyy HH:mm')}</TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID Phiên</TableHead>
+                    <TableHead>Tiêu đề</TableHead>
+                    <TableHead>Ngày tạo</TableHead>
+                    <TableHead>Cập nhật cuối</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {logs.map((log: any) => (
+                    <TableRow
+                      key={log.id}
+                      className="cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => handleRowClick(log)}
+                    >
+                      <TableCell className="font-mono text-[10px] text-gray-400">
+                        {log.id.substring(0, 8)}...
+                      </TableCell>
+                      <TableCell className="font-medium">{log.title}</TableCell>
+                      <TableCell>{format(new Date(log.created_at), 'dd/MM/yyyy HH:mm')}</TableCell>
+                      <TableCell>{format(new Date(log.updated_at), 'dd/MM/yyyy HH:mm')}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <PaginationControls
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                pageSize={pageSize}
+                onPageChange={goToPage}
+                loading={loading}
+              />
+            </>
           )}
         </CardContent>
       </Card>
@@ -128,8 +134,8 @@ export default function ChatLogsPage() {
               ) : (
                 <div className="space-y-6 pb-4">
                   {messages.map((msg, idx) => (
-                    <div 
-                      key={idx} 
+                    <div
+                      key={idx}
                       className={`flex flex-col ${msg.role === 'assistant' ? 'items-start' : 'items-end'}`}
                     >
                       <div className={`flex items-center gap-2 mb-1 ${msg.role === 'assistant' ? 'flex-row' : 'flex-row-reverse'}`}>
@@ -152,10 +158,10 @@ export default function ChatLogsPage() {
                           {format(new Date(msg.timestamp), 'HH:mm:ss')}
                         </span>
                       </div>
-                      <div 
+                      <div
                         className={`max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed ${
-                          msg.role === 'assistant' 
-                            ? 'bg-blue-50 text-gray-800 rounded-tl-none border border-blue-100 shadow-sm' 
+                          msg.role === 'assistant'
+                            ? 'bg-blue-50 text-gray-800 rounded-tl-none border border-blue-100 shadow-sm'
                             : 'bg-gray-100 text-gray-800 rounded-tr-none border border-gray-200'
                         }`}
                       >
@@ -168,7 +174,7 @@ export default function ChatLogsPage() {
             </ScrollArea>
           </div>
           <div className="p-4 border-t bg-gray-50 flex justify-end">
-            <button 
+            <button
               onClick={() => setIsDialogOpen(false)}
               className="px-4 py-2 bg-white border rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
             >

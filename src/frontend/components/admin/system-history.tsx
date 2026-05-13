@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import {
   Settings,
   Palette,
@@ -19,7 +18,6 @@ import {
   Loader2,
   AlertCircle,
 } from 'lucide-react';
-import { apiCall } from '@/lib/api';
 
 interface AuditLog {
   id: string;
@@ -33,11 +31,9 @@ interface AuditLog {
   adminEmail?: string;
 }
 
-interface AuditLogListResponse {
-  logs: AuditLog[];
-  total: number;
-  limit: number;
-  offset: number;
+interface SystemHistoryProps {
+  data?: { logs: AuditLog[]; total: number };
+  onRefresh?: () => void;
 }
 
 function formatRelativeTime(isoString: string): string {
@@ -85,7 +81,7 @@ const getActionColor = (action: string) => {
   return 'bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400';
 };
 
-const formatActionLabel = (action: string, targetType?: string): string => {
+const formatActionLabel = (action: string): string => {
   const labels: Record<string, string> = {
     create_user: 'Tạo người dùng',
     update_user: 'Cập nhật người dùng',
@@ -106,34 +102,12 @@ const formatActionLabel = (action: string, targetType?: string): string => {
     logout: 'Đăng xuất',
   };
   if (labels[action]) return labels[action];
-  // Fallback: humanize the action string
   return action.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 };
 
-export default function SystemHistory() {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastChecked, setLastChecked] = useState<string>('');
-
-  const fetchLogs = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await apiCall<AuditLogListResponse>('/api/admin/system/audit-logs?limit=8&offset=0');
-      setLogs(data.logs || []);
-      setLastChecked(formatRelativeTime(new Date().toISOString()));
-    } catch (err) {
-      setError('Không thể tải lịch sử hệ thống');
-      console.error('SystemHistory API error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchLogs();
-  }, []);
+export default function SystemHistory({ data, onRefresh }: SystemHistoryProps) {
+  const logs = data?.logs || [];
+  const loading = !data;
 
   return (
     <div className="bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800">
@@ -142,7 +116,7 @@ export default function SystemHistory() {
           Lịch sử hệ thống
         </h3>
         <button
-          onClick={fetchLogs}
+          onClick={onRefresh}
           className="text-sm text-rose-500 hover:underline"
         >
           Xem tất cả
@@ -152,11 +126,6 @@ export default function SystemHistory() {
       {loading ? (
         <div className="flex items-center justify-center py-10">
           <Loader2 className="h-6 w-6 animate-spin text-rose-400" />
-        </div>
-      ) : error ? (
-        <div className="flex items-center gap-2 py-6 text-sm text-red-500">
-          <AlertCircle className="h-4 w-4 flex-shrink-0" />
-          <span>{error}</span>
         </div>
       ) : logs.length === 0 ? (
         <p className="text-sm text-gray-400 text-center py-8">Chưa có sự kiện nào được ghi nhận.</p>
@@ -175,7 +144,7 @@ export default function SystemHistory() {
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center space-x-2">
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {formatActionLabel(log.action, log.targetType)}
+                      {formatActionLabel(log.action)}
                     </span>
                     <span
                       className={`px-1.5 py-0.5 text-xs rounded-full ${
@@ -200,11 +169,6 @@ export default function SystemHistory() {
                   {log.targetType && (
                     <span className="text-xs"> &bull; {log.targetType}</span>
                   )}
-                  {log.details && typeof log.details === 'object' && Object.keys(log.details).length > 0 && (
-                    <span className="text-xs">
-                      {' '}&bull; {Object.entries(log.details).map(([k, v]) => `${k}: ${v}`).slice(0, 1).join(', ')}
-                    </span>
-                  )}
                 </div>
               </div>
             </div>
@@ -213,12 +177,9 @@ export default function SystemHistory() {
       )}
 
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-500 dark:text-gray-400">
-            {lastChecked ? `Kiểm tra lần cuối: ${lastChecked}` : 'Đang tải...'}
-          </span>
+        <div className="flex items-center justify-end text-sm">
           <button
-            onClick={fetchLogs}
+            onClick={onRefresh}
             className="text-rose-500 hover:underline flex items-center gap-1"
           >
             <RefreshCw className="h-3 w-3" />

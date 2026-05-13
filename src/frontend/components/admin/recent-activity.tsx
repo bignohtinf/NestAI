@@ -1,8 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Eye, MessageSquare, MoreHorizontal, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
-import { apiCall } from '@/lib/api';
+import { Eye, MoreHorizontal, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface CMSItem {
   id: string;
@@ -63,30 +61,16 @@ const statusLabels: Record<string, string> = {
   review: 'Chờ duyệt',
 };
 
-export default function RecentPosts() {
-  const [posts, setPosts] = useState<CMSItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface RecentPostsProps {
+  data?: { items: CMSItem[]; total: number };
+  onRefresh?: () => void;
+}
 
-  const fetchPosts = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await apiCall<CMSItemListResponse>(
-        '/api/admin/system/cms?type=post&limit=5&offset=0'
-      );
-      setPosts(data.items || []);
-    } catch (err) {
-      setError('Không thể tải danh sách bài viết');
-      console.error('RecentPosts API error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPosts();
-  }, []);
+export default function RecentPosts({ data, onRefresh }: RecentPostsProps) {
+  const posts = data?.items || [];
+  const loading = !data;
+  const error: string | null = null;
+  const fetchPosts = onRefresh || (() => {});
 
   return (
     <div className="bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800">

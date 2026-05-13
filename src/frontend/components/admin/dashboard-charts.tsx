@@ -1,9 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import {
-  LineChart,
-  Line,
   BarChart,
   Bar,
   XAxis,
@@ -15,47 +12,17 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
-import { adminApi } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
 
-export default function DashboardCharts() {
-  const [userTrend, setUserTrend] = useState<any[]>([]);
-  const [chatTrend, setChatTrend] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+interface DashboardChartsProps {
+  data?: {
+    users: { trends: any[] };
+    chat: { trends: any[] };
+  };
+}
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const [users, chat] = await Promise.all([
-          adminApi.getUserAnalytics('month'),
-          adminApi.getChatAnalytics('month'),
-        ]);
-        
-        // Format dates for display
-        const formattedUsers = users.trends.map((t: any) => ({
-          ...t,
-          date: new Date(t.date).toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' })
-        }));
-        
-        const formattedChat = chat.trends.map((t: any) => ({
-          ...t,
-          date: new Date(t.date).toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' })
-        }));
-
-        setUserTrend(formattedUsers);
-        setChatTrend(formattedChat);
-      } catch (err) {
-        console.error('Failed to fetch analytics trend:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, []);
-
-  if (loading) {
+export default function DashboardCharts({ data }: DashboardChartsProps) {
+  if (!data) {
     return (
       <div className="grid gap-4 sm:gap-6 grid-cols-1 xl:grid-cols-2">
         {[1, 2].map((i) => (
@@ -66,6 +33,16 @@ export default function DashboardCharts() {
       </div>
     );
   }
+
+  const userTrend = (data.users?.trends || []).map((t: any) => ({
+    ...t,
+    date: new Date(t.date).toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' }),
+  }));
+
+  const chatTrend = (data.chat?.trends || []).map((t: any) => ({
+    ...t,
+    date: new Date(t.date).toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' }),
+  }));
 
   return (
     <div className="grid gap-4 sm:gap-6 grid-cols-1 xl:grid-cols-2">

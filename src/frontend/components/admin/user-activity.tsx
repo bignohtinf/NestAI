@@ -1,8 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Edit, Eye, MessageSquare, Plus, Trash2, Upload, RefreshCw, Loader2, AlertCircle } from 'lucide-react';
-import { apiCall } from '@/lib/api';
+import { Edit, Eye, MessageSquare, Plus, Trash2, Upload, RefreshCw, Loader2, AlertCircle, User as UserIcon } from 'lucide-react';
 
 interface AuditLog {
   id: string;
@@ -16,11 +14,9 @@ interface AuditLog {
   adminEmail?: string;
 }
 
-interface AuditLogListResponse {
-  logs: AuditLog[];
-  total: number;
-  limit: number;
-  offset: number;
+interface UserActivityProps {
+  data?: { logs: AuditLog[]; total: number };
+  onRefresh?: () => void;
 }
 
 function formatRelativeTime(isoString: string): string {
@@ -84,8 +80,7 @@ const actionLabelMap: Record<ActionCategory, string> = {
 
 function getInitials(email: string): string {
   if (!email) return 'A';
-  const name = email.split('@')[0];
-  return name.charAt(0).toUpperCase();
+  return email.charAt(0).toUpperCase();
 }
 
 function getTargetLabel(action: string, targetType?: string, details?: Record<string, any>): string {
@@ -104,35 +99,15 @@ function getTargetLabel(action: string, targetType?: string, details?: Record<st
     };
     return typeLabels[targetType] || targetType;
   }
-  // Fallback from action
   const parts = action.split('_');
   return parts.slice(1).join(' ') || action;
 }
 
-export default function UserActivity() {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchActivity = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await apiCall<AuditLogListResponse>('/api/admin/system/audit-logs?limit=6&offset=0');
-      setLogs(data.logs || []);
-      setTotal(data.total || 0);
-    } catch (err) {
-      setError('Không thể tải hoạt động người dùng');
-      console.error('UserActivity API error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchActivity();
-  }, []);
+export default function UserActivity({ data, onRefresh }: UserActivityProps) {
+  // Show max 6 logs to differentiate from SystemHistory (which shows 8)
+  const logs = (data?.logs || []).slice(0, 6);
+  const total = data?.total || 0;
+  const loading = !data;
 
   return (
     <div className="bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800">
@@ -140,7 +115,7 @@ export default function UserActivity() {
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           Hoạt động người dùng
         </h3>
-        <button onClick={fetchActivity} className="text-sm text-rose-500 hover:underline">
+        <button onClick={onRefresh} className="text-sm text-rose-500 hover:underline">
           Xem tất cả
         </button>
       </div>
@@ -148,11 +123,6 @@ export default function UserActivity() {
       {loading ? (
         <div className="flex items-center justify-center py-10">
           <Loader2 className="h-6 w-6 animate-spin text-rose-400" />
-        </div>
-      ) : error ? (
-        <div className="flex items-center gap-2 py-6 text-sm text-red-500">
-          <AlertCircle className="h-4 w-4 flex-shrink-0" />
-          <span>{error}</span>
         </div>
       ) : logs.length === 0 ? (
         <p className="text-sm text-gray-400 text-center py-8">Chưa có hoạt động nào được ghi nhận.</p>
@@ -208,7 +178,7 @@ export default function UserActivity() {
             {total > 0 ? `${total} hành động được ghi nhận` : 'Không có dữ liệu'}
           </span>
           <button
-            onClick={fetchActivity}
+            onClick={onRefresh}
             className="text-rose-500 hover:underline flex items-center gap-1"
           >
             <RefreshCw className="h-3 w-3" />

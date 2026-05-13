@@ -1,30 +1,23 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Bookmark } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { adminApi } from '@/lib/api';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { usePaginatedData } from '@/lib/use-api-data';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 
 export default function RecommendationLogsPage() {
-  const [logs, setLogs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchLogs() {
-      try {
-        const data = await adminApi.getRecommendationLogs();
-        setLogs(data.logs || []);
-      } catch (error) {
-        console.error('Failed to fetch recommendation logs:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchLogs();
-  }, []);
+  const { data: logs, total, page, pageSize, totalPages, loading, goToPage } = usePaginatedData({
+    key: ['admin', 'recommendation-logs'],
+    fetcher: async (limit, offset) => {
+      const res = await adminApi.getRecommendationLogs({ limit, offset });
+      return { items: res.logs || [], total: res.total || 0 };
+    },
+    pageSize: 20,
+  });
 
   return (
     <div className="space-y-6">
@@ -39,7 +32,10 @@ export default function RecommendationLogsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Menu Recommendations</CardTitle>
-          <CardDescription>Danh sách các gợi ý gần đây</CardDescription>
+          <CardDescription>
+            Danh sách các gợi ý gần đây
+            {total > 0 && <span className="ml-2 text-gray-400">({total} tổng)</span>}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -47,32 +43,42 @@ export default function RecommendationLogsPage() {
           ) : logs.length === 0 ? (
             <div className="text-center py-12 text-gray-500">Chưa có dữ liệu gợi ý nào.</div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID Phiên</TableHead>
-                  <TableHead>Ngày thực đơn</TableHead>
-                  <TableHead>Đối tượng</TableHead>
-                  <TableHead>Ngày tạo</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {logs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell className="font-mono text-[10px] text-gray-400">
-                      {log.user_id.substring(0, 8)}...
-                    </TableCell>
-                    <TableCell className="font-medium">{log.plan_date}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {log.target === 'mother' ? 'Mẹ' : 'Bé'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{format(new Date(log.created_at), 'dd/MM/yyyy HH:mm')}</TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID Phiên</TableHead>
+                    <TableHead>Ngày thực đơn</TableHead>
+                    <TableHead>Đối tượng</TableHead>
+                    <TableHead>Ngày tạo</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {logs.map((log: any) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="font-mono text-[10px] text-gray-400">
+                        {log.user_id?.substring(0, 8)}...
+                      </TableCell>
+                      <TableCell className="font-medium">{log.plan_date}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">
+                          {log.target === 'mother' ? 'Mẹ' : 'Bé'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{format(new Date(log.created_at), 'dd/MM/yyyy HH:mm')}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <PaginationControls
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                pageSize={pageSize}
+                onPageChange={goToPage}
+                loading={loading}
+              />
+            </>
           )}
         </CardContent>
       </Card>

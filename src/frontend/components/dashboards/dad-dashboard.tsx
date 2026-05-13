@@ -96,12 +96,13 @@ export function DadDashboard() {
         setLoading(true);
         const timeoutId = setTimeout(() => setLoading(false), 5000);
 
-        const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        // Use apiCall helper instead of direct fetch to avoid Mixed Content
+        const { apiCall } = await import('@/lib/api');
         const results = await Promise.allSettled([
-          fetch(`${API}/api/health/current-score?user_id=${user.id}`).then(r => r.ok ? r.json() : null),
-          fetch(`${API}/api/health/daily-stats?user_id=${user.id}`).then(r => r.ok ? r.json() : null),
-          fetch(`${API}/api/babies?user_id=${user.id}`).then(r => r.ok ? r.json() : null),
-          fetch(`${API}/api/tasks?user_id=${user.id}`).then(r => r.ok ? r.json() : null),
+          apiCall<any>(`/api/health/current-score?user_id=${user.id}`).catch(() => null),
+          apiCall<any>(`/api/health/daily-stats?user_id=${user.id}`).catch(() => null),
+          apiCall<any>(`/api/babies?user_id=${user.id}`).catch(() => null),
+          apiCall<any>(`/api/tasks?user_id=${user.id}`).catch(() => null),
         ]);
 
         if (results[0].status === 'fulfilled' && results[0].value) {

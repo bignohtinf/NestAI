@@ -150,7 +150,7 @@ CMS_ITEMS_DATA = [
         "seo_title": "10 bài yoga an toàn cho bà bầu tuần 20-32",
         "seo_description": "Hướng dẫn chi tiết 10 tư thế yoga dành riêng cho mẹ bầu tam cá nguyệt 2-3.",
         "tags": ["yoga", "vận động", "sức khỏe", "thai kỳ"],
-        "thumbnail_url": "https://cdn.nextai.vn/posts/pregnancy-yoga.jpg",
+        "thumbnail_url": "https://res.cloudinary.com/dxxiercxx/image/upload/v1778569947/47d8b73c5368b0f3b53ae53edf2cb38c396ffb10-900x600_qcba6v.avif",
         "created_by": USERS["admin"],
     },
     {
@@ -181,7 +181,7 @@ CMS_ITEMS_DATA = [
         "seo_title": "Cách kiểm soát lo âu và stress khi mang thai",
         "seo_description": "5 kỹ thuật thực hành giảm lo âu thai kỳ được chứng minh bởi khoa học.",
         "tags": ["tâm lý", "stress", "lo âu", "sức khỏe tinh thần"],
-        "thumbnail_url": "https://cdn.nextai.vn/posts/mental-health-pregnancy.jpg",
+        "thumbnail_url": "https://res.cloudinary.com/dxxiercxx/image/upload/v1778569948/cang-thang-thai-ky-2_zl3t4z.jpg",
         "created_by": USERS["admin"],
     },
     {
@@ -215,7 +215,7 @@ CMS_ITEMS_DATA = [
         "seo_title": "Thực đơn lợi sữa và dinh dưỡng phục hồi sau sinh 6 tuần đầu",
         "seo_description": "Hướng dẫn chi tiết thực phẩm lợi sữa, lịch ăn mẫu và những điều cần tránh sau sinh.",
         "tags": ["sau sinh", "lợi sữa", "phục hồi", "dinh dưỡng"],
-        "thumbnail_url": "https://cdn.nextai.vn/posts/postpartum-nutrition.jpg",
+        "thumbnail_url": "https://res.cloudinary.com/dxxiercxx/image/upload/v1778569947/mon-an-loi-sua-cho-me-sau-sinh_sbl1nk.jpg",
         "created_by": USERS["admin"],
     },
     {
@@ -249,7 +249,7 @@ CMS_ITEMS_DATA = [
         "seo_title": "Canxi và Vitamin D cho bà bầu: Liều lượng và nguồn thực phẩm tốt nhất",
         "seo_description": "Hướng dẫn bổ sung canxi và vitamin D trong thai kỳ để bảo vệ xương mẹ và phát triển xương bé.",
         "tags": ["canxi", "vitamin D", "xương", "dinh dưỡng thai kỳ"],
-        "thumbnail_url": "https://cdn.nextai.vn/posts/calcium-vitd.jpg",
+        "thumbnail_url": "https://res.cloudinary.com/dxxiercxx/image/upload/v1778569947/211116tac-dung-cua-vitamin-d3-voi-tre-so-sinh_jlucxa.jpg",
         "created_by": USERS["admin"],
     },
     # ── Thông báo & Cảnh báo ───────────────────────────────────────────────────
@@ -357,7 +357,7 @@ BLOG_REACTIONS_DATA = [
 ]
 
 
-# ── Hàm seed ───────────────────────────────────────────────────────────────────
+# ── Hàm seed (full — chỉ chạy lần đầu) ───────────────────────────────────────
 def seed(db: Client) -> tuple[bool, str]:
     try:
         log.info("Seeding blog_categories (%d)...", len(BLOG_CATEGORIES_DATA))
@@ -397,8 +397,54 @@ def seed(db: Client) -> tuple[bool, str]:
         return False, str(e)
 
 
+# ── Chỉ cập nhật URL ảnh (patch — an toàn khi chạy lại nhiều lần) ─────────────
+def patch_image_urls(db: Client) -> tuple[bool, str]:
+    """Chỉ update icon_url và thumbnail_url, không đụng dữ liệu khác."""
+    try:
+        # icon_url cho blog_categories
+        cat_urls = {
+            item["id"]: item["icon_url"]
+            for item in BLOG_CATEGORIES_DATA
+            if item.get("icon_url")
+        }
+        log.info("Patching icon_url cho %d blog_categories...", len(cat_urls))
+        for cat_id, url in cat_urls.items():
+            db.table("blog_categories").update({"icon_url": url}).eq("id", cat_id).execute()
+        log.info("  ✓ blog_categories icon_url")
+
+        # thumbnail_url cho cms_items (chỉ bài viết có thumbnail)
+        post_urls = {
+            item["id"]: item["thumbnail_url"]
+            for item in CMS_ITEMS_DATA
+            if item.get("thumbnail_url")
+        }
+        log.info("Patching thumbnail_url cho %d cms_items...", len(post_urls))
+        for post_id, url in post_urls.items():
+            db.table("cms_items").update({"thumbnail_url": url}).eq("id", post_id).execute()
+        log.info("  ✓ cms_items thumbnail_url")
+
+        return True, f"patch_image_urls hoàn tất ({len(cat_urls)} categories, {len(post_urls)} posts)"
+
+    except Exception as e:
+        log.error("Lỗi: %s", e)
+        return False, str(e)
+
+
 def main():
-    ok, msg = seed(supabase)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--patch-urls",
+        action="store_true",
+        help="Chỉ cập nhật icon_url / thumbnail_url, không seed toàn bộ",
+    )
+    args = parser.parse_args()
+
+    if args.patch_urls:
+        ok, msg = patch_image_urls(supabase)
+    else:
+        ok, msg = seed(supabase)
+
     log.info("✅ %s" if ok else "❌ %s", msg)
     if not ok:
         sys.exit(1)

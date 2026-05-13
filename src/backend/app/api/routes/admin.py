@@ -110,6 +110,74 @@ async def get_admin_stats(supabase = Depends(get_supabase)):
         print(f"Error in get_admin_stats: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
+# ─── Consolidated Dashboard Endpoint ────────────────────────────────────────
+
+@router.get("/dashboard")
+async def get_admin_dashboard(supabase = Depends(get_supabase)):
+    """Single endpoint returning all admin dashboard data to reduce round trips."""
+    import asyncio
+    from concurrent.futures import ThreadPoolExecutor
+
+    executor = ThreadPoolExecutor(max_workers=4)
+    loop = asyncio.get_event_loop()
+
+    # Helper to run sync supabase calls concurrently
+    async def run_sync(fn):
+        return await loop.run_in_executor(executor, fn)
+
+    def fetch_stats():
+        users_res = supabase.table("users").select("id, role", count="exact").execute()
+        users_data = users_res.data or []
+        babies_res = supabase.table("babies").select("id", count="exact").execute()
+        partnerships_res = supabase.table("partnerships").select("id", count="exact").eq("status", "accepted").execute()
+        convs_res = supabase.table("conversations").select("id", count="exact").execute()
+        preg_res = supabase.table("medical_profiles").select("id", count="exact").eq("pregnancy_status", "pregnant").execute()
+
+        return {
+            "totalUsers": users_res.count or len(users_data),
+            "totalAdmins": len([u for u in users_data if u.get("role") == "admin"]),
+            "totalMothers": len([u for u in users_data if u.get("role") == "mother"]),
+            "totalFathers": len([u for u in users_data if u.get("role") == "father"]),
+            "activeUsers": users_res.count or len(users_data),
+            "totalPartnerships": partnerships_res.count or len(partnerships_res.data or []),
+            "totalBabies": babies_res.count or len(babies_res.data or []),
+            "totalConversations": convs_res.count or len(convs_res.data or []),
+            "activePregnancies": preg_res.count or len(preg_res.data or []),
+        }
+
+    def fetch_analytics():
+        service = AdminAnalyticsService(supabase)
+        return {
+            "users": service.get_user_analytics(AnalyticsPeriod.month).model_dump(),
+            "chat": service.get_chat_analytics(AnalyticsPeriod.month).model_dump(),
+        }
+
+    def fetch_audit_logs():
+        service = AdminSystemService(supabase)
+        return service.get_audit_logs(limit=8, offset=0).model_dump()
+
+    def fetch_cms():
+        service = AdminSystemService(supabase)
+        return service.get_cms_items(limit=5, offset=0, type="post").model_dump()
+
+    try:
+        stats, analytics, audit_logs, cms = await asyncio.gather(
+            run_sync(fetch_stats),
+            run_sync(fetch_analytics),
+            run_sync(fetch_audit_logs),
+            run_sync(fetch_cms),
+        )
+
+        return {
+            "stats": stats,
+            "analytics": analytics,
+            "auditLogs": audit_logs,
+            "recentPosts": cms,
+        }
+    except Exception as e:
+        print(f"Error in get_admin_dashboard: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Dashboard error: {str(e)}")
+
 # ─── Analytics Endpoints (Phase 1A) ──────────────────────────────────────
 
 @router.get("/analytics/users", response_model=UserAnalyticsResponse)
