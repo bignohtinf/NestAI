@@ -24,12 +24,18 @@ app = FastAPI(
 )
 
 # CORS
+# max_age=86400 → browser cache CORS preflight (OPTIONS) trong 24h thay vì
+# preflight lại cho mỗi request. Trước đây mỗi fetch cross-origin bị nhân đôi
+# round-trip vì preflight không cache; setting này loại bỏ ~50% request đến
+# Cloud Run (đặc biệt với endpoint hay được gọi như /api/users/me,
+# /api/notifications, /api/recommendations).
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    max_age=86400,
 )
 
 # Routes
