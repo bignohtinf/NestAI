@@ -4,6 +4,24 @@ import { createContext, useContext, useState, ReactNode, useEffect, useRef } fro
 import { useRouter } from 'next/navigation';
 import { supabase, supabaseAdmin } from './supabase';
 
+/**
+ * Distinguishes "auth check in progress / failed / done" so guard components
+ * (admin layout, protected pages) can decide whether to redirect vs. wait vs.
+ * show an error. Using `isLoading` alone is ambiguous: a slow user-record
+ * fetch on a valid session would flip `isLoading=false` while `user` is still
+ * null, causing protected pages to redirect the user as if they had been
+ * logged out.
+ */
+export type SessionStatus = 'checking' | 'authenticated' | 'unauthenticated' | 'error';
+
+// How long we'll wait for the user record fetch before treating it as a
+// transient error (keeps the user on the page with a retry option instead of
+// kicking them out to the landing page).
+const GET_USER_TIMEOUT_MS = 12_000;
+// Hard ceiling: if the auth listener never fires at all (lib stuck refreshing
+// token across tabs, network broken at SDK layer), fail open as unauthenticated.
+const AUTH_LISTENER_SAFETY_MS = 30_000;
+
 export interface UserData {
   id: string;
   email: string;
@@ -53,6 +71,12 @@ interface AppContextType {
   updateQuest: (questId: string, completed: boolean) => void;
   fetchUserData: () => Promise<void>;
   isLoading: boolean;
+  /**
+   * Use this for redirect / guard decisions in protected pages instead of
+   * combining `!isLoading && !user` (which incorrectly treats transient fetch
+   * errors as a logout).
+   */
+  sessionStatus: SessionStatus;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -62,6 +86,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null);
   const [quests, setQuests] = useState<Quest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionStatus, setSessionStatus] = useState<SessionStatus>('checking');
   const mountedRef = useRef(false);
 
   const fetchBabyInfo = async (userId: string) => {
@@ -163,26 +188,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const fetchUserData = async () => {
+    // Used as a manual refetch (e.g. from the "Thử lại" button on the admin
+    // error screen). Keeps sessionStatus in sync so guards behave correctly.
+    if (mountedRef.current) {
+      setIsLoading(true);
+      setSessionStatus('checking');
+    }
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
         if (mountedRef.current) {
           setUser(null);
+          setSessionStatus('unauthenticated');
           setIsLoading(false);
         }
         return;
       }
 
-      const { data: userData, error: userError } = await supabaseAdmin.getUser(session.user.id);
-      
-      if (userError || !userData) {
+      const userResult = await Promise.race([
+        supabaseAdmin.getUser(session.user.id),
+        new Promise<{ data: null; error: Error }>((resolve) =>
+          setTimeout(
+            () => resolve({ data: null, error: new Error('getUser timeout') }),
+            GET_USER_TIMEOUT_MS,
+          ),
+        ),
+      ]);
+
+      if (userResult.error || !userResult.data) {
+        console.error('fetchUserData failed:', userResult.error);
         if (mountedRef.current) {
-          setUser(null);
+          // Session is valid but the user record fetch failed — keep them
+          // logged in conceptually and let the UI surface a retry option.
+          setSessionStatus('error');
           setIsLoading(false);
         }
         return;
       }
 
+      const userData = userResult.data;
       if (mountedRef.current) {
         setUser({
           id: userData.id,
@@ -195,6 +239,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           condition: userData.condition,
           foodPreference: userData.food_preference,
         });
+        setSessionStatus('authenticated');
 
         fetchBabyInfo(userData.id);
         fetchMedicalProfile(userData.id);
@@ -203,7 +248,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to fetch user data:', error);
       if (mountedRef.current) {
-        setUser(null);
+        // We don't know whether the session is valid here. Be conservative
+        // and surface an error state rather than logging the user out.
+        setSessionStatus('error');
         setIsLoading(false);
       }
     }
@@ -212,16 +259,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     mountedRef.current = true;
     setIsLoading(true);
+    setSessionStatus('checking');
 
-    // Safety net: if the auth listener never fires (network down, lib stuck
-    // refreshing token across tabs), stop the spinner after 20s instead of
-    // showing a loading screen forever.
+    // Tracks whether the auth listener has fired at all. If not within
+    // AUTH_LISTENER_SAFETY_MS, we assume the SDK is broken and fail open as
+    // unauthenticated. If it HAS fired but the user-record fetch is slow,
+    // we keep the spinner — we do NOT flip to "unauthenticated" because that
+    // would kick the user out of protected pages (e.g. /admin) mid-load.
+    const authEventReceivedRef = { current: false };
+
     const safetyTimer = setTimeout(() => {
-      if (mountedRef.current) {
-        console.warn('Auth init safety timeout fired — releasing loading state');
+      if (!mountedRef.current) return;
+      if (!authEventReceivedRef.current) {
+        console.warn('Supabase auth listener never fired — treating as unauthenticated');
+        setUser(null);
+        setSessionStatus('unauthenticated');
         setIsLoading(false);
       }
-    }, 20_000);
+      // If auth event was received, we're already in the right state via the
+      // callback below — nothing to do here.
+    }, AUTH_LISTENER_SAFETY_MS);
 
     // Supabase fires INITIAL_SESSION right after subscribing, so we rely on
     // this single source of truth instead of calling fetchUserData() in
@@ -230,14 +287,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // refetch via the context.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mountedRef.current) return;
+      authEventReceivedRef.current = true;
 
       try {
         if (session?.user) {
-          const { data: userData, error: userError } = await supabaseAdmin.getUser(session.user.id);
-          if (userError) {
-            console.error('Failed to load user record:', userError);
-            if (mountedRef.current) setUser(null);
-          } else if (userData && mountedRef.current) {
+          // Race the user-record fetch against a hard timeout so a slow
+          // Supabase query (cross-region latency, RLS evaluation) doesn't
+          // freeze the spinner indefinitely.
+          const userResult = await Promise.race([
+            supabaseAdmin.getUser(session.user.id),
+            new Promise<{ data: null; error: Error }>((resolve) =>
+              setTimeout(
+                () => resolve({ data: null, error: new Error('getUser timeout') }),
+                GET_USER_TIMEOUT_MS,
+              ),
+            ),
+          ]);
+
+          if (!mountedRef.current) return;
+
+          if (userResult.error) {
+            console.error('Failed to load user record:', userResult.error);
+            // Important: session exists, we just couldn't load the user row.
+            // Do NOT setUser(null) — that would log them out of protected
+            // pages. Mark as 'error' so guards can show a retry UI instead.
+            setSessionStatus('error');
+          } else if (userResult.data) {
+            const userData = userResult.data;
             setUser({
               id: userData.id,
               email: userData.email,
@@ -249,20 +325,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
               condition: userData.condition,
               foodPreference: userData.food_preference,
             });
+            setSessionStatus('authenticated');
             // Fire-and-forget; these have their own 15s timeouts and must not
             // block the loading state.
             fetchBabyInfo(userData.id);
             fetchMedicalProfile(userData.id);
+          } else {
+            // No data, no error — defensive branch.
+            setSessionStatus('error');
           }
         } else {
           // INITIAL_SESSION with no session, SIGNED_OUT, or token expired.
-          if (mountedRef.current) setUser(null);
+          if (mountedRef.current) {
+            setUser(null);
+            setSessionStatus('unauthenticated');
+          }
         }
       } catch (err) {
         console.error('Auth state change handler failed:', err);
-        if (mountedRef.current) setUser(null);
+        if (mountedRef.current) {
+          // Unknown failure with a session attempt — keep current user and
+          // mark error so guards don't redirect blindly.
+          setSessionStatus(session?.user ? 'error' : 'unauthenticated');
+          if (!session?.user) setUser(null);
+        }
       } finally {
-        // No matter what happened above, release the spinner.
         if (mountedRef.current) setIsLoading(false);
       }
     });
@@ -295,6 +382,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           condition: userData.condition,
           foodPreference: userData.food_preference,
         });
+        setSessionStatus('authenticated');
       }
     } catch (error) {
       console.error('Login failed:', error);
@@ -307,6 +395,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     setUser(null);
     setQuests([]);
+    setSessionStatus('unauthenticated');
 
     await supabase.auth.signOut({ scope: 'local' }).catch((e) => {
       console.error('Logout error:', e);
@@ -384,6 +473,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         updateQuest,
         fetchUserData,
         isLoading,
+        sessionStatus,
       }}
     >
       {children}

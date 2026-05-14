@@ -14,7 +14,7 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
-  const { user, isLoading } = useApp();
+  const { user, isLoading, sessionStatus, fetchUserData } = useApp();
   const [mounted, setMounted] = useState(false);
   const [menuState, setMenuState] = useState<MenuState>('full');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -26,11 +26,21 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     setMounted(true);
   }, []);
 
+  // Only redirect when we have a definitive answer:
+  //  - confirmed unauthenticated (no Supabase session at all), OR
+  //  - confirmed authenticated but the user is not an admin.
+  // We deliberately do NOT redirect when sessionStatus === 'checking' or
+  // 'error' — those mean "we don't know yet" and redirecting would log the
+  // user out mid-load when a backend call is slow.
   useEffect(() => {
-    if (!isLoading && (!user || user.role !== 'admin')) {
+    if (sessionStatus === 'unauthenticated') {
+      router.push('/');
+      return;
+    }
+    if (sessionStatus === 'authenticated' && user && user.role !== 'admin') {
       router.push('/');
     }
-  }, [user, isLoading, router]);
+  }, [sessionStatus, user, router]);
 
   // Handle responsive behavior
   useEffect(() => {
@@ -83,7 +93,43 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return '16rem';
   };
 
-  if (!mounted || isLoading) {
+  // Transient error (session is valid but we couldn't load the user record).
+  // Show a clear retry UI instead of silently kicking the user back to the
+  // landing page.
+  if (sessionStatus === 'error') {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-950">
+        <div className="text-center max-w-md px-6">
+          <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">⚠️</span>
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            Không tải được phiên đăng nhập
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            Có thể do mạng chậm hoặc máy chủ đang quá tải. Phiên đăng nhập của bạn vẫn còn hiệu lực.
+          </p>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={() => fetchUserData()}
+              className="px-4 py-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-sm font-medium transition-colors"
+            >
+              Thử lại
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              Tải lại trang
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Initial check or user record still loading.
+  if (!mounted || sessionStatus === 'checking' || isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-950">
         <div className="text-center">
