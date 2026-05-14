@@ -4,18 +4,27 @@ const API_BASE_URL = isServer
   ? (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000')
   : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
 
+// Default timeout for API calls (ms). Cloud Run cold start can take ~10–15s.
+const DEFAULT_API_TIMEOUT_MS = 20_000;
+
 export async function apiCall<T>(
   endpoint: string,
-  options?: RequestInit
+  options?: RequestInit & { timeoutMs?: number }
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+  const { timeoutMs, signal: userSignal, ...rest } = options || {};
+
+  // Use caller-provided signal if any, else fall back to a timeout-based abort.
+  // AbortSignal.timeout is supported in Node 18+ and all modern browsers.
+  const signal = userSignal ?? AbortSignal.timeout(timeoutMs ?? DEFAULT_API_TIMEOUT_MS);
+
   try {
     const response = await fetch(url, {
-      ...options,
+      ...rest,
+      signal,
       headers: {
         'Content-Type': 'application/json',
-        ...options?.headers,
+        ...rest.headers,
       },
     });
 
@@ -24,7 +33,12 @@ export async function apiCall<T>(
     }
 
     return await response.json();
-  } catch (error) {
+  } catch (error: any) {
+    // Surface timeouts clearly so callers (and the user) know what happened.
+    if (error?.name === 'TimeoutError' || error?.name === 'AbortError') {
+      console.error(`API call timed out for ${endpoint} after ${timeoutMs ?? DEFAULT_API_TIMEOUT_MS}ms`);
+      throw new Error(`API timeout: ${endpoint}`);
+    }
     console.error(`API call failed for ${endpoint}:`, error);
     throw error;
   }

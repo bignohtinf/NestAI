@@ -66,7 +66,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const fetchBabyInfo = async (userId: string) => {
     try {
-      const res = await fetch(`/api/babies/?user_id=${userId}`);
+      // Hard 15s timeout — prevents the UI from waiting forever on a
+      // cold-starting / stuck backend.
+      const res = await fetch(`/api/babies/?user_id=${userId}`, {
+        signal: AbortSignal.timeout(15_000),
+      });
       if (!res.ok) return;
       const data = await res.json();
       const babies: {
@@ -123,7 +127,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const fetchMedicalProfile = async (userId: string) => {
     try {
-      const res = await fetch(`/api/medical-profile/me?user_id=${userId}`);
+      const res = await fetch(`/api/medical-profile/me?user_id=${userId}`, {
+        signal: AbortSignal.timeout(15_000),
+      });
       if (!res.ok) return;
       const data = await res.json();
       if (data.profile) {
@@ -207,37 +213,63 @@ export function AppProvider({ children }: { children: ReactNode }) {
     mountedRef.current = true;
     setIsLoading(true);
 
-    fetchUserData();
+    // Safety net: if the auth listener never fires (network down, lib stuck
+    // refreshing token across tabs), stop the spinner after 20s instead of
+    // showing a loading screen forever.
+    const safetyTimer = setTimeout(() => {
+      if (mountedRef.current) {
+        console.warn('Auth init safety timeout fired — releasing loading state');
+        setIsLoading(false);
+      }
+    }, 20_000);
 
+    // Supabase fires INITIAL_SESSION right after subscribing, so we rely on
+    // this single source of truth instead of calling fetchUserData() in
+    // parallel (which would duplicate every backend call and worsen cold
+    // starts). The public fetchUserData() remains available for manual
+    // refetch via the context.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mountedRef.current) return;
 
-      if (session?.user) {
-        const { data: userData } = await supabaseAdmin.getUser(session.user.id);
-        if (userData && mountedRef.current) {
-          setUser({
-            id: userData.id,
-            email: userData.email,
-            name: userData.full_name || 'User',
-            role: (userData.role as any) || 'mother',
-            dob: userData.dob,
-            allergies: userData.allergies,
-            dislikes: userData.dislikes,
-            condition: userData.condition,
-            foodPreference: userData.food_preference,
-          });
-          fetchBabyInfo(userData.id);
-          fetchMedicalProfile(userData.id);
+      try {
+        if (session?.user) {
+          const { data: userData, error: userError } = await supabaseAdmin.getUser(session.user.id);
+          if (userError) {
+            console.error('Failed to load user record:', userError);
+            if (mountedRef.current) setUser(null);
+          } else if (userData && mountedRef.current) {
+            setUser({
+              id: userData.id,
+              email: userData.email,
+              name: userData.full_name || 'User',
+              role: (userData.role as any) || 'mother',
+              dob: userData.dob,
+              allergies: userData.allergies,
+              dislikes: userData.dislikes,
+              condition: userData.condition,
+              foodPreference: userData.food_preference,
+            });
+            // Fire-and-forget; these have their own 15s timeouts and must not
+            // block the loading state.
+            fetchBabyInfo(userData.id);
+            fetchMedicalProfile(userData.id);
+          }
+        } else {
+          // INITIAL_SESSION with no session, SIGNED_OUT, or token expired.
+          if (mountedRef.current) setUser(null);
         }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
+      } catch (err) {
+        console.error('Auth state change handler failed:', err);
+        if (mountedRef.current) setUser(null);
+      } finally {
+        // No matter what happened above, release the spinner.
+        if (mountedRef.current) setIsLoading(false);
       }
-      
-      if (mountedRef.current) setIsLoading(false);
     });
 
     return () => {
       mountedRef.current = false;
+      clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
   }, []);

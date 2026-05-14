@@ -13,6 +13,24 @@ const cache = new Map<string, CacheEntry<any>>();
 const DEFAULT_TTL = 60_000; // 1 minute
 const inflight = new Map<string, Promise<any>>();
 
+// Self-heal: even if a fetcher promise never resolves (backend hang, dropped
+// connection), force-clear it from inflight after this long so later callers
+// can retry instead of awaiting a dead promise forever.
+const INFLIGHT_TIMEOUT_MS = 30_000;
+// When a piggy-back caller awaits an existing inflight promise, cap how long
+// it will wait so a stuck inflight entry can never freeze the whole UI.
+const INFLIGHT_WAIT_TIMEOUT_MS = 25_000;
+
+function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} timeout after ${ms}ms`)), ms);
+    p.then(
+      (v) => { clearTimeout(timer); resolve(v); },
+      (e) => { clearTimeout(timer); reject(e); },
+    );
+  });
+}
+
 function getCacheKey(key: string | string[]): string {
   return Array.isArray(key) ? key.join(':') : key;
 }
@@ -71,17 +89,28 @@ export function useApiData<T>(options: UseApiDataOptions<T>): UseApiDataReturn<T
   const fetchData = useCallback(async () => {
     if (!mountedRef.current) return;
 
-    // Deduplicate concurrent requests to the same key
+    // Deduplicate concurrent requests to the same key, but cap how long we
+    // wait so a stuck inflight entry can't freeze the UI forever.
     const existing = inflight.get(cacheKey);
     if (existing) {
       try {
-        const result = await existing;
+        const result = await withTimeout(existing, INFLIGHT_WAIT_TIMEOUT_MS, `inflight:${cacheKey}`);
         if (mountedRef.current) {
           setData(result);
           setLoading(false);
           setError(null);
         }
-      } catch {}
+      } catch (err: any) {
+        // If the piggy-backed promise timed out / failed, clear it so the next
+        // attempt can fire a fresh fetch instead of stacking on a dead promise.
+        if (inflight.get(cacheKey) === existing) {
+          inflight.delete(cacheKey);
+        }
+        if (mountedRef.current) {
+          setError(err?.message || 'Fetch failed');
+          setLoading(false);
+        }
+      }
       return;
     }
 
@@ -90,6 +119,14 @@ export function useApiData<T>(options: UseApiDataOptions<T>): UseApiDataReturn<T
 
     const promise = fetcher();
     inflight.set(cacheKey, promise);
+
+    // Safety net: if the fetcher promise never settles, force-clear inflight
+    // after this long so later callers don't permanently piggy-back on it.
+    const heal = setTimeout(() => {
+      if (inflight.get(cacheKey) === promise) {
+        inflight.delete(cacheKey);
+      }
+    }, INFLIGHT_TIMEOUT_MS);
 
     try {
       const result = await promise;
@@ -104,7 +141,10 @@ export function useApiData<T>(options: UseApiDataOptions<T>): UseApiDataReturn<T
         setError(err?.message || 'Fetch failed');
       }
     } finally {
-      inflight.delete(cacheKey);
+      clearTimeout(heal);
+      if (inflight.get(cacheKey) === promise) {
+        inflight.delete(cacheKey);
+      }
       if (mountedRef.current) {
         setLoading(false);
       }

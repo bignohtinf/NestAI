@@ -129,3 +129,5 @@ reference/
 backend-env.yaml
 deploy-backend.ps1
 deploy-bot.ps1
+.vercel
+.env*.local
