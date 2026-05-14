@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useApp } from '@/lib/context';
 import AdminHeader from './admin-header';
 import AdminSidebar, { type MenuState } from './admin-sidebar';
-import { BotAnimation } from '../nori/bot-animation';
+import { LoadingOverlay } from './loading-overlay';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -128,33 +128,27 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  // Initial check or user record still loading.
-  if (!mounted || sessionStatus === 'checking' || isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-950">
-        <div className="text-center">
-          <div className="relative mb-6">
-            {/* Running light pink circle */}
-            <div className="w-24 h-24 rounded-full border-4 border-rose-100 dark:border-rose-900/30 border-t-rose-400 dark:border-t-rose-500 animate-spin mx-auto" />
-
-            {/* Bot Animation inside the circle */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="scale-50">
-                <BotAnimation />
-              </div>
-            </div>
-          </div>
-          <p className="text-gray-600 dark:text-gray-400 font-medium animate-pulse">
-            Đang tải dữ liệu hệ thống...
-          </p>
-        </div>
-      </div>
-    );
+  // Avoid hydration mismatch on first paint — isMobile detection happens in
+  // a useEffect and would otherwise differ between server and client render.
+  // We render a blank canvas of the same background so the page doesn't flash.
+  if (!mounted) {
+    return <div className="h-screen bg-white dark:bg-gray-950" />;
   }
 
-  if (!user || user.role !== 'admin') {
+  // Confirmed not admin — return null and let the redirect effect kick in.
+  if (sessionStatus === 'authenticated' && (!user || user.role !== 'admin')) {
     return null;
   }
+  if (sessionStatus === 'unauthenticated') {
+    return null;
+  }
+
+  // Show the loading overlay (instead of a full-screen loading page) whenever
+  // we're either still checking auth or still loading user data. The admin
+  // shell — sidebar + header + main area — stays visible underneath with a
+  // blurred backdrop, so the page feels like it's loading in place rather
+  // than navigating to a separate "loading screen".
+  const showAuthOverlay = sessionStatus === 'checking' || isLoading;
 
   return (
     <div className="flex h-screen bg-white dark:bg-gray-950">
@@ -181,9 +175,19 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           />
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto p-3 sm:p-6 bg-white dark:bg-gray-950 min-w-0">
-          {children}
+        {/* Page Content — relative so the overlay can be absolutely positioned
+            on top of children. We render children only once auth is resolved
+            so admin sub-pages don't fire fetches before we know the user is
+            actually an admin (those fetches would 401 and pollute logs). The
+            shell (sidebar + header) stays visible underneath the overlay, so
+            it still feels like "the admin page is loading", not a separate
+            loading screen. */}
+        <main className="relative flex-1 overflow-auto p-3 sm:p-6 bg-white dark:bg-gray-950 min-w-0">
+          {showAuthOverlay ? (
+            <LoadingOverlay />
+          ) : (
+            children
+          )}
         </main>
       </div>
     </div>
