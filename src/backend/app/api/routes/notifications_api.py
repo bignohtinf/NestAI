@@ -1,9 +1,13 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Body
 from app.core.supabase_client import get_supabase
 from app.api.routes.nutrition import invalidate_nutrition_cache
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/notifications", tags=["notifications"])
 
@@ -58,7 +62,7 @@ async def create_meal_plan_notification(request: MealPlanNotificationRequest, su
         supabase.table("notifications").insert(notification).execute()
         return {"success": True}
     except Exception as e:
-        print(f"Error creating meal plan notification: {e}")
+        logger.error(f"create_meal_plan_notification failed: {e}", exc_info=True)
         return {"success": False, "error": str(e)}
 
 VALID_LOG_SOURCES = {"manual", "ai_recommendation", "smart_scan"}
@@ -90,7 +94,7 @@ async def create_scan_food_notification(request: ScanFoodNotificationRequest, su
             # Invalidate nutrition cache vì có bữa ăn mới
             invalidate_nutrition_cache(request.mother_id)
         except Exception as log_err:
-            print(f"Warning: failed to save nutrition log: {log_err}")
+            logger.warning(f"scan-food: failed to save nutrition log: {log_err}")
 
         # 2. Tìm partner để gửi notification
         partnerships = supabase.table("partnerships").select("father_id").eq("mother_id", request.mother_id).eq("status", "accepted").execute()
@@ -119,7 +123,7 @@ async def create_scan_food_notification(request: ScanFoodNotificationRequest, su
         supabase.table("notifications").insert(notification).execute()
         return {"success": True}
     except Exception as e:
-        print(f"Error creating scan food notification: {e}")
+        logger.error(f"create_scan_food_notification failed: {e}", exc_info=True)
         return {"success": False, "error": str(e)}
 
 
@@ -175,10 +179,10 @@ async def backfill_nutrition_logs_from_notifications(supabase = Depends(get_supa
                 }).execute()
                 inserted += 1
             except Exception as e:
-                print(f"Skipped notif {notif.get('id')}: {e}")
+                logger.warning(f"backfill: skipped notif {notif.get('id')}: {e}")
                 skipped += 1
 
         return {"success": True, "inserted": inserted, "skipped": skipped}
     except Exception as e:
-        print(f"Backfill error: {e}")
+        logger.error(f"backfill_nutrition_logs failed: {e}", exc_info=True)
         return {"success": False, "error": str(e)}

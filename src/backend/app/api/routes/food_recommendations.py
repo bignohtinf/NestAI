@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, HTTPException, Query, Body
 from typing import List, Optional, Dict, Any
 from app.services.food_recommendation_service import get_full_day_recommendations, list_profiles
@@ -5,6 +7,7 @@ from app.core.supabase_client import get_supabase
 from pydantic import BaseModel, Field
 from datetime import date, datetime, timedelta
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -88,7 +91,6 @@ async def save_meal_plan(request: SaveMealPlanRequest):
     Also sends notification to partner via partnerships table.
     """
     supabase = get_supabase()
-    print(f"DEBUG: save_meal_plan called with user_id={request.user_id}, target={request.target}, date={request.plan_date}")
 
     try:
         # Check if plan already exists for this date/target
@@ -121,26 +123,19 @@ async def save_meal_plan(request: SaveMealPlanRequest):
         if existing.data and len(existing.data) > 0:
             # Update existing
             plan_id = existing.data[0]["id"]
-            print(f"DEBUG: Updating existing plan {plan_id}")
             supabase.table("meal_plans").update(plan_row).eq("id", plan_id).execute()
         else:
             # Insert new
-            print(f"DEBUG: Inserting new plan")
             result = supabase.table("meal_plans").insert(plan_row).execute()
             plan_id = result.data[0]["id"] if result.data else None
-            print(f"DEBUG: New plan created with id={plan_id}")
 
         # Send notification to partner
-        print(f"DEBUG: Calling _notify_partner")
         _notify_partner(supabase, request)
-        print(f"DEBUG: _notify_partner completed")
 
         return {"success": True, "plan_id": plan_id}
 
     except Exception as e:
-        import traceback
-        error_msg = f"Failed to save meal plan: {str(e)}\n{traceback.format_exc()}"
-        print(error_msg)
+        logger.error(f"Failed to save meal plan: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -268,42 +263,30 @@ async def mark_all_notifications_read(user_id: str):
 def _notify_partner(supabase, request: SaveMealPlanRequest):
     """Send notification to partner (father) when meal plan is saved."""
     try:
-        print(f"DEBUG: _notify_partner starting for user {request.user_id}")
-        
-        # For now, just log that we're trying to notify
-        # In production, this would query partnerships
-        print(f"DEBUG: Would notify partner about meal plan for {request.target}")
-        
-        # Try to find partnership
+        # Find accepted partnership for this user
         try:
             partnerships = (
                 supabase.table("partnerships")
                 .select("father_id, mother_id, status")
                 .execute()
             )
-            print(f"DEBUG: Total partnerships in DB: {len(partnerships.data or [])}")
-            for p in (partnerships.data or []):
-                print(f"DEBUG: Partnership - father: {p.get('father_id')}, mother: {p.get('mother_id')}, status: {p.get('status')}")
         except Exception as e:
-            print(f"DEBUG: Error querying partnerships: {e}")
+            logger.warning(f"_notify_partner: failed to query partnerships: {e}")
             return
 
-        # Find partnership for this user
+        # Resolve partner_id from the accepted partnership
         partner_id = None
         for p in (partnerships.data or []):
             if p.get("status") != "accepted":
                 continue
             if p.get("mother_id") == request.user_id:
                 partner_id = p.get("father_id")
-                print(f"DEBUG: Found partner (father) for mother: {partner_id}")
                 break
             elif p.get("father_id") == request.user_id:
                 partner_id = p.get("mother_id")
-                print(f"DEBUG: Found partner (mother) for father: {partner_id}")
                 break
 
         if not partner_id:
-            print(f"DEBUG: No accepted partnership found for user {request.user_id}")
             return
 
         # Get user name for notification
@@ -312,9 +295,8 @@ def _notify_partner(supabase, request: SaveMealPlanRequest):
             user_name = "Mẹ"
             if user_result.data:
                 user_name = user_result.data[0].get("full_name", "Mẹ")
-            print(f"DEBUG: User name: {user_name}")
         except Exception as e:
-            print(f"DEBUG: Error getting user name: {e}")
+            logger.warning(f"_notify_partner: failed to get user name: {e}")
             user_name = "Mẹ"
 
         # Format date
@@ -350,11 +332,7 @@ def _notify_partner(supabase, request: SaveMealPlanRequest):
             },
         }
 
-        print(f"DEBUG: Inserting notification for partner {partner_id}")
         supabase.table("notifications").insert(notification).execute()
-        print(f"DEBUG: Notification sent successfully")
 
     except Exception as e:
-        import traceback
-        print(f"ERROR in _notify_partner: {e}")
-        print(traceback.format_exc())
+        logger.error(f"_notify_partner failed: {e}", exc_info=True)

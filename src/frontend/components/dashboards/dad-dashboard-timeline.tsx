@@ -13,20 +13,27 @@ interface TimelineEvent {
   icon: string;
 }
 
-// Sample development milestones - can be extended with more detailed data
-const getPregnancyMilestones = (weeksPregnant: number): TimelineEvent[] => {
-  const milestones: TimelineEvent[] = [
-    { week: 8, day: 0, title: 'Nhịp tim bắt đầu', description: 'Tim bé bắt đầu đập', size: 'Hạt đậu', icon: '💓' },
-    { week: 12, day: 0, title: 'Bé có thể nghe', description: 'Tai bé phát triển', size: 'Quả lê', icon: '👂' },
-    { week: 16, day: 0, title: 'Bé bắt đầu cử động', description: 'Mẹ có thể cảm nhận', size: 'Quả táo', icon: '🤸' },
-    { week: 20, day: 0, title: 'Siêu âm giữa kỳ', description: 'Kiểm tra phát triển', size: 'Quả chuối', icon: '🔍' },
-    { week: 24, day: 0, title: 'Bé có thể sống ngoài tử cung', description: 'Phổi phát triển', size: 'Quả mango', icon: '🫁' },
-    { week: 28, day: 0, title: 'Bé mở mắt', description: 'Mắt bé phát triển hoàn toàn', size: 'Quả dưa chuột', icon: '👀' },
-    { week: 32, day: 0, title: 'Bé chuyển vị trí', description: 'Chuẩn bị cho sinh', size: 'Quả dưa lưới', icon: '🔄' },
-    { week: 36, day: 0, title: 'Bé hạ xuống', description: 'Chuẩn bị cho ngày sinh', size: 'Quả bưởi', icon: '⬇️' },
-  ];
+// All pregnancy milestones from week 1 through birth
+const ALL_PREGNANCY_MILESTONES: TimelineEvent[] = [
+  { week: 1,  day: 0, title: 'Thụ thai', description: 'Trứng được thụ tinh và bắt đầu di chuyển', size: 'Hạt cát', icon: '✨' },
+  { week: 3,  day: 0, title: 'Phôi làm tổ', description: 'Phôi thai bám vào thành tử cung', size: 'Hạt vừng', icon: '🌱' },
+  { week: 5,  day: 0, title: 'Tim bé hình thành', description: 'Nhịp tim đầu tiên xuất hiện', size: 'Hạt gạo', icon: '💓' },
+  { week: 8,  day: 0, title: 'Các cơ quan hình thành', description: 'Não, tim, phổi đang phát triển', size: 'Hạt đậu', icon: '🫀' },
+  { week: 10, day: 0, title: 'Ngón tay & ngón chân', description: 'Bé đã có đủ 10 ngón', size: 'Quả dâu', icon: '🖐️' },
+  { week: 12, day: 0, title: 'Hết nguy cơ sảy thai', description: 'Qua tam cá nguyệt đầu an toàn hơn', size: 'Quả chanh', icon: '🛡️' },
+  { week: 16, day: 0, title: 'Bé bắt đầu cử động', description: 'Mẹ có thể sớm cảm nhận', size: 'Quả táo', icon: '🤸' },
+  { week: 20, day: 0, title: 'Siêu âm giữa kỳ', description: 'Kiểm tra hình thái toàn diện', size: 'Quả chuối', icon: '🔍' },
+  { week: 24, day: 0, title: 'Bé có thể sống sót', description: 'Phổi đang trưởng thành dần', size: 'Quả mango', icon: '🫁' },
+  { week: 28, day: 0, title: 'Bé mở mắt', description: 'Mắt bé phát triển hoàn toàn', size: 'Dưa chuột', icon: '👀' },
+  { week: 32, day: 0, title: 'Bé lộn đầu xuống', description: 'Chuẩn bị tư thế chào đời', size: 'Dưa lưới', icon: '🔄' },
+  { week: 36, day: 0, title: 'Bé hạ xuống khung chậu', description: 'Gần đến ngày gặp mặt rồi!', size: 'Quả bưởi', icon: '⬇️' },
+  { week: 40, day: 0, title: 'Ngày dự sinh!', description: 'Bé sẵn sàng chào đời', size: '~3.4kg', icon: '👶' },
+];
 
-  return milestones.filter(m => m.week <= weeksPregnant);
+const getPregnancyMilestones = (weeksPregnant: number) => {
+  const passed  = ALL_PREGNANCY_MILESTONES.filter(m => m.week <= weeksPregnant);
+  const upcoming = ALL_PREGNANCY_MILESTONES.filter(m => m.week > weeksPregnant);
+  return { passed, upcoming };
 };
 
 const getPostpartumMilestones = (weeksPostpartum: number): TimelineEvent[] => {

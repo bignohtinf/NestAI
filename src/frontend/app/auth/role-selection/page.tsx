@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useApp } from '@/lib/context';
 
 type Step = 'role' | 'partner-info';
 
 export default function RoleSelectionPage() {
   const router = useRouter();
+  const { user, setUser } = useApp();
   const [step, setStep] = useState<Step>('role');
   const [selectedRole, setSelectedRole] = useState<'mother' | 'father' | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,18 +27,25 @@ export default function RoleSelectionPage() {
     }
   };
 
-  const handleConfirmRole = async (_role: 'mother' | 'father') => {
+  const handleConfirmRole = async (role: 'mother' | 'father') => {
+    if (!user?.id) {
+      setError('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
-      // TODO: Call API to update user role
-      // const response = await fetch('/api/auth/set-role', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ role }),
-      // });
+      const response = await fetch('/api/auth/set-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, role }),
+      });
 
-      login(role, role === 'mother' ? 'Mẹ' : 'Bố');
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Không thể cập nhật role');
+
+      // Update user context so downstream components see the new role immediately
+      setUser({ ...user, role });
       router.push('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi');
@@ -54,22 +62,43 @@ export default function RoleSelectionPage() {
   const handleSendPartnerRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!partnerInfo.email && !partnerInfo.phone) {
+      setError('Vui lòng nhập email hoặc số điện thoại của mẹ');
+      return;
+    }
+
+    if (!user?.id) {
+      setError('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+      return;
+    }
+
     setLoading(true);
     try {
-      if (!partnerInfo.email && !partnerInfo.phone) {
-        throw new Error('Vui lòng nhập email hoặc số điện thoại của mẹ');
-      }
-      // TODO: Call API to send partnership request
-      // const response = await fetch('/api/partnerships/request', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     partnerEmail: partnerInfo.email,
-      //     partnerPhone: partnerInfo.phone,
-      //   }),
-      // });
+      // Step 1: Save role as 'father' first (partnership API checks requester's role in DB)
+      const roleRes = await fetch('/api/auth/set-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, role: 'father' }),
+      });
+      const roleData = await roleRes.json();
+      if (!roleRes.ok) throw new Error(roleData.message || 'Không thể cập nhật role');
 
-      login('father', 'Bố');
+      // Step 2: Send partnership request
+      const partnerRes = await fetch('/api/partnerships/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          partnerEmail: partnerInfo.email || undefined,
+          partnerPhone: partnerInfo.phone || undefined,
+          requesterId: user.id,
+        }),
+      });
+      const partnerData = await partnerRes.json();
+      if (!partnerRes.ok) throw new Error(partnerData.message || 'Không thể gửi yêu cầu kết nối');
+
+      // Update user context with new role
+      setUser({ ...user, role: 'father' });
       router.push('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi');
@@ -227,7 +256,7 @@ export default function RoleSelectionPage() {
               <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={() => setStep('role')}
+                  onClick={() => { setStep('role'); setError(''); }}
                   disabled={loading}
                   className="flex-1 h-11 rounded-xl border border-border/60 font-semibold text-sm text-foreground hover:bg-muted transition-all disabled:opacity-50"
                 >

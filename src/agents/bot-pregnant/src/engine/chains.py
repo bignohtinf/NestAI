@@ -27,8 +27,13 @@ class ResponseGenerator:
             return self.system_prompt
         
         profile_text = "\n\nThông tin người dùng:\n"
-        if user_profile.get("gestation_weeks"):
-            profile_text += f"- Tuần thai kỳ: {user_profile['gestation_weeks']}\n"
+        if user_profile.get("gestation_weeks") is not None:
+            # Hiển thị giống header: "X tuần Y ngày"
+            days = user_profile.get("days_in_week")
+            if days:
+                profile_text += f"- Tuần thai kỳ: {user_profile['gestation_weeks']} tuần {days} ngày\n"
+            else:
+                profile_text += f"- Tuần thai kỳ: {user_profile['gestation_weeks']} tuần\n"
         if user_profile.get("weight"):
             profile_text += f"- Cân nặng: {user_profile['weight']} kg\n"
         if user_profile.get("condition") and user_profile["condition"] != "none":

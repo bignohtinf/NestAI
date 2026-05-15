@@ -150,13 +150,15 @@ function StoreMap({
     loadGoogleMaps(GOOGLE_MAPS_API_KEY)
       .then(() => {
         if (!mapRef.current) return;
+        // Dùng vị trí thực nếu đã có, ngược lại để Maps tự chọn center mặc định
+        // (map sẽ pan về vị trí thật khi userLocation được cập nhật bên dưới)
         const center = userLocation
           ? { lat: userLocation.lat, lng: userLocation.lng }
-          : { lat: 21.0285, lng: 105.8542 }; // Hà Nội default
+          : { lat: 16.0, lng: 106.0 }; // Trung tâm Việt Nam — sẽ pan về vị trí thật ngay khi có
 
         mapInstanceRef.current = new (window as any).google.maps.Map(mapRef.current, {
           center,
-          zoom: 13,
+          zoom: userLocation ? 13 : 6, // zoom ra khi chưa có vị trí
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: true,
@@ -273,6 +275,16 @@ function StoreMap({
       }
     }
   }, [stores, userLocation, selectedStoreId, mapReady]);
+
+  // Pan & zoom to user's real location as soon as geolocation resolves
+  useEffect(() => {
+    if (!mapReady || !mapInstanceRef.current || !userLocation) return;
+    mapInstanceRef.current.panTo({ lat: userLocation.lat, lng: userLocation.lng });
+    // Only set zoom if no stores are shown yet (fitBounds handles multi-store view)
+    if (markersRef.current.length === 0) {
+      mapInstanceRef.current.setZoom(13);
+    }
+  }, [userLocation, mapReady]);
 
   if (mapError) {
     return (

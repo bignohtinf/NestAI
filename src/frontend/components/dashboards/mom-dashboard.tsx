@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/lib/context';
 import { formatGestationAge } from '@/lib/utils';
+import { nutritionApi } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -120,13 +121,111 @@ const HEALTH_TIPS: Record<string, string[]> = {
   ],
 };
 
+/** Trả về ngày đầu tuần (thứ 2) của một ngày bất kỳ — ISO string yyyy-MM-dd */
+function getWeekMonday(d: Date): string {
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d);
+  monday.setDate(diff);
+  return monday.toISOString().split('T')[0];
+}
+
 export function MomDashboard() {
-  const { user, quests } = useApp();
+  const { user } = useApp();
   const [isHydrated, setIsHydrated] = useState(false);
+
+  // ── Dữ liệu dinh dưỡng hôm nay ──
+  const [todayCalories, setTodayCalories] = useState(0);
+  const [microNutrients, setMicroNutrients] = useState({ iron: 0, calcium: 0 });
+
+  // ── Wellness hôm nay (nước + giấc ngủ) ──
+  const [wellnessToday, setWellnessToday] = useState({ waterLiters: 0, sleepHours: 0 });
+
+  // ── Quests ──
+  const [quests, setQuests] = useState<import('@/lib/context').Quest[]>([]);
 
   useEffect(() => {
     setIsHydrated(true);
   }, []);
+
+  // ── Fetch dinh dưỡng hôm nay (meal plan + nutrition summary) ──
+  const fetchTodayNutrition = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const weekStart = getWeekMonday(new Date());
+
+      // 1. Lấy thực đơn ngày hôm nay để hiển thị calories/macros
+      const weekRes = await nutritionApi.getWeeklyMealPlans(user.id, weekStart);
+      const todayPlan = (weekRes.plans as Record<string, any>)?.[today];
+      if (todayPlan?.plan_data?.nutrition_summary?.total) {
+        const t = todayPlan.plan_data.nutrition_summary.total;
+        setTodayCalories(Math.round(t.energy || 0));
+      }
+
+      // 2. Lấy vi chất từ nutrition_summary (đọc từ food_scan_logs + nutrition_logs)
+      try {
+        const summary = await nutritionApi.getSummary(user.id, 1);
+        const micros: any[] = summary?.micro_nutrients ?? [];
+        const ironPct  = micros.find(m => m.name.includes('Iron') || m.name.includes('Sắt'))?.value ?? 0;
+        const calciumPct = micros.find(m => m.name.includes('Calcium') || m.name.includes('Canxi'))?.value ?? 0;
+        // Chuyển % RDA → mg thực tế (RDA iron=27mg, calcium=1000mg)
+        setMicroNutrients({
+          iron:    Math.round(ironPct    * 27   / 100 * 10) / 10,
+          calcium: Math.round(calciumPct * 1000 / 100),
+        });
+      } catch {
+        // Vi chất là tuỳ chọn — silent fail
+      }
+    } catch {
+      // Silently fail, dashboard hiển thị 0
+    }
+  }, [user?.id]);
+
+  // ── Fetch wellness entry hôm nay ──
+  const fetchWellnessToday = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`/api/wellness/today?user_id=${user.id}`);
+      if (!res.ok) return;
+      const { entry } = await res.json();
+      if (!entry) return;
+      setWellnessToday({
+        waterLiters: entry.water_intake_ml ? Math.round(entry.water_intake_ml / 100) / 10 : 0,
+        sleepHours:  entry.sleep_hours     ?? 0,
+      });
+    } catch {
+      // silent fail
+    }
+  }, [user?.id]);
+
+  // ── Fetch quests ──
+  const fetchQuests = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`/api/quests?user_id=${user.id}`);
+      if (!res.ok) return;
+      const { quests: data } = await res.json();
+      setQuests(data ?? []);
+    } catch {
+      // silent fail
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!isHydrated || !user?.id) return;
+    fetchTodayNutrition();
+    fetchWellnessToday();
+    fetchQuests();
+
+    const handleUpdate = () => fetchTodayNutrition();
+    window.addEventListener('mealPlanSaved',    handleUpdate);
+    window.addEventListener('nutritionLogSaved', handleUpdate);
+    return () => {
+      window.removeEventListener('mealPlanSaved',    handleUpdate);
+      window.removeEventListener('nutritionLogSaved', handleUpdate);
+    };
+  }, [isHydrated, user?.id, fetchTodayNutrition, fetchWellnessToday, fetchQuests]);
 
   const activeQuests = (quests || []).filter((q) => !q.completed).slice(0, 3);
 
@@ -197,19 +296,27 @@ export function MomDashboard() {
 
       {/* ── Daily stats bar ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {DAILY_STATS.map((stat) => (
-          <div key={stat.label} className="bg-white rounded-2xl border border-border/60 p-3 shadow-sm flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${stat.color}`}>
-              {stat.icon}
+        {DAILY_STATS.map((stat) => {
+          // Cập nhật giá trị thực tế theo từng stat
+          const value =
+            stat.label === 'Calo'      && todayCalories             > 0 ? todayCalories.toString() :
+            stat.label === 'Nước'      && wellnessToday.waterLiters  > 0 ? wellnessToday.waterLiters.toFixed(1) :
+            stat.label === 'Giấc ngủ' && wellnessToday.sleepHours   > 0 ? wellnessToday.sleepHours.toFixed(1) :
+            stat.value;
+          return (
+            <div key={stat.label} className="bg-white rounded-2xl border border-border/60 p-3 shadow-sm flex items-center gap-3">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${stat.color}`}>
+                {stat.icon}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">{stat.label}</p>
+                <p className="text-sm font-bold text-foreground truncate">
+                  {value}<span className="text-xs font-normal text-muted-foreground ml-1">/{stat.target} {stat.unit}</span>
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
-              <p className="text-sm font-bold text-foreground truncate">
-                {stat.value}<span className="text-xs font-normal text-muted-foreground ml-1">/{stat.target} {stat.unit}</span>
-              </p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* ── Quick actions ── */}
@@ -252,20 +359,28 @@ export function MomDashboard() {
               </div>
             </CardHeader>
             <CardContent className="p-5 space-y-3">
-              {PREGNANCY_MICROS.map((micro) => (
-                <div key={micro.key} className="flex items-center gap-3">
-                  <span className="text-xl w-7 text-center shrink-0">{micro.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-semibold text-foreground">{micro.label}</span>
-                      <span className={`text-xs font-bold ${micro.color}`}>0 / {micro.target} {micro.unit}</span>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className={`h-full ${micro.bar} rounded-full`} style={{ width: '0%' }} />
+              {PREGNANCY_MICROS.map((micro) => {
+                // Map dữ liệu thực tế vào từng vi chất
+                const current =
+                  micro.key === 'iron'    ? microNutrients.iron :
+                  micro.key === 'calcium' ? microNutrients.calcium :
+                  0; // folate & DHA chưa có nguồn dữ liệu
+                const pct = Math.min(100, Math.round((current / micro.target) * 100));
+                return (
+                  <div key={micro.key} className="flex items-center gap-3">
+                    <span className="text-xl w-7 text-center shrink-0">{micro.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-semibold text-foreground">{micro.label}</span>
+                        <span className={`text-xs font-bold ${micro.color}`}>{current} / {micro.target} {micro.unit}</span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div className={`h-full ${micro.bar} rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </CardContent>
           </Card>
 

@@ -14,6 +14,9 @@ import { MobileBottomNav } from '@/components/navigation/mobile-bottom-nav';
 import { OnboardingGuard } from '@/components/layouts/onboarding-guard';
 import { botPregnantApi } from '@/lib/bot-pregnant-api';
 import { apiCall } from '@/lib/api';
+import { calculateGestationAge } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Message {
   id: string;
@@ -102,6 +105,8 @@ function NoriPageInner() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [currentChatTitle, setCurrentChatTitle] = useState<string>('Cuộc trò chuyện mới');
+  // Fix #3: track đã generate/attempt title chưa để không gọi thừa mỗi tin nhắn
+  const titleGeneratedRef = useRef(false);
   const searchParams = useSearchParams();
   const chatIdFromUrl = searchParams.get('id');
   const [isBotReady, setIsBotReady] = useState(false);
@@ -313,19 +318,17 @@ function NoriPageInner() {
     window.dispatchEvent(new CustomEvent('chatHistoryToggle', { detail: newState }));
   };
 
-  const handleNewChat = async () => {
-    try {
-      const newChat = await createChatHistory('Cuộc trò chuyện mới', []);
-      setCurrentChatId(newChat.id);
-      setCurrentChatTitle('Cuộc trò chuyện mới');
-      router.push(`/nori?id=${newChat.id}`);
-      setMessages([]);
-      setChatHistory([]);
-      setInput('');
-      setShowSuggestions(true);
-    } catch (error) {
-      console.error('Failed to create new chat:', error);
-    }
+  const handleNewChat = () => {
+    // Fix #4: KHÔNG tạo DB record ngay — chat chỉ được tạo khi user gửi tin đầu tiên
+    // (tránh tạo rác trong DB khi user bấm "New Chat" mà không nhắn gì)
+    setCurrentChatId(null);
+    setCurrentChatTitle('Cuộc trò chuyện mới');
+    titleGeneratedRef.current = false;
+    setMessages([]);
+    setChatHistory([]);
+    setInput('');
+    setShowSuggestions(true);
+    router.push('/nori');
   };
 
   const handleSelectChat = async (chatId: string) => {
@@ -345,6 +348,8 @@ function NoriPageInner() {
         setChatHistory(data.messages);
         setCurrentChatId(chatId);
         setCurrentChatTitle(data.title || 'Cuộc trò chuyện mới');
+        // Chat đã có title thực → không cần generate lại
+        titleGeneratedRef.current = true;
         if (chatIdFromUrl !== chatId) {
           router.push(`/nori?id=${chatId}`);
         }
@@ -388,16 +393,37 @@ function NoriPageInner() {
     setMessages(prev => [...prev, botMsg]);
 
     try {
+      // --- Tính tuần thai chính xác như header ---
+      // Ưu tiên user.gestationWeeks từ context (giống header dùng formatGestationAge).
+      // Fallback: tính live từ LMP/dueDate bằng calculateGestationAge nếu chưa load xong.
+      let gestationWeeks: number | null = null;
+      let daysInWeek: number | null = null;
+      if (user?.babyStatus === 'pregnant') {
+        if (user.gestationWeeks != null) {
+          gestationWeeks = user.gestationWeeks;
+          daysInWeek = user.daysInWeek ?? null;
+        } else if (user.lastMenstrualPeriod || user.dueDate) {
+          const calc = calculateGestationAge(user.lastMenstrualPeriod, user.dueDate);
+          gestationWeeks = calc.weeks;
+          daysInWeek = calc.daysInWeek;
+        }
+      }
+
+      // stage = "week_N" để RAG retriever lọc đúng trimester (giống tuần hiển thị trên header)
+      const stage = gestationWeeks != null ? `week_${gestationWeeks}` : undefined;
+
       // Prepare request payload for streaming endpoint
       const requestPayload = {
         user_id: user?.id,
         question: msg,
         conversation_id: null, // Can be set if tracking conversations
         chat_history: newHistory,
+        stage,
         user_profile: user ? {
           id: user.id,
           name: user.name,
-          gestation_weeks: user.babyStatus === 'pregnant' ? user.gestationWeeks : null,
+          gestation_weeks: gestationWeeks,
+          days_in_week: daysInWeek,
           condition: user.condition !== 'none' ? user.condition : null,
           food_preference: user.foodPreference !== 'no_pref' ? user.foodPreference : null,
           baby_status: user.babyStatus,
@@ -481,56 +507,57 @@ function NoriPageInner() {
 
       const onDone = async () => {
         console.log('[Nori] Stream done. fullResponse length:', fullResponse.length);
-        
+
         const assistantMsg = { role: 'assistant' as const, content: fullResponse };
         const updatedHistory = [...newHistory, assistantMsg];
         setChatHistory(updatedHistory);
 
-        // Generate title if the chat doesn't have a real title yet
-        const needsTitleGeneration = !currentChatId || currentChatTitle === 'Cuộc trò chuyện mới';
-        console.log('[Nori] needsTitleGeneration check:', { currentChatTitle, currentChatId, needsTitleGeneration });
-        
-        if (needsTitleGeneration) {
-          console.log('[Nori] Triggering title generation for:', msg);
+        // Fix #3: chỉ attempt title generation 1 lần duy nhất cho mỗi chat
+        // (dùng ref thay vì so sánh currentChatTitle để tránh gọi thừa khi isGreeting=true)
+        const shouldGenerateTitle = !titleGeneratedRef.current;
+
+        if (shouldGenerateTitle) {
+          titleGeneratedRef.current = true; // đánh dấu ngay, dù title gen thành công hay thất bại
+
+          let resolvedTitle = 'Cuộc trò chuyện mới';
           try {
-            const data = await generateChatTitle(msg);
-            console.log('[Nori] generateChatTitle response:', data);
-            
-            if (data && data.title) {
-              const finalTitle = data.title;
-              const isGreeting = data.is_greeting;
-              
-              if (currentChatId) {
-                console.log('[Nori] Chat exists, checking if title update needed. isGreeting:', isGreeting);
-                if (!isGreeting) {
-                  console.log('[Nori] Calling updateChatHistory with:', finalTitle);
-                  await updateChatHistory(currentChatId, finalTitle);
-                  setCurrentChatTitle(finalTitle);
-                }
-                
-                console.log('[Nori] Calling addMessagesToChat');
-                await addMessagesToChat(currentChatId, [
-                  { role: 'user', content: msg },
-                  { role: 'assistant', content: fullResponse },
-                ]);
-              } else {
-                console.log('[Nori] Chat does not exist, creating new chat with title:', finalTitle);
-                const chatMessages: ChatMessage[] = [
-                  { role: 'user', content: msg },
-                  { role: 'assistant', content: fullResponse },
-                ];
-                const newChat = await createChatHistory(finalTitle, chatMessages);
-                console.log('[Nori] New chat created with ID:', newChat.id);
-                setCurrentChatId(newChat.id);
-                setCurrentChatTitle(finalTitle);
-                router.push(`/nori?id=${newChat.id}`);
-              }
+            const titleData = await generateChatTitle(msg);
+            console.log('[Nori] generateChatTitle response:', titleData);
+            if (titleData?.title && !titleData.is_greeting) {
+              resolvedTitle = titleData.title;
             }
           } catch (err) {
-            console.error('[Nori] Error in title generation/saving:', err);
+            console.error('[Nori] generateChatTitle failed, using default title:', err);
+          }
+
+          // Fix #2: lưu messages LUÔN LUÔN — dù title gen có lỗi hay không
+          try {
+            const chatMessages: ChatMessage[] = [
+              { role: 'user', content: msg },
+              { role: 'assistant', content: fullResponse },
+            ];
+
+            if (currentChatId) {
+              // Chat đã tồn tại — update title nếu có title thực và append messages
+              if (resolvedTitle !== 'Cuộc trò chuyện mới') {
+                await updateChatHistory(currentChatId, resolvedTitle);
+                setCurrentChatTitle(resolvedTitle);
+              }
+              await addMessagesToChat(currentChatId, chatMessages);
+              console.log('[Nori] Messages appended to existing chat:', currentChatId);
+            } else {
+              // Fix #4: Chat chưa tồn tại (lazy create) — tạo mới khi gửi tin đầu tiên
+              const newChat = await createChatHistory(resolvedTitle, chatMessages);
+              console.log('[Nori] New chat created:', newChat.id, 'title:', resolvedTitle);
+              setCurrentChatId(newChat.id);
+              setCurrentChatTitle(resolvedTitle);
+              router.push(`/nori?id=${newChat.id}`);
+            }
+          } catch (err) {
+            console.error('[Nori] Failed to persist messages:', err);
           }
         } else if (currentChatId) {
-          console.log('[Nori] Not first message, appending to existing chat:', currentChatId);
+          // Fix #2: tin nhắn tiếp theo — append trực tiếp, không cần title gen
           try {
             await addMessagesToChat(currentChatId, [
               { role: 'user', content: msg },
@@ -709,7 +736,21 @@ function NoriPageInner() {
                       ? { background: '#fecdd3' }
                       : { background: '#dcfce7' }}
                   >
-                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                    {msg.type === 'user' ? (
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                    ) : (
+                      <div className="text-sm leading-relaxed prose prose-sm prose-green max-w-none
+                        prose-p:my-1 prose-p:leading-relaxed
+                        prose-strong:text-green-900 prose-strong:font-semibold
+                        prose-ul:my-1 prose-ul:pl-4 prose-li:my-0.5
+                        prose-ol:my-1 prose-ol:pl-4
+                        prose-headings:text-green-900 prose-headings:font-bold prose-headings:mt-2 prose-headings:mb-1
+                        [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
+                    )}
                     <div className={`flex items-center mt-1 gap-1.5 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <p className={`text-xs ${msg.type === 'user' ? 'text-rose-400' : 'text-green-600'}`}>
                         {msg.timestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}

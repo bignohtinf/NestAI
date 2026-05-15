@@ -1,20 +1,17 @@
 'use client';
 
 import { useState, useEffect, ChangeEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Eye, EyeOff } from 'lucide-react';
-import { useApp } from '@/lib/context';
+import { Eye, EyeOff, Mail, CheckCircle2 } from 'lucide-react';
 
 export default function SignupPage() {
-  const router = useRouter();
-  const { login } = useApp();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -52,15 +49,69 @@ export default function SignupPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message);
 
-      // Establish client-side session so the browser is authenticated
-      await login(formData.email, formData.password);
-      router.push('/auth/role-selection');
+      // Đăng ký thành công → hiện màn hình kiểm tra email (KHÔNG tự login,
+      // vì Supabase yêu cầu xác nhận email trước khi có thể đăng nhập)
+      setRegisteredEmail(formData.email);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi');
     } finally {
       setLoading(false);
     }
   };
+
+  // Màn hình xác nhận email — hiện sau khi đăng ký thành công
+  if (registeredEmail) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4"
+        style={{ background: 'linear-gradient(135deg, #fdf3f1 0%, #fff8f5 50%, #fef0ee 100%)' }}>
+        <div className={`w-full max-w-md bg-white rounded-3xl p-8 shadow-xl shadow-rose-100/60 border border-rose-100/40 text-center transition-all duration-700 ease-out ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+          {/* Icon */}
+          <div className="flex justify-center mb-5">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: '#fdf0ed' }}>
+              <Mail className="w-9 h-9 text-rose-400" />
+            </div>
+          </div>
+
+          <CheckCircle2 className="w-6 h-6 text-green-500 mx-auto -mt-3 mb-4" />
+
+          <h1 className="text-gray-900 text-2xl font-bold mb-2 tracking-tight">Kiểm tra email của bạn</h1>
+          <p className="text-gray-500 text-sm mb-1">
+            Chúng tôi đã gửi email xác nhận đến
+          </p>
+          <p className="text-rose-500 font-semibold text-sm mb-6 break-all">{registeredEmail}</p>
+
+          <div className="bg-rose-50 rounded-2xl p-4 text-left mb-6 space-y-2">
+            <p className="text-gray-700 text-sm font-medium">Làm theo các bước sau:</p>
+            <ol className="text-gray-500 text-sm space-y-1.5 list-decimal list-inside">
+              <li>Mở hộp thư email của bạn</li>
+              <li>Tìm email từ <span className="font-medium text-gray-700">NestAI</span></li>
+              <li>Nhấn nút <span className="font-medium text-rose-500">Xác nhận email</span> trong thư</li>
+              <li>Quay lại đây để đăng nhập</li>
+            </ol>
+          </div>
+
+          <p className="text-gray-400 text-xs mb-5">
+            Không thấy email? Kiểm tra thư mục <span className="font-medium">Spam / Junk</span> hoặc chờ vài phút.
+          </p>
+
+          <Link
+            href="/auth/login"
+            className="block w-full text-white font-medium py-2.5 rounded-xl text-sm transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0"
+            style={{ background: 'linear-gradient(135deg, #e05a50, #f07060)', boxShadow: '0 4px 14px rgba(224,90,80,0.35)' }}
+          >
+            Đi đến trang đăng nhập
+          </Link>
+
+          <button
+            onClick={() => { setRegisteredEmail(''); setFormData({ fullName: '', email: '', phone: '', password: '', confirmPassword: '' }); }}
+            className="mt-3 text-xs text-gray-400 hover:text-gray-600 transition-colors duration-300 underline underline-offset-2"
+          >
+            Đăng ký bằng email khác
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4"

@@ -114,8 +114,13 @@ def format_system_prompt(user_profile: Optional[UserProfile]) -> str:
         return base_prompt
     
     profile_text = "\n\nThông tin người dùng:\n"
-    if user_profile.gestation_weeks:
-        profile_text += f"- Tuần thai kỳ: {user_profile.gestation_weeks}\n"
+    if user_profile.gestation_weeks is not None:
+        # Hiển thị giống header: "X tuần Y ngày"
+        days = user_profile.days_in_week
+        if days:
+            profile_text += f"- Tuần thai kỳ: {user_profile.gestation_weeks} tuần {days} ngày\n"
+        else:
+            profile_text += f"- Tuần thai kỳ: {user_profile.gestation_weeks} tuần\n"
     if user_profile.weight:
         profile_text += f"- Cân nặng: {user_profile.weight} kg\n"
     if user_profile.condition and user_profile.condition != "none":
@@ -158,6 +163,7 @@ class UserProfile(BaseModel):
     id: str
     name: str
     gestation_weeks: Optional[int] = None
+    days_in_week: Optional[int] = None   # số ngày lẻ trong tuần — giống header hiển thị "X tuần Y ngày"
     weight: Optional[float] = None
     condition: Optional[str] = None  # 'gdm', 'anemia', 'hypertension', 'none'
     food_preference: Optional[str] = None

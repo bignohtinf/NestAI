@@ -130,6 +130,8 @@ export function SmartScan({ splitLayout = false }: SmartScanProps) {
       }
 
       setSaveStatus('saved');
+      // Thông báo cho MomDashboard và các component khác cập nhật dinh dưỡng
+      window.dispatchEvent(new CustomEvent('nutritionLogSaved'));
 
       // 2. Nếu là mẹ → gửi thông báo cho bố
       if (user.role === 'mother') {

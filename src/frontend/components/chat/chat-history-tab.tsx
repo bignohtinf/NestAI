@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useChatHistory, ChatHistoryItem } from '@/hooks/useChatHistory';
+import { useApp } from '@/lib/context';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { MoreVertical, Trash2, Download, ChevronDown } from 'lucide-react';
@@ -16,6 +17,8 @@ interface ChatHistoryTabProps {
 
 export function ChatHistoryTab({ onSelectChat, isVisible = true, activeChatId }: ChatHistoryTabProps) {
   const { getChatHistories, deleteChatHistory } = useChatHistory();
+  // Lỗi #1: Chỉ gọi API sau khi user đã được xác thực — tránh 401 khi mount sớm
+  const { sessionStatus } = useApp();
   const [histories, setHistories] = useState<ChatHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -23,6 +26,9 @@ export function ChatHistoryTab({ onSelectChat, isVisible = true, activeChatId }:
   const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
+    // Không gọi API cho đến khi session đã xác nhận là authenticated
+    if (sessionStatus !== 'authenticated') return;
+
     loadHistories();
 
     const handleUpdate = () => {
@@ -31,7 +37,7 @@ export function ChatHistoryTab({ onSelectChat, isVisible = true, activeChatId }:
     };
     window.addEventListener('chatHistoryUpdated', handleUpdate);
     return () => window.removeEventListener('chatHistoryUpdated', handleUpdate);
-  }, []);
+  }, [sessionStatus]); // re-run khi sessionStatus thay đổi sang 'authenticated'
 
   const loadHistories = async (offsetOverride?: number) => {
     try {

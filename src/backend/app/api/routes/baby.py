@@ -86,8 +86,8 @@ def calculate_live_pregnancy(lmp_str: Optional[str], edd_str: Optional[str]) -> 
             if not due_date:
                 from datetime import timedelta
                 due_date = (lmp + timedelta(days=280)).isoformat()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"calculate_live_pregnancy: failed to parse lmp '{lmp_str}': {e}")
 
     elif edd_str:
         try:
@@ -96,8 +96,8 @@ def calculate_live_pregnancy(lmp_str: Optional[str], edd_str: Optional[str]) -> 
             total_days = 280 - days_to_due
             weeks = max(0, min(42, total_days // 7))
             days_in_week = max(0, total_days % 7)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"calculate_live_pregnancy: failed to parse edd '{edd_str}': {e}")
 
     if weeks is None:
         return {}
@@ -174,8 +174,8 @@ async def get_babies(user_id: str, supabase=Depends(get_supabase)):
                     try:
                         supabase.table("babies").update({"partnership_id": partnership_id}).eq("id", b["id"]).execute()
                         b["partnership_id"] = partnership_id
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.warning(f"get_babies: failed to auto-link baby {b['id']} to partnership {partnership_id}: {e}")
                 babies.append(enrich_baby(b))
                 seen_ids.add(b["id"])
 
@@ -189,15 +189,15 @@ async def get_babies(user_id: str, supabase=Depends(get_supabase)):
                         try:
                             supabase.table("babies").update({"partnership_id": partnership_id}).eq("id", b["id"]).execute()
                             b["partnership_id"] = partnership_id
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            logger.warning(f"get_babies: failed to auto-link partner's baby {b['id']} to partnership {partnership_id}: {e}")
                     babies.append(enrich_baby(b))
                     seen_ids.add(b["id"])
 
         return {"babies": babies}
 
     except Exception as e:
-        print(f"Error in get_babies: {str(e)}")
+        logger.error(f"get_babies failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
@@ -305,7 +305,7 @@ async def create_baby(user_id: str, baby: BabyCreate, supabase=Depends(get_supab
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error in create_baby: {str(e)}")
+        logger.error(f"create_baby failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
@@ -528,7 +528,7 @@ async def delete_baby(baby_id: str, supabase=Depends(get_supabase)):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error deleting baby: {str(e)}")
+        logger.error(f"delete_baby failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

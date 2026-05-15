@@ -286,6 +286,8 @@ export function NutritionRecommendations() {
           ? '✅ Đã lưu thực đơn và gửi thông báo cho bố!'
           : '✅ Đã lưu thực đơn thành công!',
       });
+      // Thông báo cho MomDashboard cập nhật mục tiêu dinh dưỡng
+      window.dispatchEvent(new CustomEvent('mealPlanSaved'));
       await loadWeekPlans();
     } catch {
       setSaveMessage({ type: 'error', text: '❌ Lưu thất bại, thử lại sau.' });

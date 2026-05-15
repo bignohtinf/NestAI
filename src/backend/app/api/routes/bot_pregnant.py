@@ -6,6 +6,7 @@ Start it with: cd src/agents/bot-pregnant && USE_QDRANT=1 ... .venv/bin/python s
 """
 from __future__ import annotations
 
+import logging
 import os
 import httpx
 from fastapi import APIRouter, HTTPException
@@ -13,6 +14,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
 
+logger = logging.getLogger(__name__)
 BOT_SERVICE_URL = os.getenv("BOT_SERVICE_URL", "http://localhost:8001")
 
 router = APIRouter(prefix="/api/bot-pregnant", tags=["bot-pregnant"])
@@ -31,7 +33,7 @@ class QueryResponse(BaseModel):
 
 
 async def warm_up_llm() -> None:
-    print(f"[BOT-PROXY] RAG service expected at {BOT_SERVICE_URL}")
+    logger.info(f"[BOT-PROXY] RAG service expected at {BOT_SERVICE_URL}")
 
 
 @router.post("/query", response_model=QueryResponse)

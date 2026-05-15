@@ -193,7 +193,7 @@ async def _call_openai_vision(image_data: str) -> dict:
             if response.status_code in [502, 503, 504]:
                 if attempt < max_retries - 1:
                     wait_time = retry_delay * (2 ** attempt)  # exponential backoff
-                    print(f"OpenAI API returned {response.status_code}, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries})")
+                    logger.warning(f"OpenAI API returned {response.status_code}, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries})")
                     await asyncio.sleep(wait_time)
                     continue
             
@@ -211,17 +211,17 @@ async def _call_openai_vision(image_data: str) -> dict:
         except asyncio.TimeoutError:
             if attempt < max_retries - 1:
                 wait_time = retry_delay * (2 ** attempt)
-                print(f"OpenAI API timeout, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries})")
+                logger.warning(f"OpenAI API timeout, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries})")
                 await asyncio.sleep(wait_time)
                 continue
             raise HTTPException(status_code=504, detail="OpenAI API timeout after multiple retries")
-        
+
         except HTTPException:
             raise
         except Exception as exc:
             if attempt < max_retries - 1:
                 wait_time = retry_delay * (2 ** attempt)
-                print(f"OpenAI API error: {str(exc)}, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries})")
+                logger.warning(f"OpenAI API error: {exc}, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries})")
                 await asyncio.sleep(wait_time)
                 continue
             raise HTTPException(status_code=502, detail=f"Vision model error: {str(exc)}")
