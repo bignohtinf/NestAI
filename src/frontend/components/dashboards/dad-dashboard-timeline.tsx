@@ -30,10 +30,8 @@ const ALL_PREGNANCY_MILESTONES: TimelineEvent[] = [
   { week: 40, day: 0, title: 'Ngày dự sinh!', description: 'Bé sẵn sàng chào đời', size: '~3.4kg', icon: '👶' },
 ];
 
-const getPregnancyMilestones = (weeksPregnant: number) => {
-  const passed  = ALL_PREGNANCY_MILESTONES.filter(m => m.week <= weeksPregnant);
-  const upcoming = ALL_PREGNANCY_MILESTONES.filter(m => m.week > weeksPregnant);
-  return { passed, upcoming };
+const getPregnancyMilestones = (weeksPregnant: number): TimelineEvent[] => {
+  return ALL_PREGNANCY_MILESTONES.filter(m => m.week <= weeksPregnant);
 };
 
 const getPostpartumMilestones = (weeksPostpartum: number): TimelineEvent[] => {
