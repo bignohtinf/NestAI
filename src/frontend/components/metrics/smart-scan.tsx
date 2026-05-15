@@ -111,46 +111,46 @@ export function SmartScan({ splitLayout = false }: SmartScanProps) {
 
       const mealName = analysis.dishes.map((d) => d.matched_food?.dish_name_vi || d.name).join(', ');
 
-      // 1. Lưu nhật ký dinh dưỡng
-      const response = await fetch(`${BASE_API_URL}/api/nutrition/logs?user_id=${encodeURIComponent(user.id)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      if (user.role === 'mother') {
+        // Mẹ: đi qua /api/notifications/scan-food — endpoint này vừa lưu nutrition_log
+        // vừa gửi notification cho bố (1 request, 1 lần lưu duy nhất, không double-save)
+        const result = await nutritionApi.createScanFoodNotification(user.id, {
           meal_name: mealName,
-          calories: analysis.total_calories,
-          protein: analysis.total_protein,
-          carbs: analysis.total_carbs,
-          fat: analysis.total_fat,
-          notes: analysis.meal_context ? `Bữa ${analysis.meal_context}` : 'Quét bữa ăn AI',
-        }),
-      });
-      if (!response.ok) {
-        const body = await response.text();
-        throw new Error(body || 'Không thể lưu nhật ký');
+          total_calories: analysis.total_calories,
+          total_protein: analysis.total_protein,
+          total_carbs: analysis.total_carbs,
+          total_fat: analysis.total_fat,
+          dishes: analysis.dishes,
+          pregnancy_guidance: analysis.pregnancy_guidance ?? null,
+          meal_context: analysis.meal_context ?? null,
+        });
+        if (!result.success && !result.skipped) {
+          throw new Error('Không thể lưu nhật ký');
+        }
+        setSaveStatus(result.skipped ? 'saved' : 'notified');
+      } else {
+        // Bố / user khác: gọi thẳng POST /api/nutrition/logs
+        const response = await fetch(`${BASE_API_URL}/api/nutrition/logs?user_id=${encodeURIComponent(user.id)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            meal_name: mealName,
+            calories: analysis.total_calories,
+            protein: analysis.total_protein,
+            carbs: analysis.total_carbs,
+            fat: analysis.total_fat,
+            notes: analysis.meal_context ? `Bữa ${analysis.meal_context}` : 'Quét bữa ăn AI',
+          }),
+        });
+        if (!response.ok) {
+          const body = await response.text();
+          throw new Error(body || 'Không thể lưu nhật ký');
+        }
+        setSaveStatus('saved');
       }
 
-      setSaveStatus('saved');
       // Thông báo cho MomDashboard và các component khác cập nhật dinh dưỡng
       window.dispatchEvent(new CustomEvent('nutritionLogSaved'));
-
-      // 2. Nếu là mẹ → gửi thông báo cho bố
-      if (user.role === 'mother') {
-        try {
-          const result = await nutritionApi.createScanFoodNotification(user.id, {
-            meal_name: mealName,
-            total_calories: analysis.total_calories,
-            total_protein: analysis.total_protein,
-            total_carbs: analysis.total_carbs,
-            total_fat: analysis.total_fat,
-            dishes: analysis.dishes,
-            pregnancy_guidance: analysis.pregnancy_guidance ?? null,
-            meal_context: analysis.meal_context ?? null,
-          });
-          if (result.success || result.skipped) setSaveStatus('notified');
-        } catch {
-          // Không block việc lưu nếu gửi thông báo lỗi
-        }
-      }
 
       // Reset sau 1.5s để user thấy trạng thái
       setTimeout(() => {

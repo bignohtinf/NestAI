@@ -16,10 +16,15 @@ const inflight = new Map<string, Promise<any>>();
 // Self-heal: even if a fetcher promise never resolves (backend hang, dropped
 // connection), force-clear it from inflight after this long so later callers
 // can retry instead of awaiting a dead promise forever.
-const INFLIGHT_TIMEOUT_MS = 30_000;
+const INFLIGHT_TIMEOUT_MS = 40_000;
 // When a piggy-back caller awaits an existing inflight promise, cap how long
 // it will wait so a stuck inflight entry can never freeze the whole UI.
-const INFLIGHT_WAIT_TIMEOUT_MS = 25_000;
+const INFLIGHT_WAIT_TIMEOUT_MS = 38_000;
+
+// Auto-retry on first failure (e.g. Cloud Run cold-start timeout).
+// The hook will silently retry up to this many times before showing the error.
+const AUTO_RETRY_LIMIT = 1;
+const AUTO_RETRY_DELAY_MS = 2_000;
 
 function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -86,6 +91,10 @@ export function useApiData<T>(options: UseApiDataOptions<T>): UseApiDataReturn<T
   const [loading, setLoading] = useState(!isFresh && !manual && enabled);
   const [error, setError] = useState<string | null>(null);
 
+  // Tracks how many auto-retries have been attempted for the current fetch cycle.
+  // Resets to 0 whenever a fetch succeeds or the user calls refetch() manually.
+  const retryCountRef = useRef(0);
+
   const fetchData = useCallback(async () => {
     if (!mountedRef.current) return;
 
@@ -99,6 +108,7 @@ export function useApiData<T>(options: UseApiDataOptions<T>): UseApiDataReturn<T
           setData(result);
           setLoading(false);
           setError(null);
+          retryCountRef.current = 0;
         }
       } catch (err: any) {
         // If the piggy-backed promise timed out / failed, clear it so the next
@@ -135,8 +145,25 @@ export function useApiData<T>(options: UseApiDataOptions<T>): UseApiDataReturn<T
       if (mountedRef.current) {
         setData(result);
         setError(null);
+        retryCountRef.current = 0;
       }
     } catch (err: any) {
+      // Auto-retry once on timeout/network errors before surfacing the error.
+      // This silently handles Cloud Run cold-start timeouts without requiring
+      // the user to manually click "Thử lại".
+      if (
+        mountedRef.current &&
+        retryCountRef.current < AUTO_RETRY_LIMIT &&
+        (err?.message?.includes('timeout') || err?.message?.includes('fetch'))
+      ) {
+        retryCountRef.current += 1;
+        // Wait briefly then retry — by this point the container is warming up.
+        setTimeout(() => {
+          if (mountedRef.current) fetchData();
+        }, AUTO_RETRY_DELAY_MS);
+        // Keep loading=true during the retry delay (don't show error yet)
+        return;
+      }
       if (mountedRef.current) {
         setError(err?.message || 'Fetch failed');
       }
@@ -186,7 +213,15 @@ export function useApiData<T>(options: UseApiDataOptions<T>): UseApiDataReturn<T
     [cacheKey, data]
   );
 
-  return { data, loading, error, refetch: fetchData, mutate };
+  // Wrap fetchData for public refetch: reset retry counter so the user-triggered
+  // reload gets a fresh retry budget (AUTO_RETRY_LIMIT) rather than being blocked
+  // by retries that already happened during the initial auto-fetch.
+  const refetch = useCallback(async () => {
+    retryCountRef.current = 0;
+    await fetchData();
+  }, [fetchData]);
+
+  return { data, loading, error, refetch, mutate };
 }
 
 // ── Paginated Hook ──────────────────────────────────────────────────────────

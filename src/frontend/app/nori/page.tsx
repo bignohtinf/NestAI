@@ -14,7 +14,7 @@ import { MobileBottomNav } from '@/components/navigation/mobile-bottom-nav';
 import { OnboardingGuard } from '@/components/layouts/onboarding-guard';
 import { botPregnantApi } from '@/lib/bot-pregnant-api';
 import { apiCall } from '@/lib/api';
-import { calculateGestationAge } from '@/lib/utils';
+import { calculateGestationAge, formatGestationAge } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -107,6 +107,17 @@ function NoriPageInner() {
   const [currentChatTitle, setCurrentChatTitle] = useState<string>('Cuộc trò chuyện mới');
   // Fix #3: track đã generate/attempt title chưa để không gọi thừa mỗi tin nhắn
   const titleGeneratedRef = useRef(false);
+
+  // Luôn giữ gestationWeeks/daysInWeek mới nhất trong ref để handleSend đọc được
+  // ngay cả khi user gửi tin trước khi fetchBabyInfo/fetchMedicalProfile hoàn tất.
+  const latestGestationRef = useRef<{ weeks: number | null; days: number | null }>({
+    weeks: null,
+    days: null,
+  });
+
+  // welcomeInitializedRef: track xem welcome message đã được set chưa (thay thế guard
+  // messages.length === 0 vốn block update khi user data load xong sau đó).
+  const welcomeInitializedRef = useRef(false);
   const searchParams = useSearchParams();
   const chatIdFromUrl = searchParams.get('id');
   const [isBotReady, setIsBotReady] = useState(false);
@@ -275,33 +286,59 @@ function NoriPageInner() {
     }
   }, [chatIdFromUrl]);
 
+  // Cập nhật latestGestationRef mỗi khi user thay đổi (cả lần đầu lẫn khi
+  // fetchBabyInfo / fetchMedicalProfile trả về). handleSend đọc ref này thay vì
+  // đọc user trực tiếp để luôn có giá trị mới nhất tại thời điểm gửi tin.
   useEffect(() => {
-    if (messages.length === 0 && user) {
-      const weekLabel =
-        user.babyStatus === 'pregnant' && user.gestationWeeks
-          ? `Tuần ${user.gestationWeeks} thai kỳ`
-          : user.babyStatus === 'born' && user.weeksPostpartum
-            ? `Tuần ${user.weeksPostpartum} sau sinh`
-            : null;
+    if (!user) return;
+    if (user.babyStatus === 'pregnant') {
+      if (user.gestationWeeks != null) {
+        latestGestationRef.current = { weeks: user.gestationWeeks, days: user.daysInWeek ?? null };
+      } else if (user.lastMenstrualPeriod || user.dueDate) {
+        const calc = calculateGestationAge(user.lastMenstrualPeriod, user.dueDate);
+        latestGestationRef.current = { weeks: calc.weeks, days: calc.daysInWeek };
+      }
+    } else {
+      latestGestationRef.current = { weeks: null, days: null };
+    }
+  }, [user]);
 
-      const conditionNote =
-        user.condition === 'gdm'
-          ? '\n\n⚠️ Tôi biết bạn đang theo dõi tiểu đường thai kỳ — tôi sẽ ưu tiên gợi ý món GI thấp cho bạn.'
-          : user.condition === 'anemia'
-            ? '\n\n🩸 Tôi biết bạn cần tăng cường sắt — tôi sẽ ưu tiên gợi ý thực phẩm giàu sắt.'
-            : user.condition === 'hypertension'
-              ? '\n\n💊 Tôi biết bạn đang quản lý huyết áp — tôi sẽ ưu tiên gợi ý món ít muối.'
-              : '';
+  useEffect(() => {
+    if (!user) return;
 
-      setMessages([
-        {
-          id: '1',
-          type: 'bot',
-          content:
-            `Xin chào ${user?.name}! 🌸\n\nTôi là Nori — trợ lý dinh dưỡng AI của bạn.${weekLabel ? ` Đang theo dõi ${weekLabel}.` : ''}${conditionNote}\n\nTôi có thể giúp bạn:\n\n• 🍚 Gợi ý món Việt phù hợp tuần thai và bệnh lý\n• 📊 Kiểm tra vi chất còn thiếu sau bữa ăn\n• ✅ Danh sách thực phẩm được/không được khi mang thai\n• 📋 Giải thích kết quả xét nghiệm (sắt, glucose)\n\nHôm nay mẹ cần tôi giúp gì? 🌿`,
-          timestamp: new Date(),
-        },
-      ]);
+    // Fix Bug 2: dùng formatGestationAge nhất quán với Header thay vì template string thủ công
+    const weekLabel =
+      user.babyStatus === 'pregnant' && user.gestationWeeks != null
+        ? formatGestationAge(user.gestationWeeks, user.daysInWeek)
+        : user.babyStatus === 'born' && user.weeksPostpartum != null
+          ? `Tuần ${user.weeksPostpartum} sau sinh`
+          : null;
+
+    const conditionNote =
+      user.condition === 'gdm'
+        ? '\n\n⚠️ Tôi biết bạn đang theo dõi tiểu đường thai kỳ — tôi sẽ ưu tiên gợi ý món GI thấp cho bạn.'
+        : user.condition === 'anemia'
+          ? '\n\n🩸 Tôi biết bạn cần tăng cường sắt — tôi sẽ ưu tiên gợi ý thực phẩm giàu sắt.'
+          : user.condition === 'hypertension'
+            ? '\n\n💊 Tôi biết bạn đang quản lý huyết áp — tôi sẽ ưu tiên gợi ý món ít muối.'
+            : '';
+
+    const welcomeContent =
+      `Xin chào ${user.name}! 🌸\n\nTôi là Nori — trợ lý dinh dưỡng AI của bạn.${weekLabel ? ` Đang theo dõi ${weekLabel}.` : ''}${conditionNote}\n\nTôi có thể giúp bạn:\n\n• 🍚 Gợi ý món Việt phù hợp tuần thai và bệnh lý\n• 📊 Kiểm tra vi chất còn thiếu sau bữa ăn\n• ✅ Danh sách thực phẩm được/không được khi mang thai\n• 📋 Giải thích kết quả xét nghiệm (sắt, glucose)\n\nHôm nay mẹ cần tôi giúp gì? 🌿`;
+
+    if (!welcomeInitializedRef.current) {
+      // Lần đầu: set welcome message và đánh dấu đã init
+      welcomeInitializedRef.current = true;
+      setMessages([{ id: '1', type: 'bot', content: welcomeContent, timestamp: new Date() }]);
+    } else {
+      // Fix Bug 1: fetchBabyInfo / fetchMedicalProfile vừa update user (gestationWeeks,
+      // condition...) → cập nhật lại welcome message NẾU user chưa gửi tin nào
+      // (tức là messages vẫn chỉ có đúng 1 tin = welcome bot).
+      // Dùng functional update để đọc messages hiện tại mà không cần thêm dependency.
+      setMessages(prev => {
+        if (prev.length !== 1 || prev[0].type !== 'bot') return prev; // user đã chat → giữ nguyên
+        return [{ ...prev[0], content: welcomeContent }];
+      });
     }
   }, [user]);
 
@@ -394,20 +431,10 @@ function NoriPageInner() {
 
     try {
       // --- Tính tuần thai chính xác như header ---
-      // Ưu tiên user.gestationWeeks từ context (giống header dùng formatGestationAge).
-      // Fallback: tính live từ LMP/dueDate bằng calculateGestationAge nếu chưa load xong.
-      let gestationWeeks: number | null = null;
-      let daysInWeek: number | null = null;
-      if (user?.babyStatus === 'pregnant') {
-        if (user.gestationWeeks != null) {
-          gestationWeeks = user.gestationWeeks;
-          daysInWeek = user.daysInWeek ?? null;
-        } else if (user.lastMenstrualPeriod || user.dueDate) {
-          const calc = calculateGestationAge(user.lastMenstrualPeriod, user.dueDate);
-          gestationWeeks = calc.weeks;
-          daysInWeek = calc.daysInWeek;
-        }
-      }
+      // Đọc từ latestGestationRef (được sync mỗi khi user thay đổi) để đảm bảo
+      // luôn có giá trị mới nhất ngay cả khi user gửi tin trước fetchBabyInfo xong.
+      const gestationWeeks = latestGestationRef.current.weeks;
+      const daysInWeek = latestGestationRef.current.days;
 
       // stage = "week_N" để RAG retriever lọc đúng trimester (giống tuần hiển thị trên header)
       const stage = gestationWeeks != null ? `week_${gestationWeeks}` : undefined;

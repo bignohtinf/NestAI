@@ -4,8 +4,11 @@ const API_BASE_URL = isServer
   ? (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000')
   : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
 
-// Default timeout for API calls (ms). Cloud Run cold start can take ~10–15s.
-const DEFAULT_API_TIMEOUT_MS = 20_000;
+// Default timeout for API calls (ms).
+// Cloud Run cold start can take 20-30s on the very first request after a period
+// of inactivity. 35s gives the container enough time to warm up without the
+// user seeing a false "cannot load" error that disappears on retry.
+const DEFAULT_API_TIMEOUT_MS = 35_000;
 
 export async function apiCall<T>(
   endpoint: string,

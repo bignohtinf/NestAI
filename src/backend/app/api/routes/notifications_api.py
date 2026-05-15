@@ -80,15 +80,16 @@ async def create_scan_food_notification(request: ScanFoodNotificationRequest, su
         meal_context = meal_data.get("meal_context")
 
         try:
+            from datetime import date as _date
             supabase.table("nutrition_logs").insert({
                 "user_id": request.mother_id,
-                "meal_name": meal_name,
-                "calories": float(meal_data.get("total_calories") or 0),
+                "log_date": _date.today().isoformat(),   # NOT NULL — bắt buộc phải có
+                # "meal_name" không tồn tại trong schema → dùng notes thay thế
+                "notes": meal_name,                       # tên món hiển thị trong lịch sử
+                "calories": round(float(meal_data.get("total_calories") or 0)),
                 "protein": float(meal_data.get("total_protein")) if meal_data.get("total_protein") is not None else None,
                 "carbs": float(meal_data.get("total_carbs")) if meal_data.get("total_carbs") is not None else None,
                 "fat": float(meal_data.get("total_fat")) if meal_data.get("total_fat") is not None else None,
-                "image_url": meal_data.get("image_url"),
-                "notes": f"Bữa {meal_context}" if meal_context else "Quét bữa ăn AI",
                 "source": log_source,
             }).execute()
             # Invalidate nutrition cache vì có bữa ăn mới

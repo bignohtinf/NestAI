@@ -372,9 +372,8 @@ async def analyze_photo(payload: PhotoAnalysisRequest, supabase = Depends(get_su
         fat = round(fat_100 * portion, 1)
 
         # --- Optional DB enrichment (async offload to thread to avoid blocking event loop) ---
-        loop = asyncio.get_event_loop()
-        matched_food, match_score = await loop.run_in_executor(
-            None, _try_db_enrich, supabase, name
+        matched_food, match_score = await asyncio.to_thread(
+            _try_db_enrich, supabase, name
         )
 
         # --- Pregnancy benefit (based on AI-calculated nutrition, not DB) ---
@@ -478,14 +477,16 @@ async def get_nutrition_logs(user_id: str, limit: int = 30, supabase = Depends(g
 @router.post("/logs")
 async def create_nutrition_log(user_id: str, log: NutritionLogCreate, supabase = Depends(get_supabase)):
     """Create a nutrition log entry"""
+    from datetime import date as _date
     result = supabase.table("nutrition_logs").insert({
         "user_id": user_id,
-        "calories": int(log.calories),
+        "log_date": _date.today().isoformat(),   # bắt buộc NOT NULL
+        "calories": round(log.calories),          # round thay vì int() để tránh truncate
         "protein": log.protein,
         "carbs": log.carbs,
         "fat": log.fat,
-        "notes": log.meal_name,
-        "source": "manual",
+        "notes": log.notes or log.meal_name,      # notes mô tả bữa, meal_name làm fallback
+        "source": "smart_scan",                   # từ SmartScan → đúng source
     }).execute()
 
     if not result.data:

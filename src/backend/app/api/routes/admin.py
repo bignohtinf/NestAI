@@ -116,14 +116,12 @@ async def get_admin_stats(supabase = Depends(get_supabase)):
 async def get_admin_dashboard(supabase = Depends(get_supabase)):
     """Single endpoint returning all admin dashboard data to reduce round trips."""
     import asyncio
-    from concurrent.futures import ThreadPoolExecutor
 
-    executor = ThreadPoolExecutor(max_workers=4)
-    loop = asyncio.get_event_loop()
-
-    # Helper to run sync supabase calls concurrently
+    # Helper to run sync supabase calls concurrently in the default thread pool.
+    # asyncio.to_thread() (Python 3.9+) reuses the running loop's default executor
+    # so we don't leak threads by creating a new ThreadPoolExecutor per request.
     async def run_sync(fn):
-        return await loop.run_in_executor(executor, fn)
+        return await asyncio.to_thread(fn)
 
     def fetch_stats():
         users_res = supabase.table("users").select("id, role", count="exact").execute()
