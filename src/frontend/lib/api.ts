@@ -165,7 +165,7 @@ export const nutritionApi = {
     }
   ) {
     return apiCall<{ success: boolean; notification_id?: string; skipped?: boolean }>(
-      '/api/notifications/scan-food',
+      '/api/nutrition/scan-food-notify',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

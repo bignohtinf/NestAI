@@ -3,7 +3,7 @@ from app.core.supabase_client import get_supabase
 from app.services.embedding_service import EmbeddingService
 from app.services.vector_search_service import VectorSearchService
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import httpx
 import json
 import logging
@@ -50,6 +50,10 @@ def invalidate_nutrition_cache(user_id: str) -> None:
         logger.info(f"Nutrition cache invalidated for user {user_id}")
 
 router = APIRouter()
+
+class ScanFoodNotifyRequest(BaseModel):
+    mother_id: str
+    meal_data: Dict[str, Any]
 
 class NutritionLogCreate(BaseModel):
     meal_name: str
@@ -496,6 +500,63 @@ async def create_nutrition_log(user_id: str, log: NutritionLogCreate, supabase =
     invalidate_nutrition_cache(user_id)
 
     return {"status": "created", "data": result.data[0]}
+
+
+@router.post("/scan-food-notify")
+async def scan_food_notify(request: ScanFoodNotifyRequest, supabase = Depends(get_supabase)):
+    """Lưu nutrition log cho mẹ + gửi notification cho bố sau khi smart scan.
+    Thay thế /api/notifications/scan-food — gộp vào nutrition router để tránh vấn đề đăng ký route.
+    """
+    from datetime import date as _date, datetime as _dt
+
+    meal_data = request.meal_data
+    mother_id = request.mother_id
+    meal_name = meal_data.get("meal_name", "bữa ăn")
+
+    # 1. Lưu nutrition log (luôn chạy dù có partner hay không)
+    try:
+        supabase.table("nutrition_logs").insert({
+            "user_id": mother_id,
+            "log_date": _date.today().isoformat(),
+            "notes": meal_name,
+            "calories": round(float(meal_data.get("total_calories") or 0)),
+            "protein": float(meal_data.get("total_protein")) if meal_data.get("total_protein") is not None else None,
+            "carbs": float(meal_data.get("total_carbs")) if meal_data.get("total_carbs") is not None else None,
+            "fat": float(meal_data.get("total_fat")) if meal_data.get("total_fat") is not None else None,
+            "source": "smart_scan",
+        }).execute()
+        invalidate_nutrition_cache(mother_id)
+    except Exception as log_err:
+        logger.warning(f"scan-food-notify: failed to save nutrition log: {log_err}")
+
+    # 2. Tìm partner để gửi notification
+    partnerships = supabase.table("partnerships").select("father_id").eq("mother_id", mother_id).eq("status", "accepted").execute()
+    if not partnerships.data:
+        return {"success": True, "skipped": True, "message": "No partner to notify"}
+
+    partner_id = partnerships.data[0]["father_id"]
+
+    # 3. Lấy tên mẹ
+    user_res = supabase.table("users").select("full_name").eq("id", mother_id).execute()
+    mother_name = user_res.data[0]["full_name"] if user_res.data else "Mẹ"
+
+    # 4. Insert notification cho bố
+    try:
+        supabase.table("notifications").insert({
+            "user_id": partner_id,
+            "type": "scan_food",
+            "title": f"🍽️ {mother_name} vừa lưu bữa ăn",
+            "message": f"{meal_name} — {meal_data.get('total_calories', 0)} kcal | Protein: {meal_data.get('total_protein', 0)}g | Carbs: {meal_data.get('total_carbs', 0)}g | Béo: {meal_data.get('total_fat', 0)}g",
+            "data": {
+                **meal_data,
+                "mother_name": mother_name,
+                "scanned_at": _dt.utcnow().isoformat(),
+            }
+        }).execute()
+    except Exception as notif_err:
+        logger.warning(f"scan-food-notify: failed to insert notification: {notif_err}")
+
+    return {"success": True}
 
 
 @router.get("/summary")
