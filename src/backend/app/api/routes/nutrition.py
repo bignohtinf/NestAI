@@ -529,6 +529,24 @@ async def scan_food_notify(request: ScanFoodNotifyRequest, supabase = Depends(ge
     except Exception as log_err:
         logger.warning(f"scan-food-notify: failed to save nutrition log: {log_err}")
 
+    # 1b. Lưu food_scan_logs để summary endpoint có thể đọc iron/calcium từ dishes
+    try:
+        supabase.table("food_scan_logs").insert({
+            "user_id": mother_id,
+            "recognized_dish_name": meal_name,
+            "nutrition_data": {
+                "total_calories": meal_data.get("total_calories"),
+                "total_protein": meal_data.get("total_protein"),
+                "total_carbs": meal_data.get("total_carbs"),
+                "total_fat": meal_data.get("total_fat"),
+                "dishes": meal_data.get("dishes", []),
+            },
+            "meal_type": meal_data.get("meal_context"),
+            "source": "smart_scan",
+        }).execute()
+    except Exception as fsl_err:
+        logger.warning(f"scan-food-notify: failed to save food_scan_log: {fsl_err}")
+
     # 2. Tìm partner để gửi notification
     partnerships = supabase.table("partnerships").select("father_id").eq("mother_id", mother_id).eq("status", "accepted").execute()
     if not partnerships.data:
@@ -710,7 +728,19 @@ async def get_nutrition_summary(user_id: str, days: int = 7, supabase = Depends(
                     total_vitamin_c += float(dish.get("vitamin_c") or 0) * servings
                     total_zinc += float(dish.get("zinc") or 0) * servings
         except Exception as e:
-            logger.warning(f"Failed to fetch micronutrients: {e}")
+            logger.warning(f"Failed to fetch micronutrients from nutrition_log_items: {e}")
+
+    # Đọc iron/calcium từ food_scan_logs.nutrition_data.dishes (Smart Scan saves here)
+    try:
+        for scan in (fs_res.data or []):
+            nd = scan.get("nutrition_data") or {}
+            for dish in (nd.get("dishes") or []):
+                total_iron      += float(dish.get("iron")      or 0)
+                total_calcium   += float(dish.get("calcium")   or 0)
+                total_vitamin_c += float(dish.get("vitamin_c") or 0)
+                total_zinc      += float(dish.get("zinc")      or 0)
+    except Exception as e:
+        logger.warning(f"Failed to aggregate micronutrients from food_scan_logs: {e}")
 
     # Tính % đạt mục tiêu (dựa trên RDA * số ngày có dữ liệu)
     def pct(total: float, rda_per_day: float) -> int:
