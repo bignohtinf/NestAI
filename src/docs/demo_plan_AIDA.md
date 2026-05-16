@@ -24,20 +24,20 @@
 - **Nguồn dữ liệu Y khoa uy tín**: Được xây dựng dựa trên:
   - HƯỚNG DẪN QUỐC GIA VỀ SÀNG LỌC VÀ QUẢN LÝ ĐÁI THÁO ĐƯỜNG THAI KỲ.
   - HƯỚNG DẪN QUỐC GIA VỀ DINH DƯỠNG CHO PHỤ NỮ CÓ THAI VÀ BÀ MẸ CHO CON BÚ.
-- **[Hoàn thành] Demo Tính năng 1: Khởi tạo hồ sơ & Cá nhân hóa (Onboarding & Health Profile)**
+- **Demo Tính năng 1: Khởi tạo hồ sơ & Cá nhân hóa (Onboarding & Health Profile)**
   - Thao tác: Mở app, nhập nhanh thông tin (giai đoạn mang thai tuần thứ mấy, chỉ số BMI, có bị tiểu đường thai kỳ không).
   - Điểm nhấn: App lập tức tự động tùy chỉnh giao diện và mục tiêu dinh dưỡng riêng biệt.
-- **[80%] Demo Tính năng 2: Smart Scan - Quét thức ăn bằng Camera (Wow Effect)**
+- **Demo Tính năng 2: Smart Scan - Quét thức ăn bằng Camera (Wow Effect)**
   - Thao tác: Bật tính năng Camera trong app, chọn ảnh món ăn có sẵn.
   - Điểm nhấn: AI nhận diện món ăn trong 2 giây, bóc tách chính xác Calo, Protein, Carbs, Fat, cập nhật vào mục tiêu dinh dưỡng ngày, và đưa ra cảnh báo nếu món ăn chưa phù hợp với tình trạng sức khoẻ hiện tại của mẹ.
 
 ## 3. Desire (Khơi gợi mong muốn)
 **Mục tiêu**: Trình bày giá trị sâu sắc hơn, cho thấy app không chỉ "hay ho" mà còn "cần thiết" (must-have).
 
-- **[Hoàn thành] Demo Tính năng 3: Tạo thực đơn (Nutrition Planner) & Gắn kết gia đình**
+- **Demo Tính năng 3: Tạo thực đơn (Nutrition Planner) & Gắn kết gia đình**
   - Thao tác: Mẹ yêu cầu tạo thực đơn dinh dưỡng trong ngày, sau đó thao tác **lưu thực đơn gửi cho bố** Tài khoản của bố nhận được thông báo nhiệm vụ chuẩn bị thực đơn cho mẹ
   - Điểm nhấn: AI phân tích và đưa ra danh sách món ăn đầy đủ dinh dưỡng. Tính năng này giúp biến việc chuẩn bị bữa ăn thành hành trình chia sẻ, bố có thể nhận ngay danh sách đi chợ hoặc công thức nấu ăn.
-- **[90%] Demo Tính năng 4: Theo dõi Sức khỏe Bé và Trợ lý Nori**
+- **Demo Tính năng 4: Theo dõi Sức khỏe Bé và Trợ lý Nori**
   - Thao tác: 
     - Mở tính năng "Hành trình bé" để biết em bé đang ở giai đoạn nào, kích thước ra sao, nặng bao nhiêu gram, biểu hiện của mẹ trong giai đoạn này thế nào...
     - Trò chuyện với AI Nori: *"Cách chăm sóc cuống rốn của em bé mới sinh như thế nào?"*
