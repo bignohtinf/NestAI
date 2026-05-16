@@ -6,9 +6,9 @@
 
 ## Slide 1: Tiêu đề (Title)
 - **Tiêu đề lớn:** NestAI - Trợ lý Dinh dưỡng AI cho Mẹ bầu & Sau sinh
-- **Tagline:** *"Biến nỗi lo dinh dưỡng thai kỳ thành sự an tâm tuyệt đối, chỉ trong 10 giây."*
+- **Tagline:** *"AI hiểu mẹ, chuẩn y khoa, vì một thế hệ trẻ em khoẻ mạnh từ trong bụng mẹ."​*
 - **Hình ảnh minh hoạ:** Giao diện app (mockup trên iPhone) với thông báo dinh dưỡng an toàn cho mẹ bầu.
-- **Presenter:** [Tên người trình bày / Đại diện team]
+- **Presenter:** [Nhóm 005 / AI thực chiến K1 - VinUni]
 
 ---
 
@@ -75,4 +75,6 @@
 - **B2B2C (Đối tác Y tế):** Phân phối ứng dụng qua các phòng khám sản, bệnh viện phụ sản lớn như một tiện ích giá trị gia tăng kèm theo các gói khám thai.
 - **B2C (Direct):** Tiếp cận mẹ bầu qua Social Media, Freemium model (miễn phí cơ bản, trả phí Subscription cho tính năng Smart Scan và Tối ưu thực đơn cá nhân hoá AI).
 - **LTV/CAC:** Dự kiến tỷ lệ đạt ~4.2x với thời gian hoàn vốn (Payback period) chỉ trong 3 tháng.
+
+
 

@@ -193,6 +193,40 @@ Ghi lại các quyết định kỹ thuật, phân công, và brainstorming củ
 
 ---
 
+### Sprint 6 — 12/05 → 19/05/2026 (Tuần nộp bài cuối kỳ)
+
+**Mục tiêu sprint:** Hoàn thiện toàn bộ hạng mục nộp bài cuối kỳ — Pitch deck, Video demo 5 phút, Báo cáo cuối kỳ (PDF), Source code + README, Deploy public.
+
+| Task | Phụ trách | Thời gian | Trạng thái |
+|---|---|---|---|
+| **[Pitch Deck]** Hoàn thiện slide pitch deck (visual, layout, narrative AIDA) | Huyền | 12/05 → 14/05 | Xong |
+| **[Pitch Deck]** Review nội dung pitch deck (số liệu kỹ thuật, kiến trúc AI) | Quân | 14/05 | Xong |
+| **[Video 5min]** Hoàn thiện kịch bản chi tiết `video_script_5min.md` | Huyền | 13/05 | Xong |
+| **[Video 5min]** Quay screen demo các luồng chính (Nori, Smart Scan, Optimizer, Dashboard) | Thông | 14/05 → 15/05 | Xong |
+| **[Video 5min]** Voice-over + edit video, ghép nhạc, export 1080p | Huyền | 16/05 → 17/05 | Xong |
+| **[Báo cáo]** Phần 1 — Tổng quan đề tài, mục tiêu, đối tượng người dùng | Huyền | 13/05 | Xong |
+| **[Báo cáo]** Phần 2 — Kiến trúc hệ thống, tech stack, ADR | Thông | 14/05 | Xong |
+| **[Báo cáo]** Phần 3 — Các module AI (Nori, Optimizer, Bot Pregnant, Smart Scan) + đánh giá | Quân | 14/05 → 15/05 | Xong |
+| **[Báo cáo]** Phần 4 — Kết quả test, evaluation evidence, AI Governance | Quân | 15/05 | Xong |
+| **[Báo cáo]** Phần 5 — Demo screenshots, UX showcase, kết luận & hướng phát triển | Huyền | 16/05 | Xong |
+| **[Báo cáo]** Ghép báo cáo, format, export PDF cuối cùng | Huyền | 17/05 | Xong |
+| **[Source Code]** Cleanup repo, xoá dead code, gom dependencies | Thông | 13/05 | Xong |
+| **[Source Code]** Viết README.md (mô tả, cài đặt, ENV, cách chạy local & Docker) | Thông | 14/05 | Xong |
+| **[Source Code]** Bổ sung tài liệu kỹ thuật AI (`docs/ai_modules.md`) | Quân | 15/05 | Xong |
+| **[Deploy]** Deploy frontend (Next.js) lên Vercel + cấu hình ENV | Thông | 15/05 | Xong |
+| **[Deploy]** Deploy backend FastAPI + Bot Pregnant lên server, expose URL công khai | Thông | 15/05 → 16/05 | Xong |
+| **[Deploy]** Kiểm thử end-to-end trên môi trường production | Cả nhóm | 16/05 | Xong |
+| **[Tổng kết]** Dry-run pitch + xem lại video, chỉnh sửa lần cuối | Cả nhóm | 18/05 | Xong |
+| **[Tổng kết]** Đóng gói nộp bài (PDF + link repo + link deploy + video) | Huyền | 19/05 | Xong |
+
+**Deliverables cuối sprint (deadline 19/05/2026):**
+1. ✉️ Pitch Deck (PDF/PPTX) — Huyền
+2. 🎬 Video demo 5 phút (MP4 1080p) — Huyền, Quân quay demo
+3. 💻 Source code + README — Thông 
+4. 🌐 Link deploy public — Thông 
+
+---
+
 ### Brainstorm: Ưu tiên tính năng MVP — 10/04/2026
 
 **Câu hỏi:** Với thời gian còn lại, tính năng nào cần làm trước để sản phẩm có giá trị thực sự cho mẹ bầu?
