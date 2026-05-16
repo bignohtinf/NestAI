@@ -62,6 +62,8 @@ class NutritionLogCreate(BaseModel):
     fat: Optional[float] = None
     image_url: Optional[str] = None
     notes: Optional[str] = None
+    meal_type: Optional[str] = None   # breakfast | lunch | dinner | snack
+    source: Optional[str] = None      # manual | ai_recommendation | smart_scan
 
 class PhotoAnalysisRequest(BaseModel):
     image: str
@@ -302,6 +304,22 @@ def _pregnancy_benefit_from_nutrition(protein: float, fat: float, calcium: Optio
     return "Món ăn này cung cấp năng lượng và chất dinh dưỡng cần thiết cho mẹ bầu."
 
 
+def _map_meal_context_to_type(meal_context: str | None) -> str | None:
+    """Chuyển meal_context tiếng Việt từ AI → meal_type tiếng Anh cho DB.
+    Trả về None nếu không nhận diện được — an toàn cho DB có CHECK constraint.
+    """
+    if not meal_context:
+        return None
+    ctx = meal_context.strip().lower()
+    mapping = {
+        "bữa sáng": "breakfast", "sáng": "breakfast", "breakfast": "breakfast",
+        "bữa trưa": "lunch", "trưa": "lunch", "lunch": "lunch",
+        "bữa tối": "dinner", "tối": "dinner", "dinner": "dinner",
+        "bữa phụ": "snack", "phụ": "snack", "snack": "snack",
+    }
+    return mapping.get(ctx)
+
+
 def _pregnancy_guidance_from_totals(total_protein: float, total_calories: float) -> str:
     """Generate overall meal guidance for pregnant women."""
     points = []
@@ -463,10 +481,11 @@ async def get_nutrition_logs(user_id: str, limit: int = 30, supabase = Depends(g
         combined.append({
             "id": scan["id"],
             "meal_name": scan.get("recognized_dish_name") or "Smart Scan",
-            "calories": nd.get("calories") or nd.get("total_calories") or 0,
-            "protein": nd.get("protein") or nd.get("total_protein") or 0,
-            "carbs": nd.get("carbs") or nd.get("total_carbs") or 0,
-            "fat": nd.get("fat") or nd.get("total_fat") or 0,
+            # Backward compat: seed data dùng "energy", smart scan dùng "total_calories"
+            "calories": nd.get("total_calories") or nd.get("calories") or nd.get("energy") or 0,
+            "protein": nd.get("total_protein") or nd.get("protein") or 0,
+            "carbs": nd.get("total_carbs") or nd.get("carbs") or nd.get("carbohydrate") or 0,
+            "fat": nd.get("total_fat") or nd.get("fat") or 0,
             "image_url": scan.get("image_url"),
             "source": "smart_scan",
             "meal_type": scan.get("meal_type"),
@@ -483,7 +502,16 @@ async def get_nutrition_logs(user_id: str, limit: int = 30, supabase = Depends(g
 async def create_nutrition_log(user_id: str, log: NutritionLogCreate, supabase = Depends(get_supabase)):
     """Create a nutrition log entry"""
     from datetime import date as _date
-    result = supabase.table("nutrition_logs").insert({
+
+    # Validate source nếu có — chỉ chấp nhận giá trị hợp lệ
+    valid_sources = {"manual", "ai_recommendation", "smart_scan"}
+    source = log.source if log.source in valid_sources else "manual"
+
+    # Validate meal_type nếu có
+    valid_meal_types = {"breakfast", "lunch", "dinner", "snack"}
+    meal_type = log.meal_type if log.meal_type in valid_meal_types else None
+
+    insert_data: dict = {
         "user_id": user_id,
         "log_date": _date.today().isoformat(),   # bắt buộc NOT NULL
         "calories": round(log.calories),          # round thay vì int() để tránh truncate
@@ -491,8 +519,12 @@ async def create_nutrition_log(user_id: str, log: NutritionLogCreate, supabase =
         "carbs": log.carbs,
         "fat": log.fat,
         "notes": log.notes or log.meal_name,      # notes mô tả bữa, meal_name làm fallback
-        "source": "smart_scan",                   # từ SmartScan → đúng source
-    }).execute()
+        "source": source,
+    }
+    if meal_type:
+        insert_data["meal_type"] = meal_type
+
+    result = supabase.table("nutrition_logs").insert(insert_data).execute()
 
     if not result.data:
         raise HTTPException(status_code=400, detail="Failed to create nutrition log")
@@ -518,9 +550,12 @@ async def scan_food_notify(request: ScanFoodNotifyRequest, supabase = Depends(ge
         raise HTTPException(status_code=400, detail="user_id hoặc mother_id là bắt buộc")
     meal_name = meal_data.get("meal_name", "bữa ăn")
 
+    # Map meal_context tiếng Việt → meal_type tiếng Anh (dùng cho cả 2 bảng)
+    mapped_meal_type = _map_meal_context_to_type(meal_data.get("meal_context"))
+
     # 1. Lưu nutrition log (luôn chạy dù có partner hay không)
     try:
-        supabase.table("nutrition_logs").insert({
+        nl_insert: dict = {
             "user_id": scan_user_id,
             "log_date": _date.today().isoformat(),
             "notes": meal_name,
@@ -529,10 +564,13 @@ async def scan_food_notify(request: ScanFoodNotifyRequest, supabase = Depends(ge
             "carbs": float(meal_data.get("total_carbs")) if meal_data.get("total_carbs") is not None else None,
             "fat": float(meal_data.get("total_fat")) if meal_data.get("total_fat") is not None else None,
             "source": "smart_scan",
-        }).execute()
+        }
+        if mapped_meal_type:
+            nl_insert["meal_type"] = mapped_meal_type
+        supabase.table("nutrition_logs").insert(nl_insert).execute()
         invalidate_nutrition_cache(scan_user_id)
     except Exception as log_err:
-        logger.warning(f"scan-food-notify: failed to save nutrition log: {log_err}")
+        logger.error(f"scan-food-notify: failed to save nutrition log for user {scan_user_id}: {log_err}", exc_info=True)
 
     # 1b. Lưu food_scan_logs để summary endpoint có thể đọc iron/calcium
     try:
@@ -553,14 +591,13 @@ async def scan_food_notify(request: ScanFoodNotifyRequest, supabase = Depends(ge
                 "total_calcium": round(total_calcium, 2),
                 "dishes": dishes,
             },
-            "meal_type": meal_data.get("meal_context"),
-            "source": "smart_scan",
+            "meal_type": mapped_meal_type,
         }).execute()
         # Invalidate cache sau khi lưu food_scan_logs (không chỉ nutrition_logs)
         # để summary endpoint trả dữ liệu mới cho cả dashboard mẹ lẫn bố
         invalidate_nutrition_cache(scan_user_id)
     except Exception as fsl_err:
-        logger.warning(f"scan-food-notify: failed to save food_scan_log: {fsl_err}")
+        logger.error(f"scan-food-notify: failed to save food_scan_log for user {scan_user_id}: {fsl_err}", exc_info=True)
 
     # 2. Tìm partner để gửi notification (chỉ khi user là mẹ trong partnership)
     partnerships = supabase.table("partnerships").select("father_id").eq("mother_id", scan_user_id).eq("status", "accepted").execute()
@@ -645,10 +682,11 @@ async def get_nutrition_summary(user_id: str, days: int = 7, supabase = Depends(
         nd = scan.get("nutrition_data") or {}
         all_entries.append({
             "date": (scan.get("created_at") or "")[:10],
-            "calories": nd.get("calories") or nd.get("total_calories") or 0,
-            "protein": nd.get("protein") or nd.get("total_protein") or 0,
-            "carbs": nd.get("carbs") or nd.get("total_carbs") or 0,
-            "fat": nd.get("fat") or nd.get("total_fat") or 0,
+            # Backward compat: seed data dùng "energy", smart scan dùng "total_calories"
+            "calories": nd.get("total_calories") or nd.get("calories") or nd.get("energy") or 0,
+            "protein": nd.get("total_protein") or nd.get("protein") or 0,
+            "carbs": nd.get("total_carbs") or nd.get("carbs") or nd.get("carbohydrate") or 0,
+            "fat": nd.get("total_fat") or nd.get("fat") or 0,
         })
 
     # Aggregate theo ngày cho biểu đồ

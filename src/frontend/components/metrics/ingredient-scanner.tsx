@@ -201,20 +201,22 @@ export function IngredientScanner() {
       const mealName = result.dishes
         .map(d => d.matched_food?.dish_name_vi || d.name)
         .join(', ');
-      await fetch(`${BASE_API_URL}/api/nutrition/logs?user_id=${encodeURIComponent(user.id)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          meal_name: mealName,
-          calories: result.total_calories,
-          protein: result.total_protein,
-          carbs: result.total_carbs,
-          fat: result.total_fat,
-          source: 'father_scan',
-          notes: 'Quét thực phẩm tại chợ — NutriMart',
-        }),
+      // Dùng saveScanFood thay vì POST /logs trực tiếp
+      // → lưu cả nutrition_logs + food_scan_logs (giữ iron/calcium)
+      // → gửi notification cho partner nếu có
+      await nutritionApi.saveScanFood(user.id, {
+        meal_name: mealName,
+        total_calories: result.total_calories,
+        total_protein: result.total_protein,
+        total_carbs: result.total_carbs,
+        total_fat: result.total_fat,
+        dishes: result.dishes,
+        pregnancy_guidance: null,
+        meal_context: result.meal_context ?? null,
       });
       setSaved(true);
+      // Thông báo cho NutritionDashboard và các component khác cập nhật
+      window.dispatchEvent(new CustomEvent('nutritionLogSaved'));
       await loadHistory();
       setTimeout(() => { resetScan(); setSaved(false); }, 1800);
     } catch {
