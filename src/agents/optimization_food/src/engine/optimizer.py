@@ -12,8 +12,11 @@ Example: IntVar = 5, UNIT_GRAMS = 50 → 250g → nutrition = value_per_100g × 
 """
 
 import re
+import logging
 from typing import List, Dict, Any, Optional, Tuple
 from ortools.sat.python import cp_model
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -131,6 +134,140 @@ def _resolve_meal_budgets(
 # Core Optimization Logic
 # ---------------------------------------------------------------------------
 
+def _solve_meal(
+    meal_name: str,
+    available_dishes: List[Dict[str, Any]],
+    current_excluded: List[int],
+    targets: Dict[str, Tuple[float, float]],
+    budget_limits: Dict[str, Optional[float]],
+    has_any_budget: bool,
+) -> Optional[Dict[str, Any]]:
+    """
+    Solve a single meal with CP-SAT. If strict constraints fail, retry with
+    relaxed nutrient bands and optional dish-type requirements.
+    """
+    meal_available = [d for d in available_dishes if d["stt"] not in current_excluded]
+    if not meal_available:
+        logger.warning(f"[optimizer] {meal_name}: no dishes available after exclusion")
+        return None
+
+    structure = MEAL_STRUCTURE[meal_name]
+
+    # Log available dish types for debugging
+    type_counts: Dict[str, int] = {}
+    for d in meal_available:
+        t = d.get("dish_type", "unknown")
+        type_counts[t] = type_counts.get(t, 0) + 1
+    logger.info(f"[optimizer] {meal_name}: {len(meal_available)} dishes available, types={type_counts}")
+
+    # Try strict first (flexibility=0.2), then relaxed (0.4), then very relaxed (0.6, no type req)
+    attempts = [
+        {"flex": 0.2, "require_types": True,  "label": "strict"},
+        {"flex": 0.4, "require_types": True,  "label": "relaxed"},
+        {"flex": 0.6, "require_types": False, "label": "no-type-req"},
+    ]
+
+    for attempt in attempts:
+        flex = attempt["flex"]
+        require_types = attempt["require_types"]
+        label = attempt["label"]
+
+        model = cp_model.CpModel()
+        dish_vars: Dict[int, Any] = {}
+        is_selected: Dict[int, Any] = {}
+
+        for dish in meal_available:
+            stt = dish["stt"]
+            default_units = DEFAULT_PORTIONS.get(dish["dish_type"], 4)
+            max_u = min(MAX_UNITS, default_units + 2)
+            dish_vars[stt] = model.NewIntVar(0, max_u, f'{meal_name}_u_{stt}')
+            is_selected[stt] = model.NewBoolVar(f'{meal_name}_sel_{stt}')
+            model.Add(dish_vars[stt] >= 1).OnlyEnforceIf(is_selected[stt])
+            model.Add(dish_vars[stt] == 0).OnlyEnforceIf(is_selected[stt].Not())
+
+        # Nutrient constraints with adjustable flexibility
+        ratio = MEAL_RATIOS[meal_name]
+        for key, (min_val, max_val) in targets.items():
+            total_nutrient = sum(
+                int(dish.get(key, 0) * NUTRIENT_PER_UNIT * SCALE) * dish_vars[dish["stt"]]
+                for dish in meal_available
+            )
+            model.Add(total_nutrient >= int(min_val * ratio * (1 - flex) * SCALE))
+            model.Add(total_nutrient <= int(max_val * ratio * (1 + flex) * SCALE))
+
+        # Structure constraints
+        total_selected = sum(is_selected.values())
+        min_dishes = structure["min_dishes"] if require_types else 1
+        model.Add(total_selected >= min_dishes)
+        model.Add(total_selected <= structure["max_dishes"])
+        model.Add(sum(dish_vars.values()) <= structure["max_total_units"])
+
+        # Dish type diversity
+        if meal_name == "breakfast":
+            starch_or_savory = [
+                is_selected[d["stt"]] for d in meal_available
+                if d["dish_type"] in ("món mặn", "món tinh bột")
+            ]
+            if starch_or_savory:
+                model.Add(sum(starch_or_savory) >= 1)
+        elif require_types:
+            type_reqs = ["món mặn", "món rau", "món tinh bột", "món canh"]
+            for t in type_reqs:
+                vars_of_type = [is_selected[d["stt"]] for d in meal_available if d["dish_type"] == t]
+                if vars_of_type:
+                    model.Add(sum(vars_of_type) >= 1)
+
+        # Budget
+        meal_budget = budget_limits.get(meal_name)
+        if meal_budget is not None:
+            total_cost = sum(
+                int((dish.get("price_vnd") or 0) * NUTRIENT_PER_UNIT * SCALE) * dish_vars[dish["stt"]]
+                for dish in meal_available
+            )
+            model.Add(total_cost <= int(meal_budget * SCALE))
+
+        # Objective
+        if has_any_budget:
+            cost_obj = sum(
+                int((dish.get("price_vnd") or 0) * NUTRIENT_PER_UNIT * SCALE) * dish_vars[dish["stt"]]
+                for dish in meal_available
+            )
+            model.Minimize(cost_obj)
+
+        # Solve
+        solver = cp_model.CpSolver()
+        solver.parameters.max_time_in_seconds = 5.0
+        status = solver.Solve(model)
+
+        if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+            selected_items = []
+            meal_cost = 0.0
+            meal_nutrients = {k: 0.0 for k in PRIMARY_NUTRIENT_KEYS}
+
+            for dish in meal_available:
+                stt = dish["stt"]
+                units = solver.Value(dish_vars[stt])
+                if units > 0:
+                    grams = units * UNIT_GRAMS
+                    factor = units * NUTRIENT_PER_UNIT
+                    selected_items.append({"stt": stt, "units": units, "grams": grams})
+                    meal_cost += (dish.get("price_vnd") or 0) * factor
+                    for k in PRIMARY_NUTRIENT_KEYS:
+                        meal_nutrients[k] += dish.get(k, 0) * factor
+
+            logger.info(f"[optimizer] {meal_name}: solved ({label}), {len(selected_items)} dishes, {round(meal_nutrients.get('energy', 0))} kcal")
+            return {
+                "items": selected_items,
+                "cost": round(meal_cost, 0),
+                "nutrition": {k: round(v, 1) for k, v in meal_nutrients.items()},
+            }
+        else:
+            logger.warning(f"[optimizer] {meal_name}: {label} attempt INFEASIBLE, trying next...")
+
+    logger.error(f"[optimizer] {meal_name}: ALL attempts failed — no feasible solution")
+    return None
+
+
 def recommend_full_day_meals(
     all_dishes: List[Dict[str, Any]],
     daily_recommendations: List[Dict[str, Any]],
@@ -242,113 +379,21 @@ def recommend_full_day_meals(
                 current_excluded.extend(locked_stts)
                 continue
 
-            # ─── Build CP-SAT model ─────────────────────────────────
-            model = cp_model.CpModel()
-            dish_vars: Dict[int, Any] = {}
-            is_selected: Dict[int, Any] = {}  # BoolVar: whether dish is selected at all
-            meal_available = [d for d in available_dishes if d["stt"] not in current_excluded]
+            # ─── Solve meal (with retry on relaxed constraints) ─────
+            result = _solve_meal(
+                meal_name=meal_name,
+                available_dishes=available_dishes,
+                current_excluded=current_excluded,
+                targets=targets,
+                budget_limits=budget_limits,
+                has_any_budget=has_any_budget,
+            )
 
-            structure = MEAL_STRUCTURE[meal_name]
-
-            for dish in meal_available:
-                stt = dish["stt"]
-                # IntVar: number of portion units (0 = not selected)
-                # Each unit = UNIT_GRAMS (50g). Max units based on dish type.
-                default_units = DEFAULT_PORTIONS.get(dish["dish_type"], 4)
-                max_u = min(MAX_UNITS, default_units + 2)  # Allow some flexibility
-                dish_vars[stt] = model.NewIntVar(0, max_u, f'{meal_name}_u_{stt}')
-                # BoolVar: is this dish selected (units > 0)?
-                is_selected[stt] = model.NewBoolVar(f'{meal_name}_sel_{stt}')
-                # Link: selected ↔ units > 0
-                model.Add(dish_vars[stt] >= 1).OnlyEnforceIf(is_selected[stt])
-                model.Add(dish_vars[stt] == 0).OnlyEnforceIf(is_selected[stt].Not())
-
-            # ─── Nutrient constraints (per meal) ────────────────────
-            # Each unit = UNIT_GRAMS. Nutrient per unit = nutrient_per_100g × (UNIT_GRAMS/100)
-            # We scale everything: coeff = int(nutrient_per_100g × NUTRIENT_PER_UNIT × SCALE)
-            ratio = MEAL_RATIOS[meal_name]
-            for key, (min_val, max_val) in targets.items():
-                total_nutrient = sum(
-                    int(dish.get(key, 0) * NUTRIENT_PER_UNIT * SCALE) * dish_vars[dish["stt"]]
-                    for dish in meal_available
-                )
-                # 20% flexibility band
-                model.Add(total_nutrient >= int(min_val * ratio * 0.8 * SCALE))
-                model.Add(total_nutrient <= int(max_val * ratio * 1.2 * SCALE))
-
-            # ─── Structure constraints ──────────────────────────────
-            total_selected = sum(is_selected.values())
-            model.Add(total_selected >= structure["min_dishes"])
-            model.Add(total_selected <= structure["max_dishes"])
-
-            # Total units cap (prevents unrealistic total volume)
-            total_units = sum(dish_vars.values())
-            model.Add(total_units <= structure["max_total_units"])
-
-            if meal_name == "breakfast":
-                # At least one món mặn or món tinh bột for breakfast
-                starch_or_savory = [
-                    is_selected[d["stt"]] for d in meal_available
-                    if d["dish_type"] in ("món mặn", "món tinh bột")
-                ]
-                if starch_or_savory:
-                    model.Add(sum(starch_or_savory) >= 1)
-            else:
-                # Lunch/Dinner: require diverse dish types
-                type_reqs = ["món mặn", "món rau", "món tinh bột", "món canh"]
-                for t in type_reqs:
-                    vars_of_type = [is_selected[d["stt"]] for d in meal_available if d["dish_type"] == t]
-                    if vars_of_type:
-                        model.Add(sum(vars_of_type) >= 1)
-
-            # ─── Budget constraint ──────────────────────────────────
-            # Price is per serving (per 100g equivalent), scaled by portion units
-            meal_budget = budget_limits.get(meal_name)
-            if meal_budget is not None:
-                total_cost = sum(
-                    int((dish.get("price_vnd") or 0) * NUTRIENT_PER_UNIT * SCALE) * dish_vars[dish["stt"]]
-                    for dish in meal_available
-                )
-                model.Add(total_cost <= int(meal_budget * SCALE))
-
-            # ─── Objective ──────────────────────────────────────────
-            # Minimize cost when budget is active
-            if has_any_budget:
-                cost_obj = sum(
-                    int((dish.get("price_vnd") or 0) * NUTRIENT_PER_UNIT * SCALE) * dish_vars[dish["stt"]]
-                    for dish in meal_available
-                )
-                model.Minimize(cost_obj)
-
-            # ─── Solve ──────────────────────────────────────────────
-            solver = cp_model.CpSolver()
-            solver.parameters.max_time_in_seconds = 3.0
-            status = solver.Solve(model)
-
-            if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-                selected_items = []
-                meal_cost = 0.0
-                meal_nutrients = {k: 0.0 for k in PRIMARY_NUTRIENT_KEYS}
-
-                for dish in meal_available:
-                    stt = dish["stt"]
-                    units = solver.Value(dish_vars[stt])
-                    if units > 0:
-                        grams = units * UNIT_GRAMS
-                        factor = units * NUTRIENT_PER_UNIT  # e.g., 5 units × 0.5 = 2.5× per 100g
-                        selected_items.append({
-                            "stt": stt,
-                            "units": units,
-                            "grams": grams,
-                        })
-                        meal_cost += (dish.get("price_vnd") or 0) * factor
-                        for k in PRIMARY_NUTRIENT_KEYS:
-                            meal_nutrients[k] += dish.get(k, 0) * factor
-                        current_excluded.append(stt)
-
-                day_plan[meal_name] = selected_items
-                day_cost[meal_name] = round(meal_cost, 0)
-                day_nutrition[meal_name] = {k: round(v, 1) for k, v in meal_nutrients.items()}
+            if result:
+                day_plan[meal_name] = result["items"]
+                day_cost[meal_name] = result["cost"]
+                day_nutrition[meal_name] = result["nutrition"]
+                current_excluded.extend([item["stt"] for item in result["items"]])
             else:
                 day_plan[meal_name] = []
                 day_cost[meal_name] = 0

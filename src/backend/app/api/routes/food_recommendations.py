@@ -394,6 +394,30 @@ def _notify_partner(supabase, request: SaveMealPlanRequest):
             if total_cost:
                 cost_info = f", {int(total_cost):,}đ".replace(",", ".")
 
+        # Build meals summary for notification dialog
+        meals_summary = []
+        for meal_key, meal_label in [("breakfast", "Bữa sáng"), ("lunch", "Bữa trưa"), ("dinner", "Bữa tối")]:
+            meal = request.plan_data.get(meal_key) or {}
+            dishes_raw = meal.get("dishes") or []
+            dishes_formatted = []
+            for d in dishes_raw:
+                dishes_formatted.append({
+                    "name": d.get("dish_name_vi") or d.get("name") or "—",
+                    "dish_type": d.get("dish_type") or "",
+                    "grams": d.get("grams") or 100,
+                    "energy": d.get("energy") or 0,
+                    "protein": d.get("protein") or 0,
+                    "fat": d.get("fat") or 0,
+                    "carbohydrate": d.get("carbohydrate") or 0,
+                })
+            meal_nutrition = (request.nutrition_summary or {}).get(meal_key)
+            meals_summary.append({
+                "key": meal_key,
+                "label": meal_label,
+                "dishes": dishes_formatted,
+                "nutrition": meal_nutrition,
+            })
+
         notification = {
             "user_id": partner_id,
             "type": "meal_plan_created",
@@ -403,6 +427,9 @@ def _notify_partner(supabase, request: SaveMealPlanRequest):
                 "plan_date": request.plan_date,
                 "target": request.target,
                 "created_by": request.user_id,
+                "meals": meals_summary,
+                "total_nutrition": ns_total if (ns_total := (request.nutrition_summary or {}).get("total")) else None,
+                "estimated_cost": (request.estimated_cost or {}).get("total"),
             },
         }
 

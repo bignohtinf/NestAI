@@ -20,7 +20,7 @@ interface Notification {
   data?: Record<string, any>;
 }
 
-type DialogType = 'scan_food' | 'meal_plan_generated' | null;
+type DialogType = 'scan_food' | 'meal_plan_generated' | 'meal_plan_created' | null;
 
 function formatTime(date: Date): string {
   const diff = Date.now() - date.getTime();
@@ -40,6 +40,10 @@ const TYPE_META: Record<string, { icon: React.ReactNode; dot: string }> = {
     dot: 'bg-emerald-500',
   },
   meal_plan_generated: {
+    icon: <CalendarDays className="h-4 w-4 text-blue-600" />,
+    dot: 'bg-blue-500',
+  },
+  meal_plan_created: {
     icon: <CalendarDays className="h-4 w-4 text-blue-600" />,
     dot: 'bg-blue-500',
   },
@@ -73,7 +77,7 @@ export function NotificationBell() {
 
   // Chỉ hiện các loại thông báo có type icon (scan_food, meal_plan_generated)
   const displayed = notifications
-    .filter((n) => n.type === 'scan_food' || n.type === 'meal_plan_generated')
+    .filter((n) => n.type === 'scan_food' || n.type === 'meal_plan_generated' || n.type === 'meal_plan_created')
     .slice(0, 8);
 
   const handleMarkAsRead = async (notifId: string) => {
@@ -231,9 +235,9 @@ export function NotificationBell() {
         />
       )}
 
-      {selectedNotif && dialogType === 'meal_plan_generated' && (
+      {selectedNotif && (dialogType === 'meal_plan_generated' || dialogType === 'meal_plan_created') && (
         <MealPlanNotificationDialog
-          open={dialogType === 'meal_plan_generated'}
+          open={dialogType === 'meal_plan_generated' || dialogType === 'meal_plan_created'}
           onOpenChange={(o) => { if (!o) closeDialog(); }}
           notificationTitle={selectedNotif.title}
           data={selectedNotif.data || {}}

@@ -29,7 +29,7 @@ interface Notification {
   data?: Record<string, any>;
 }
 
-type DialogType = 'scan_food' | 'meal_plan_generated' | null;
+type DialogType = 'scan_food' | 'meal_plan_generated' | 'meal_plan_created' | null;
 
 export default function NotificationsPage() {
   const { ready, user } = useAuthGuard({ blockedRoles: ['admin'] });
@@ -129,8 +129,8 @@ export default function NotificationsPage() {
 
   // Phân loại thông báo
   const scanFoodNotifs       = notifications.filter((n) => n.type === 'scan_food');
-  const mealPlanNotifs       = notifications.filter((n) => n.type === 'meal_plan_generated');
-  const otherNotifs          = notifications.filter((n) => n.type !== 'scan_food' && n.type !== 'meal_plan_generated');
+  const mealPlanNotifs       = notifications.filter((n) => n.type === 'meal_plan_generated' || n.type === 'meal_plan_created');
+  const otherNotifs          = notifications.filter((n) => n.type !== 'scan_food' && n.type !== 'meal_plan_generated' && n.type !== 'meal_plan_created');
   const totalCount           = requests.length + notifications.length;
 
   // Helper: badge đếm chưa đọc
@@ -371,9 +371,9 @@ export default function NotificationsPage() {
         />
       )}
 
-      {selectedNotif && dialogType === 'meal_plan_generated' && (
+      {selectedNotif && (dialogType === 'meal_plan_generated' || dialogType === 'meal_plan_created') && (
         <MealPlanNotificationDialog
-          open={dialogType === 'meal_plan_generated'}
+          open={dialogType === 'meal_plan_generated' || dialogType === 'meal_plan_created'}
           onOpenChange={(open) => { if (!open) closeDialog(); }}
           notificationTitle={selectedNotif.title}
           data={selectedNotif.data || {}}
