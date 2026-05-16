@@ -56,7 +56,7 @@ MEAL_STRUCTURE = {
     "dinner":    {"min_dishes": 3, "max_dishes": 5, "max_total_units": 20},  # ~1000g max
 }
 
-PRIMARY_NUTRIENT_KEYS = ["energy", "protein", "fat", "carbohydrate"]
+PRIMARY_NUTRIENT_KEYS = ["energy", "protein", "fat", "carbohydrate", "iron", "calcium", "zinc", "vitamin_c"]
 
 # ---------------------------------------------------------------------------
 # Utility Functions

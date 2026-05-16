@@ -9,10 +9,19 @@ import sys
 import time
 import asyncio
 import json
+import logging
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
+
+
+# --- Suppress noisy /health logs ---
+class _HealthFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        return "/health" not in record.getMessage()
+
+logging.getLogger("uvicorn.access").addFilter(_HealthFilter())
 
 sys.path.insert(0, str(Path(__file__).parent))
 

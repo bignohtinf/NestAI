@@ -85,7 +85,8 @@ def _fetch_dish_details(stts: List[int]) -> List[Dict[str, Any]]:
     result = (
         supabase.table("nutrition_database")
         .select("stt, dish_id, dish_name_vi, dish_name_en, dish_type, "
-                "group_name_vi, energy, protein, fat, carbohydrate, price_vnd")
+                "group_name_vi, energy, protein, fat, carbohydrate, "
+                "iron, calcium, zinc, vitamin_c, price_vnd")
         .in_("stt", stts)
         .execute()
     )

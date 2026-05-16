@@ -52,9 +52,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // role intentionally omitted — user will select it on first login via /auth/role-selection
     const { error: userError } = await adminClient
       .from('users')
-      .insert([{ id: data.user.id, email, full_name: fullName, phone, role: 'mother' }]);
+      .insert([{ id: data.user.id, email, full_name: fullName, phone }]);
 
     if (userError) {
       console.error('Error creating user record:', JSON.stringify(userError, null, 2));

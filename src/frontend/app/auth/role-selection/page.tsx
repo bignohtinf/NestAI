@@ -131,7 +131,8 @@ export default function RoleSelectionPage() {
               alt="NestAI Logo"
               width={64}
               height={64}
-              className="w-full h-full object-cover"
+              className="object-cover"
+              style={{ width: '100%', height: '100%' }}
             />
           </div>
           <h1 className="text-2xl font-bold text-foreground">

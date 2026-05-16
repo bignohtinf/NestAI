@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useApp } from '@/lib/context';
+import { useAuthGuard } from '@/lib/hooks/use-auth-guard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MainLayout } from '@/components/layouts/main-layout';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { AlertCircle, CheckCircle, Plus, Trash2, Heart, Mail, Phone, Sparkles, Pencil, X, User } from 'lucide-react';
 import { formatGestationAge, calculateGestationAge } from '@/lib/utils';
 
@@ -28,8 +29,8 @@ function ProfilePageInner() {
 }
 
 function ProfilePageContent() {
-  const { user, isLoading, fetchUserData } = useApp();
-  const router = useRouter();
+  const { ready, user } = useAuthGuard();
+  const { fetchUserData } = useApp();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -77,12 +78,6 @@ function ProfilePageContent() {
     currentWeightKg: '',
   });
   const [loadingMedical, setLoadingMedical] = useState(false);
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/auth/login');
-    }
-  }, [isLoading, user, router]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -162,7 +157,7 @@ function ProfilePageContent() {
     }
   }, [user?.id]);
 
-  if (isLoading || !user) {
+  if (!ready) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-screen">

@@ -1,29 +1,15 @@
 'use client';
 
 import { MainLayout } from '@/components/layouts/main-layout';
-import { useApp } from '@/lib/context';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useAuthGuard } from '@/lib/hooks/use-auth-guard';
 
 export default function NutritionScanLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user } = useApp();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-    } else if (user.role !== 'mother' && user.role !== 'father') {
-      router.push('/');
-    }
-  }, [user, router]);
-
-  if (!user || (user.role !== 'mother' && user.role !== 'father')) {
-    return null;
-  }
+  const { ready } = useAuthGuard({ allowedRoles: ['mother', 'father'] });
+  if (!ready) return null;
 
   return (
     <MainLayout fullWidth>

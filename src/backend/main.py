@@ -1,8 +1,18 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.api.routes import auth, users, partnerships, nutrition, health, missions, admin, baby, tasks, food_recommendations, bot_pregnant, chat_history, wellness, blog, medical_profile, stores, notifications_api
+
+
+# --- Suppress noisy /health logs ---
+class HealthCheckFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        msg = record.getMessage()
+        return "/health" not in msg
+
+logging.getLogger("uvicorn.access").addFilter(HealthCheckFilter())
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

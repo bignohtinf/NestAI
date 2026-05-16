@@ -17,16 +17,44 @@ export type SessionStatus = 'checking' | 'authenticated' | 'unauthenticated' | '
 // How long we'll wait for the user record fetch before treating it as a
 // transient error (keeps the user on the page with a retry option instead of
 // kicking them out to the landing page).
-const GET_USER_TIMEOUT_MS = 12_000;
+// 30s covers Supabase free-tier cold starts which can exceed 12s.
+const GET_USER_TIMEOUT_MS = 30_000;
 // Hard ceiling: if the auth listener never fires at all (lib stuck refreshing
 // token across tabs, network broken at SDK layer), fail open as unauthenticated.
-const AUTH_LISTENER_SAFETY_MS = 30_000;
+const AUTH_LISTENER_SAFETY_MS = 60_000;
+
+/**
+ * Fetches the user record with a single automatic retry if the first attempt
+ * times out or fails. The retry fires after a 1 s back-off so we don't
+ * hammer a cold-starting DB.
+ */
+async function getUserWithRetry(userId: string) {
+  const makeRace = () =>
+    Promise.race([
+      supabaseAdmin.getUser(userId),
+      new Promise<{ data: null; error: Error }>((resolve) =>
+        setTimeout(
+          () => resolve({ data: null, error: new Error('getUser timeout') }),
+          GET_USER_TIMEOUT_MS,
+        ),
+      ),
+    ]);
+
+  const first = await makeRace();
+  if (!first.error) return first;
+
+  // First attempt timed-out or errored — wait briefly, then retry once.
+  console.warn('getUser first attempt failed, retrying in 1 s…', first.error.message);
+  await new Promise((r) => setTimeout(r, 1_000));
+  return makeRace();
+}
 
 export interface UserData {
   id: string;
   email: string;
   name: string;
-  role: 'mother' | 'father' | 'admin';
+  /** null = user has not completed role-selection yet */
+  role: 'mother' | 'father' | 'admin' | null;
   age?: number;
   weeksPostpartum?: number;
   points?: number;
@@ -205,15 +233,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const userResult = await Promise.race([
-        supabaseAdmin.getUser(session.user.id),
-        new Promise<{ data: null; error: Error }>((resolve) =>
-          setTimeout(
-            () => resolve({ data: null, error: new Error('getUser timeout') }),
-            GET_USER_TIMEOUT_MS,
-          ),
-        ),
-      ]);
+      const userResult = await getUserWithRetry(session.user.id);
 
       if (userResult.error || !userResult.data) {
         console.error('fetchUserData failed:', userResult.error);
@@ -232,7 +252,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           id: userData.id,
           email: userData.email,
           name: userData.full_name || 'User',
-          role: (userData.role as any) || 'mother',
+          role: (userData.role as UserData['role']) ?? null,
           dob: userData.dob,
           allergies: userData.allergies,
           dislikes: userData.dislikes,
@@ -285,40 +305,108 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // parallel (which would duplicate every backend call and worsen cold
     // starts). The public fetchUserData() remains available for manual
     // refetch via the context.
+    // Track whether we've completed the initial auth check. Subsequent events
+    // (TOKEN_REFRESHED when returning to a tab) should NOT reset the UI to a
+    // loading/white state — they enrich in the background instead.
+    const initialCheckDoneRef = { current: false };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mountedRef.current) return;
       authEventReceivedRef.current = true;
 
+      // ─── Optimisation: skip redundant DB fetch on TOKEN_REFRESHED ───────
+      // When the user returns to the tab after it was backgrounded, Supabase
+      // fires TOKEN_REFRESHED. If we already have a valid user, there's no
+      // need to re-fetch from DB (which often times out on cold starts and
+      // causes the white-screen bug). We just confirm the session is still
+      // valid and keep the existing state.
+      const isBackgroundRefresh =
+        initialCheckDoneRef.current &&
+        (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') &&
+        session?.user;
+
+      if (isBackgroundRefresh) {
+        // Session is still valid — keep existing user state, don't flash white.
+        if (mountedRef.current) {
+          setSessionStatus('authenticated');
+          setIsLoading(false);
+        }
+        // Optional: silently refresh user data in background without blocking UI
+        if (session?.user?.id) {
+          getUserWithRetry(session.user.id).then((result) => {
+            if (!mountedRef.current || result.error || !result.data) return;
+            const userData = result.data;
+            setUser((prev) => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                id: userData.id,
+                email: userData.email,
+                name: userData.full_name || prev.name,
+                role: (userData.role as UserData['role']) ?? prev.role,
+                dob: userData.dob ?? prev.dob,
+                allergies: userData.allergies ?? prev.allergies,
+                dislikes: userData.dislikes ?? prev.dislikes,
+                condition: userData.condition ?? prev.condition,
+                foodPreference: userData.food_preference ?? prev.foodPreference,
+              };
+            });
+          }).catch(() => {
+            // Silent fail — user keeps their existing data
+          });
+        }
+        return;
+      }
+
       try {
         if (session?.user) {
-          // Race the user-record fetch against a hard timeout so a slow
-          // Supabase query (cross-region latency, RLS evaluation) doesn't
-          // freeze the spinner indefinitely.
-          const userResult = await Promise.race([
-            supabaseAdmin.getUser(session.user.id),
-            new Promise<{ data: null; error: Error }>((resolve) =>
-              setTimeout(
-                () => resolve({ data: null, error: new Error('getUser timeout') }),
-                GET_USER_TIMEOUT_MS,
-              ),
-            ),
-          ]);
+          const meta = session.user.user_metadata ?? {};
+          const appMeta = session.user.app_metadata ?? {};
+          // Role cached in app_metadata by /api/auth/set-role after first onboarding.
+          // app_metadata is server-only writable (service role) so it can be trusted.
+          const cachedRole = (appMeta.role ?? null) as UserData['role'];
+
+          // ── Phase 1: instant render from session JWT (zero DB latency) ──────
+          // Set a partial user immediately so the UI can render without waiting
+          // for the DB. Guards use sessionStatus to decide whether to redirect.
+          if (mountedRef.current) {
+            setUser({
+              id: session.user.id,
+              email: session.user.email ?? '',
+              name: (meta.full_name as string) || 'User',
+              role: cachedRole,
+            });
+            if (cachedRole) {
+              // Role is known → the app can render right now; DB enrichment
+              // (Phase 2) fills in the remaining profile fields in the background.
+              setSessionStatus('authenticated');
+              setIsLoading(false);
+            }
+            // If no cachedRole → stay in 'checking' until Phase 2 resolves,
+            // so OnboardingGuard can decide whether to redirect to role-selection.
+          }
+
+          // ── Phase 2: DB enrichment (background when role cached, blocking otherwise) ──
+          const userResult = await getUserWithRetry(session.user.id);
 
           if (!mountedRef.current) return;
 
           if (userResult.error) {
             console.error('Failed to load user record:', userResult.error);
-            // Important: session exists, we just couldn't load the user row.
-            // Do NOT setUser(null) — that would log them out of protected
-            // pages. Mark as 'error' so guards can show a retry UI instead.
-            setSessionStatus('error');
+            if (!cachedRole) {
+              // Role unknown and DB failed → surface error so guards don't redirect blindly.
+              setSessionStatus('error');
+            }
+            // If cachedRole was already set, user is authenticated — DB enrichment
+            // failure is non-fatal; they'll just see their name/role only.
           } else if (userResult.data) {
             const userData = userResult.data;
             setUser({
               id: userData.id,
               email: userData.email,
-              name: userData.full_name || 'User',
-              role: (userData.role as any) || 'mother',
+              name: userData.full_name || (meta.full_name as string) || 'User',
+              // DB is source of truth for role; fall back to JWT cache, then null.
+              role: (userData.role as UserData['role']) ?? cachedRole ?? null,
               dob: userData.dob,
               allergies: userData.allergies,
               dislikes: userData.dislikes,
@@ -332,22 +420,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
             fetchMedicalProfile(userData.id);
           } else {
             // No data, no error — defensive branch.
-            setSessionStatus('error');
+            if (!cachedRole) setSessionStatus('error');
           }
+
+          initialCheckDoneRef.current = true;
         } else {
           // INITIAL_SESSION with no session, SIGNED_OUT, or token expired.
           if (mountedRef.current) {
             setUser(null);
             setSessionStatus('unauthenticated');
           }
+          initialCheckDoneRef.current = true;
         }
       } catch (err) {
         console.error('Auth state change handler failed:', err);
         if (mountedRef.current) {
-          // Unknown failure with a session attempt — keep current user and
-          // mark error so guards don't redirect blindly.
-          setSessionStatus(session?.user ? 'error' : 'unauthenticated');
-          if (!session?.user) setUser(null);
+          // If we already had a user and this is just a refresh failure,
+          // don't kick them out — keep existing state.
+          if (initialCheckDoneRef.current && session?.user) {
+            // Silent fail: keep current authenticated state
+            console.warn('Background auth refresh failed, keeping existing session');
+          } else {
+            setSessionStatus(session?.user ? 'error' : 'unauthenticated');
+            if (!session?.user) setUser(null);
+          }
         }
       } finally {
         if (mountedRef.current) setIsLoading(false);
@@ -375,7 +471,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           id: userData.id,
           email: userData.email,
           name: userData.full_name || 'User',
-          role: (userData.role as any) || 'mother',
+          role: (userData.role as UserData['role']) ?? null,
           dob: userData.dob,
           allergies: userData.allergies,
           dislikes: userData.dislikes,

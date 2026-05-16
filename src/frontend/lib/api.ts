@@ -1,50 +1,66 @@
 // API client for backend requests
 const isServer = typeof window === 'undefined';
-const API_BASE_URL = isServer 
+const API_BASE_URL = isServer
   ? (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000')
   : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
 
-// Default timeout for API calls (ms).
-// Cloud Run cold start can take 20-30s on the very first request after a period
-// of inactivity. 35s gives the container enough time to warm up without the
-// user seeing a false "cannot load" error that disappears on retry.
-const DEFAULT_API_TIMEOUT_MS = 35_000;
+// Cloud Run cold start: 20-30s. Timeout đủ rộng cho cold start + xử lý.
+const DEFAULT_API_TIMEOUT_MS = 45_000;
 
 export async function apiCall<T>(
   endpoint: string,
-  options?: RequestInit & { timeoutMs?: number }
+  options?: RequestInit & { timeoutMs?: number; retries?: number }
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  const { timeoutMs, signal: userSignal, ...rest } = options || {};
+  const { timeoutMs, retries = 1, signal: userSignal, ...rest } = options || {};
+  const timeout = timeoutMs ?? DEFAULT_API_TIMEOUT_MS;
 
-  // Use caller-provided signal if any, else fall back to a timeout-based abort.
-  // AbortSignal.timeout is supported in Node 18+ and all modern browsers.
-  const signal = userSignal ?? AbortSignal.timeout(timeoutMs ?? DEFAULT_API_TIMEOUT_MS);
+  let lastError: Error | null = null;
 
-  try {
-    const response = await fetch(url, {
-      ...rest,
-      signal,
-      headers: {
-        'Content-Type': 'application/json',
-        ...rest.headers,
-      },
-    });
+  for (let attempt = 0; attempt < retries; attempt++) {
+    const signal = userSignal ?? AbortSignal.timeout(timeout);
 
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+    try {
+      const response = await fetch(url, {
+        ...rest,
+        signal,
+        headers: {
+          'Content-Type': 'application/json',
+          ...rest.headers,
+        },
+      });
+
+      if (!response.ok) {
+        let detail = '';
+        try {
+          const body = await response.json();
+          detail = JSON.stringify(body.detail ?? body);
+        } catch { /* ignore parse errors */ }
+        throw new Error(`API error: ${response.status}${detail ? ` — ${detail}` : ''}`);
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      lastError = error;
+      const isTimeout = error?.name === 'TimeoutError' || error?.name === 'AbortError';
+      const isNetworkError = error?.message === 'Failed to fetch';
+
+      // Retry trên timeout hoặc network error (Cold Start)
+      if ((isTimeout || isNetworkError) && attempt < retries - 1) {
+        // Đợi ngắn trước khi retry (backend đang warm up)
+        await new Promise(r => setTimeout(r, 2000));
+        continue;
+      }
+
+      if (isTimeout) {
+        console.error(`API timeout for ${endpoint} after ${timeout}ms (attempt ${attempt + 1}/${retries})`);
+        throw new Error(`API timeout: ${endpoint}`);
+      }
+      throw error;
     }
-
-    return await response.json();
-  } catch (error: any) {
-    // Surface timeouts clearly so callers (and the user) know what happened.
-    if (error?.name === 'TimeoutError' || error?.name === 'AbortError') {
-      console.error(`API call timed out for ${endpoint} after ${timeoutMs ?? DEFAULT_API_TIMEOUT_MS}ms`);
-      throw new Error(`API timeout: ${endpoint}`);
-    }
-    console.error(`API call failed for ${endpoint}:`, error);
-    throw error;
   }
+
+  throw lastError ?? new Error(`API failed: ${endpoint}`);
 }
 
 export const nutritionApi = {
@@ -117,7 +133,8 @@ export const nutritionApi = {
       limit: String(limit),
     });
     return apiCall<{ notifications: any[]; unread_count: number }>(
-      `/api/recommendations/notifications?${params}`
+      `/api/recommendations/notifications?${params}`,
+      { timeoutMs: 15_000, retries: 2 }
     );
   },
 
@@ -151,6 +168,7 @@ export const nutritionApi = {
     );
   },
 
+  /** @deprecated Dùng saveScanFood thay thế */
   async createScanFoodNotification(
     motherId: string,
     mealData: {
@@ -170,6 +188,36 @@ export const nutritionApi = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mother_id: motherId, meal_data: mealData }),
+      }
+    );
+  },
+
+  /**
+   * Lưu kết quả smart scan cho BẤT KỲ user (mẹ hoặc bố).
+   * Backend sẽ lưu nutrition_logs + food_scan_logs (giữ iron/calcium),
+   * và tự gửi notification cho partner nếu user là mẹ.
+   */
+  async saveScanFood(
+    userId: string,
+    mealData: {
+      meal_name: string;
+      total_calories: number;
+      total_protein: number;
+      total_carbs: number;
+      total_fat: number;
+      dishes: any[];
+      pregnancy_guidance?: string | null;
+      meal_context?: string | null;
+    }
+  ) {
+    return apiCall<{ success: boolean; notification_id?: string; skipped?: boolean }>(
+      '/api/nutrition/scan-food-notify',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // Gửi cả user_id lẫn mother_id để backward compatible
+        // với server cũ (chỉ biết mother_id) và server mới (ưu tiên user_id)
+        body: JSON.stringify({ user_id: userId, mother_id: userId, meal_data: mealData }),
       }
     );
   },

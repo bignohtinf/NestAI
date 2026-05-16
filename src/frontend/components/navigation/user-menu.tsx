@@ -28,8 +28,8 @@ export function UserMenu() {
     router.refresh();
   };
 
-  // Only show for father and mother roles
-  if (!user || !['father', 'mother'].includes(user.role)) {
+  // Only show for father and mother roles (not admin, not null/unset)
+  if (!user || !user.role || !['father', 'mother'].includes(user.role)) {
     return null;
   }
 

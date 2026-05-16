@@ -2,9 +2,9 @@
 
 import { MainLayout } from '@/components/layouts/main-layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useApp } from '@/lib/context';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
+import { useAuthGuard } from '@/lib/hooks/use-auth-guard';
 import { DashboardSection } from './components/sections/DashboardSection';
 import { TrackingLayoutSection } from './components/sections/TrackingLayoutSection';
 import { SupportSection } from './components/sections/SupportSection';
@@ -12,26 +12,12 @@ import { PersonalizationDialog } from './components/PersonalizationDialog';
 import { useWellnessData } from './hooks/useWellnessData';
 
 function WellnessPageInner() {
-  const { user } = useApp();
-  const router = useRouter();
+  const { ready, user } = useAuthGuard({ allowedRoles: ['mother'] });
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'tracking' | 'support'>('dashboard');
-  const [mounted, setMounted] = useState(false);
   const [showPersonalization, setShowPersonalization] = useState(false);
 
   const { profile, loading } = useWellnessData(user?.id || null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-    } else if (user.role !== 'mother') {
-      router.push('/');
-    }
-  }, [user, router]);
 
   // Show personalization dialog if not completed
   useEffect(() => {
@@ -41,16 +27,13 @@ function WellnessPageInner() {
   }, [profile, loading]);
 
   useEffect(() => {
-    if (!mounted) return;
     const tab = searchParams.get('tab');
     if (['dashboard', 'tracking', 'support'].includes(tab || '')) {
       setActiveTab(tab as any);
     }
-  }, [searchParams, mounted]);
+  }, [searchParams]);
 
-  if (!mounted || !user || user.role !== 'mother') {
-    return null;
-  }
+  if (!ready) return null;
 
   return (
     <MainLayout fullWidth>

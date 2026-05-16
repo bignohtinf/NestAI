@@ -92,17 +92,21 @@ export function Sidebar({ open, onOpenChange, activeChatId, onSelectChat }: Side
     try {
       const res = await nutritionApi.getNotifications(user.id, true, 1);
       setUnreadCount(res.unread_count || 0);
-    } catch (error) {
-      console.error('Failed to fetch unread notifications:', error);
+    } catch {
+      // Silent fail — notification badge không critical, không crash UI
     }
   }, [user?.id]);
 
   useEffect(() => {
-    fetchUnreadCount();
+    // Delay lần đầu 3s để backend có thời gian warm up
+    const initialDelay = setTimeout(fetchUnreadCount, 3000);
 
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchUnreadCount, 60000);
-    return () => clearInterval(interval);
+    // Poll mỗi 3 phút (thay vì 60s) — giảm áp lực cold start Cloud Run
+    const interval = setInterval(fetchUnreadCount, 180_000);
+    return () => {
+      clearTimeout(initialDelay);
+      clearInterval(interval);
+    };
   }, [fetchUnreadCount]);
 
   useEffect(() => {

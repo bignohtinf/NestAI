@@ -1,7 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.core.supabase_client import get_supabase
-from app.services.embedding_service import EmbeddingService
-from app.services.vector_search_service import VectorSearchService
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import httpx
@@ -52,7 +50,8 @@ def invalidate_nutrition_cache(user_id: str) -> None:
 router = APIRouter()
 
 class ScanFoodNotifyRequest(BaseModel):
-    mother_id: str
+    mother_id: Optional[str] = None   # backward compat — dùng khi mẹ scan
+    user_id: Optional[str] = None     # generic — dùng cho cả mẹ lẫn bố
     meal_data: Dict[str, Any]
 
 class NutritionLogCreate(BaseModel):
@@ -118,6 +117,8 @@ NGUYÊN TẮC ĐẶT TÊN MÓN (bắt buộc):
 
 ƯỚC TÍNH DINH DƯỠNG (per 100g, theo cách chế biến Việt Nam điển hình):
 - calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g
+- iron_per_100g (mg): hàm lượng sắt — dựa trên loại thực phẩm (thịt đỏ 2-4mg, rau xanh đậm 2-6mg, đậu phụ 5mg, gan 6-12mg, cơm trắng 0.2mg)
+- calcium_per_100g (mg): hàm lượng canxi — dựa trên loại thực phẩm (sữa 120mg, tôm/cua 80-150mg, rau cải 100-200mg, đậu phụ 350mg, cá nhỏ ăn xương 300-500mg, cơm 10mg)
 - Dựa trên nguyên liệu nhìn thấy và phương pháp chế biến.
 - Nước chấm / rau: ước lượng theo thành phần điển hình.
 
@@ -131,7 +132,9 @@ Trả về JSON, KHÔNG giải thích thêm:
       "calories_per_100g": 180,
       "protein_per_100g": 18.5,
       "carbs_per_100g": 2.0,
-      "fat_per_100g": 11.0
+      "fat_per_100g": 11.0,
+      "iron_per_100g": 2.5,
+      "calcium_per_100g": 15.0
     }
   ],
   "meal_context": "bữa sáng/trưa/tối/phụ"
@@ -186,7 +189,9 @@ async def _call_openai_vision(image_data: str) -> dict:
                             }
                         ],
                         "temperature": 0.2,
-                        "max_tokens": 800,
+                        "max_tokens": 1200,
+                        # Bắt buộc OpenAI trả JSON hợp lệ — tránh markdown wrapping
+                        "response_format": {"type": "json_object"},
                     },
                 )
 
@@ -255,16 +260,32 @@ def _parse_json_from_response(text: str) -> dict:
     if not text:
         raise ValueError("Empty response text from OpenAI")
 
+    # 1. Try direct parse (response_format: json_object → should work)
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        match = re.search(r"\{.*\}", text, re.S)
-        if not match:
-            raise ValueError("Unable to parse JSON from OpenAI response")
-        return json.loads(match.group(0))
+        pass
 
+    # 2. Strip markdown code blocks: ```json ... ``` or ``` ... ```
+    stripped = text.strip()
+    md_match = re.search(r"```(?:json)?\s*\n?(.*?)```", stripped, re.S)
+    if md_match:
+        try:
+            return json.loads(md_match.group(1).strip())
+        except json.JSONDecodeError:
+            pass
 
-_DB_MATCH_THRESHOLD = 0.85  # Only accept DB canonical name if similarity >= this value
+    # 3. Extract first { ... } block (greedy — outermost braces)
+    brace_match = re.search(r"\{.*\}", stripped, re.S)
+    if brace_match:
+        try:
+            return json.loads(brace_match.group(0))
+        except json.JSONDecodeError:
+            pass
+
+    # 4. Nếu vẫn fail, log nội dung để debug
+    logger.error(f"Unable to parse JSON from OpenAI response (first 500 chars): {text[:500]}")
+    raise ValueError("Unable to parse JSON from OpenAI response")
 
 
 def _pregnancy_benefit_from_nutrition(protein: float, fat: float, calcium: Optional[float], iron: Optional[float]) -> str:
@@ -295,34 +316,6 @@ def _pregnancy_guidance_from_totals(total_protein: float, total_calories: float)
     return ", ".join(points) + "."
 
 
-def _try_db_enrich(supabase, dish_name: str) -> tuple[Optional[dict], float]:
-    """
-    Try to find a canonical DB entry for the dish name via vector similarity.
-    Returns (matched_food, score). Only meaningful if score >= _DB_MATCH_THRESHOLD.
-    Silently returns (None, 0.0) on any error so the main flow is never interrupted.
-    """
-    try:
-        embedding_svc = EmbeddingService()
-        embedding = embedding_svc.embed_text(dish_name)
-        if not embedding:
-            return None, 0.0
-
-        vs = VectorSearchService(supabase)
-        if not vs._verify_pgvector_available():
-            return None, 0.0
-
-        results = vs.search_similar_dishes(embedding, top_k=1)
-        if not results:
-            return None, 0.0
-
-        top = results[0]
-        score = float(top.get("match_score", 0.0))
-        if score >= _DB_MATCH_THRESHOLD:
-            return top, score
-        return None, score
-    except Exception as exc:
-        logger.debug(f"DB enrich skipped for '{dish_name}': {exc}")
-        return None, 0.0
 
 
 @router.post("/analyze-photo", response_model=PhotoAnalysisResponse)
@@ -350,6 +343,8 @@ async def analyze_photo(payload: PhotoAnalysisRequest, supabase = Depends(get_su
     if not dishes or not isinstance(dishes, list) or len(dishes) == 0:
         raise HTTPException(status_code=400, detail="No dishes detected in image")
 
+    logger.info(f"[scan] {len(dishes)} dishes detected")
+
     meal_context = parsed.get("meal_context")
 
     dish_analyses: List[DishAnalysis] = []
@@ -375,13 +370,18 @@ async def analyze_photo(payload: PhotoAnalysisRequest, supabase = Depends(get_su
         carbs = round(carbs_100 * portion, 1)
         fat = round(fat_100 * portion, 1)
 
-        # --- Optional DB enrichment (async offload to thread to avoid blocking event loop) ---
-        matched_food, match_score = await asyncio.to_thread(
-            _try_db_enrich, supabase, name
-        )
+        # --- Vi chất: lấy từ AI estimate (nhanh, không cần vector search) ---
+        ai_iron_100 = float(dish.get("iron_per_100g") or 0)
+        ai_calcium_100 = float(dish.get("calcium_per_100g") or 0)
+        iron: Optional[float] = round(ai_iron_100 * portion, 2) if ai_iron_100 > 0 else None
+        calcium: Optional[float] = round(ai_calcium_100 * portion, 2) if ai_calcium_100 > 0 else None
 
-        # --- Pregnancy benefit (based on AI-calculated nutrition, not DB) ---
-        pregnancy_benefit = _pregnancy_benefit_from_nutrition(protein, fat, None, None)
+        # DB vector search đã b��� — AI estimate đủ chính xác, tránh lỗi pgvector + chậm
+        matched_food = None
+        match_score = 0.0
+
+        # --- Pregnancy benefit (based on AI-calculated nutrition + vi chất) ---
+        pregnancy_benefit = _pregnancy_benefit_from_nutrition(protein, fat, calcium, iron)
 
         dish_analyses.append(DishAnalysis(
             name=name,
@@ -393,8 +393,8 @@ async def analyze_photo(payload: PhotoAnalysisRequest, supabase = Depends(get_su
             protein=protein,
             carbs=carbs,
             fat=fat,
-            iron=None,
-            calcium=None,
+            iron=iron,
+            calcium=calcium,
             pregnancy_benefit=pregnancy_benefit,
             portion_multiplier=round(portion, 2),
         ))
@@ -427,10 +427,11 @@ async def get_nutrition_logs(user_id: str, limit: int = 30, supabase = Depends(g
     """
     combined = []
 
-    # 1. nutrition_logs
+    # 1. nutrition_logs (loại trừ smart_scan vì đã có trong food_scan_logs)
     nl_res = supabase.table("nutrition_logs") \
         .select("id, user_id, log_date, calories, protein, carbs, fat, notes, meal_type, source, created_at") \
         .eq("user_id", user_id) \
+        .neq("source", "smart_scan") \
         .order("created_at", desc=True) \
         .limit(limit) \
         .execute()
@@ -504,19 +505,23 @@ async def create_nutrition_log(user_id: str, log: NutritionLogCreate, supabase =
 
 @router.post("/scan-food-notify")
 async def scan_food_notify(request: ScanFoodNotifyRequest, supabase = Depends(get_supabase)):
-    """Lưu nutrition log cho mẹ + gửi notification cho bố sau khi smart scan.
-    Thay thế /api/notifications/scan-food — gộp vào nutrition router để tránh vấn đề đăng ký route.
+    """Lưu nutrition log + food_scan_log cho BẤT KỲ user nào sau khi smart scan.
+    Nếu user là mẹ (có partnership) → gửi thêm notification cho bố.
+    Hỗ trợ cả mother_id (backward compat) lẫn user_id (generic).
     """
     from datetime import date as _date, datetime as _dt
 
     meal_data = request.meal_data
-    mother_id = request.mother_id
+    # Resolve user: ưu tiên user_id, fallback sang mother_id (backward compat)
+    scan_user_id = request.user_id or request.mother_id
+    if not scan_user_id:
+        raise HTTPException(status_code=400, detail="user_id hoặc mother_id là bắt buộc")
     meal_name = meal_data.get("meal_name", "bữa ăn")
 
     # 1. Lưu nutrition log (luôn chạy dù có partner hay không)
     try:
         supabase.table("nutrition_logs").insert({
-            "user_id": mother_id,
+            "user_id": scan_user_id,
             "log_date": _date.today().isoformat(),
             "notes": meal_name,
             "calories": round(float(meal_data.get("total_calories") or 0)),
@@ -525,37 +530,48 @@ async def scan_food_notify(request: ScanFoodNotifyRequest, supabase = Depends(ge
             "fat": float(meal_data.get("total_fat")) if meal_data.get("total_fat") is not None else None,
             "source": "smart_scan",
         }).execute()
-        invalidate_nutrition_cache(mother_id)
+        invalidate_nutrition_cache(scan_user_id)
     except Exception as log_err:
         logger.warning(f"scan-food-notify: failed to save nutrition log: {log_err}")
 
-    # 1b. Lưu food_scan_logs để summary endpoint có thể đọc iron/calcium từ dishes
+    # 1b. Lưu food_scan_logs để summary endpoint có thể đọc iron/calcium
     try:
+        dishes = meal_data.get("dishes", [])
+        # Tổng hợp vi chất trực tiếp từ dishes — getSummary đọc total_iron/total_calcium
+        # thay vì phải loop qua dishes (đơn giản hơn, tránh None handling)
+        total_iron = sum(float(d.get("iron") or 0) for d in dishes)
+        total_calcium = sum(float(d.get("calcium") or 0) for d in dishes)
         supabase.table("food_scan_logs").insert({
-            "user_id": mother_id,
+            "user_id": scan_user_id,
             "recognized_dish_name": meal_name,
             "nutrition_data": {
                 "total_calories": meal_data.get("total_calories"),
                 "total_protein": meal_data.get("total_protein"),
                 "total_carbs": meal_data.get("total_carbs"),
                 "total_fat": meal_data.get("total_fat"),
-                "dishes": meal_data.get("dishes", []),
+                "total_iron": round(total_iron, 2),
+                "total_calcium": round(total_calcium, 2),
+                "dishes": dishes,
             },
             "meal_type": meal_data.get("meal_context"),
             "source": "smart_scan",
         }).execute()
+        # Invalidate cache sau khi lưu food_scan_logs (không chỉ nutrition_logs)
+        # để summary endpoint trả dữ liệu mới cho cả dashboard mẹ lẫn bố
+        invalidate_nutrition_cache(scan_user_id)
     except Exception as fsl_err:
         logger.warning(f"scan-food-notify: failed to save food_scan_log: {fsl_err}")
 
-    # 2. Tìm partner để gửi notification
-    partnerships = supabase.table("partnerships").select("father_id").eq("mother_id", mother_id).eq("status", "accepted").execute()
+    # 2. Tìm partner để gửi notification (chỉ khi user là mẹ trong partnership)
+    partnerships = supabase.table("partnerships").select("father_id").eq("mother_id", scan_user_id).eq("status", "accepted").execute()
     if not partnerships.data:
+        # Không có partnership hoặc user không phải mẹ → lưu thành công, skip notification
         return {"success": True, "skipped": True, "message": "No partner to notify"}
 
     partner_id = partnerships.data[0]["father_id"]
 
-    # 3. Lấy tên mẹ
-    user_res = supabase.table("users").select("full_name").eq("id", mother_id).execute()
+    # 3. Lấy tên user (mẹ) để hiển thị trong notification
+    user_res = supabase.table("users").select("full_name").eq("id", scan_user_id).execute()
     mother_name = user_res.data[0]["full_name"] if user_res.data else "Mẹ"
 
     # 4. Insert notification cho bố
@@ -593,10 +609,13 @@ async def get_nutrition_summary(user_id: str, days: int = 7, supabase = Depends(
     cutoff = (datetime.utcnow() - timedelta(days=days)).isoformat()
 
     # Lấy nutrition_logs trong khoảng thời gian
+    # Loại trừ source='smart_scan' vì dữ liệu đó đã có trong food_scan_logs
+    # → tránh double-count macro (calo, protein, carbs, fat)
     nl_res = supabase.table("nutrition_logs") \
-        .select("id, log_date, calories, protein, carbs, fat, created_at") \
+        .select("id, log_date, calories, protein, carbs, fat, source, created_at") \
         .eq("user_id", user_id) \
         .gte("created_at", cutoff) \
+        .neq("source", "smart_scan") \
         .order("created_at", desc=True) \
         .execute()
 
@@ -730,15 +749,25 @@ async def get_nutrition_summary(user_id: str, days: int = 7, supabase = Depends(
         except Exception as e:
             logger.warning(f"Failed to fetch micronutrients from nutrition_log_items: {e}")
 
-    # Đọc iron/calcium từ food_scan_logs.nutrition_data.dishes (Smart Scan saves here)
+    # Đọc iron/calcium từ food_scan_logs (Smart Scan)
+    # Ưu tiên total_iron/total_calcium (format mới — đã tổng hợp khi save),
+    # fallback sang loop dishes (format cũ / backward compat).
     try:
         for scan in (fs_res.data or []):
             nd = scan.get("nutrition_data") or {}
-            for dish in (nd.get("dishes") or []):
-                total_iron      += float(dish.get("iron")      or 0)
-                total_calcium   += float(dish.get("calcium")   or 0)
-                total_vitamin_c += float(dish.get("vitamin_c") or 0)
-                total_zinc      += float(dish.get("zinc")      or 0)
+            if nd.get("total_iron") is not None or nd.get("total_calcium") is not None:
+                # Format mới: dùng trực tiếp
+                total_iron      += float(nd.get("total_iron")    or 0)
+                total_calcium   += float(nd.get("total_calcium") or 0)
+                total_vitamin_c += float(nd.get("total_vitamin_c") or 0)
+                total_zinc      += float(nd.get("total_zinc")    or 0)
+            else:
+                # Format cũ: loop qua dishes
+                for dish in (nd.get("dishes") or []):
+                    total_iron      += float(dish.get("iron")      or 0)
+                    total_calcium   += float(dish.get("calcium")   or 0)
+                    total_vitamin_c += float(dish.get("vitamin_c") or 0)
+                    total_zinc      += float(dish.get("zinc")      or 0)
     except Exception as e:
         logger.warning(f"Failed to aggregate micronutrients from food_scan_logs: {e}")
 

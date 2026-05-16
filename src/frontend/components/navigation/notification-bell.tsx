@@ -62,11 +62,11 @@ export function NotificationBell() {
     } catch { /* ignore */ }
   }, [user?.id, user?.role]);
 
-  // Fetch on mount + mỗi 60s
+  // Fetch sau 2s delay (warm up) + poll mỗi 3 phút
   useEffect(() => {
-    fetchNotifications();
-    const timer = setInterval(fetchNotifications, 60_000);
-    return () => clearInterval(timer);
+    const delay = setTimeout(fetchNotifications, 2000);
+    const timer = setInterval(fetchNotifications, 180_000);
+    return () => { clearTimeout(delay); clearInterval(timer); };
   }, [fetchNotifications]);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;

@@ -2,25 +2,11 @@
 
 import { MainLayout } from '@/components/layouts/main-layout';
 import { BabyJourneyTracker } from '@/components/baby-journey/baby-journey-tracker';
-import { useApp } from '@/lib/context';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useAuthGuard } from '@/lib/hooks/use-auth-guard';
 
 export default function BabyJourneyPage() {
-  const { user } = useApp();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-    } else if (user.role === 'admin') {
-      router.push('/');
-    }
-  }, [user, router]);
-
-  if (!user || user.role === 'admin') {
-    return null;
-  }
+  const { ready } = useAuthGuard({ blockedRoles: ['admin'] });
+  if (!ready) return null;
 
   return (
     <MainLayout fullWidth>

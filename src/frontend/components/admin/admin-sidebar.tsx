@@ -472,7 +472,8 @@ export default function AdminSidebar({
                     alt="NestAI Logo"
                     width={32}
                     height={32}
-                    className="w-full h-full object-contain"
+                    className="object-contain"
+                    style={{ width: '100%', height: '100%' }}
                   />
                 </div>
                 <span className="text-lg font-bold text-primary tracking-tight">
@@ -565,7 +566,8 @@ export default function AdminSidebar({
                     alt="NestAI Logo"
                     width={32}
                     height={32}
-                    className="w-full h-full object-contain"
+                    className="object-contain"
+                    style={{ width: '100%', height: '100%' }}
                   />
                 </div>
                 <span className="text-lg font-bold text-primary tracking-tight transition-opacity duration-200">
@@ -580,7 +582,8 @@ export default function AdminSidebar({
                     alt="NestAI Logo"
                     width={32}
                     height={32}
-                    className="w-full h-full object-contain"
+                    className="object-contain"
+                    style={{ width: '100%', height: '100%' }}
                   />
                 </div>
               </div>

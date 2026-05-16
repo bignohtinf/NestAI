@@ -77,26 +77,31 @@ export function SmartScan({ splitLayout = false }: SmartScanProps) {
         body: JSON.stringify({ image: imageData, user_id: user?.id }),
       });
 
+      // Read body once as text, then parse — avoids double-read bug
+      const bodyText = await response.text();
+
       if (!response.ok) {
         let message = 'Không thể phân tích ảnh';
         try {
-          const errorJson = await response.json();
+          const errorJson = JSON.parse(bodyText);
           const detail = errorJson?.detail;
           if (typeof detail === 'string' && detail.trim()) {
             message = detail.includes('model_not_found') || (detail.includes('model') && detail.includes('not found'))
               ? 'Cấu hình AI vision chưa hợp lệ trên server. Vui lòng thử lại sau hoặc liên hệ quản trị viên.'
               : detail;
+          } else if (bodyText) {
+            message = bodyText;
           }
         } catch {
-          const body = await response.text();
-          if (body) message = body;
+          if (bodyText) message = bodyText;
         }
         throw new Error(message);
       }
 
-      const data = (await response.json()) as SmartScanResponse;
+      const data = JSON.parse(bodyText) as SmartScanResponse;
       setAnalysis(data);
     } catch (err) {
+      console.error('[SmartScan] analyzeFood error:', err);
       setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi');
     } finally {
       setLoading(false);
@@ -111,43 +116,23 @@ export function SmartScan({ splitLayout = false }: SmartScanProps) {
 
       const mealName = analysis.dishes.map((d) => d.matched_food?.dish_name_vi || d.name).join(', ');
 
-      if (user.role === 'mother') {
-        // Mẹ: đi qua /api/notifications/scan-food — endpoint này vừa lưu nutrition_log
-        // vừa gửi notification cho bố (1 request, 1 lần lưu duy nhất, không double-save)
-        const result = await nutritionApi.createScanFoodNotification(user.id, {
-          meal_name: mealName,
-          total_calories: analysis.total_calories,
-          total_protein: analysis.total_protein,
-          total_carbs: analysis.total_carbs,
-          total_fat: analysis.total_fat,
-          dishes: analysis.dishes,
-          pregnancy_guidance: analysis.pregnancy_guidance ?? null,
-          meal_context: analysis.meal_context ?? null,
-        });
-        if (!result.success && !result.skipped) {
-          throw new Error('Không thể lưu nhật ký');
-        }
-        setSaveStatus(result.skipped ? 'saved' : 'notified');
-      } else {
-        // Bố / user khác: gọi thẳng POST /api/nutrition/logs
-        const response = await fetch(`${BASE_API_URL}/api/nutrition/logs?user_id=${encodeURIComponent(user.id)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            meal_name: mealName,
-            calories: analysis.total_calories,
-            protein: analysis.total_protein,
-            carbs: analysis.total_carbs,
-            fat: analysis.total_fat,
-            notes: analysis.meal_context ? `Bữa ${analysis.meal_context}` : 'Quét bữa ăn AI',
-          }),
-        });
-        if (!response.ok) {
-          const body = await response.text();
-          throw new Error(body || 'Không thể lưu nhật ký');
-        }
-        setSaveStatus('saved');
+      // Cả mẹ lẫn bố đều đi qua scan-food-notify endpoint
+      // → lưu cả nutrition_logs + food_scan_logs (giữ iron/calcium)
+      // → mẹ có partnership thì tự gửi notification cho bố, bố thì skip notification
+      const result = await nutritionApi.saveScanFood(user.id, {
+        meal_name: mealName,
+        total_calories: analysis.total_calories,
+        total_protein: analysis.total_protein,
+        total_carbs: analysis.total_carbs,
+        total_fat: analysis.total_fat,
+        dishes: analysis.dishes,
+        pregnancy_guidance: analysis.pregnancy_guidance ?? null,
+        meal_context: analysis.meal_context ?? null,
+      });
+      if (!result.success && !result.skipped) {
+        throw new Error('Không thể lưu nhật ký');
       }
+      setSaveStatus(result.skipped ? 'saved' : 'notified');
 
       // Thông báo cho MomDashboard và các component khác cập nhật dinh dưỡng
       window.dispatchEvent(new CustomEvent('nutritionLogSaved'));
@@ -251,8 +236,9 @@ export function SmartScan({ splitLayout = false }: SmartScanProps) {
     </div>
   );
 
-  /** Panel kết quả (dùng chung cả hai layout) */
-  const ResultsPanel = () => (
+  // ─── Kết quả phân tích (JSX thuần — không dùng sub-component để tránh
+  //     React unmount/remount mỗi lần re-render khi state thay đổi)
+  const resultsPanel = (
     <>
       {loading && (
         <div className="rounded-2xl border border-border/50 bg-card p-8 text-center">
@@ -301,6 +287,30 @@ export function SmartScan({ splitLayout = false }: SmartScanProps) {
                   </div>
                 ))}
               </div>
+
+              {/* Vi chất: Sắt & Canxi */}
+              {(() => {
+                const totalIron = analysis.dishes.reduce((s, d) => s + (d.iron ?? 0), 0);
+                const totalCalcium = analysis.dishes.reduce((s, d) => s + (d.calcium ?? 0), 0);
+                return (totalIron > 0 || totalCalcium > 0) ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    {totalIron > 0 && (
+                      <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-center">
+                        <p className="text-xs text-muted-foreground mb-1">🩸 Sắt</p>
+                        <p className="text-lg font-bold text-red-600">{Math.round(totalIron * 10) / 10}</p>
+                        <p className="text-xs text-muted-foreground">mg</p>
+                      </div>
+                    )}
+                    {totalCalcium > 0 && (
+                      <div className="bg-sky-50 border border-sky-100 rounded-xl p-3 text-center">
+                        <p className="text-xs text-muted-foreground mb-1">🥛 Canxi</p>
+                        <p className="text-lg font-bold text-sky-600">{Math.round(totalCalcium)}</p>
+                        <p className="text-xs text-muted-foreground">mg</p>
+                      </div>
+                    )}
+                  </div>
+                ) : null;
+              })()}
 
               {analysis.pregnancy_guidance && (
                 <div className="flex items-start gap-3 bg-emerald-50 border border-emerald-100 rounded-xl p-3.5">
@@ -361,6 +371,16 @@ export function SmartScan({ splitLayout = false }: SmartScanProps) {
                     </div>
                   ))}
                 </div>
+                {(dish.iron || dish.calcium) && (
+                  <div className="px-4 pb-2 flex gap-3">
+                    {dish.iron ? (
+                      <span className="text-xs text-red-600 bg-red-50 rounded-md px-2 py-1">🩸 Sắt {Math.round(dish.iron * 10) / 10}mg</span>
+                    ) : null}
+                    {dish.calcium ? (
+                      <span className="text-xs text-sky-600 bg-sky-50 rounded-md px-2 py-1">🥛 Canxi {Math.round(dish.calcium)}mg</span>
+                    ) : null}
+                  </div>
+                )}
                 {dish.pregnancy_benefit && (
                   <div className="px-4 pb-3">
                     <p className="text-xs text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">🤰 {dish.pregnancy_benefit}</p>
@@ -418,7 +438,7 @@ export function SmartScan({ splitLayout = false }: SmartScanProps) {
               <p className="text-xs text-muted-foreground/70 mt-1">Tải ảnh lên để AI bắt đầu phân tích</p>
             </div>
           )}
-          <ResultsPanel />
+          {resultsPanel}
         </div>
       </div>
     );
@@ -435,7 +455,7 @@ export function SmartScan({ splitLayout = false }: SmartScanProps) {
       ) : (
         <div className="space-y-4">
           <ImagePreview />
-          <ResultsPanel />
+          {resultsPanel}
         </div>
       )}
     </div>

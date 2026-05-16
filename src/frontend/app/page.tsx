@@ -63,22 +63,18 @@ export default function Home() {
     return <LandingPage />;
   }
 
-  // Admin users should be redirected to the admin section
+  // Admin users → redirect to admin section
   if (user.role === 'admin') {
-    if (typeof window !== 'undefined') {
-      window.location.href = '/admin';
-    }
+    if (typeof window !== 'undefined') window.location.href = '/admin';
     return null;
   }
 
-  // Regular users (mother/father) use HomeLayout
+  // Role not selected yet → OnboardingGuard handles redirect to /auth/role-selection
+  if (!user.role) return null;
+
   return (
     <HomeLayout fullWidth>
-      {user.role === 'mother' ? (
-        <MomDashboard />
-      ) : (
-        <DadDashboard />
-      )}
+      {user.role === 'mother' ? <MomDashboard /> : <DadDashboard />}
     </HomeLayout>
   );
 }

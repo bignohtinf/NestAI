@@ -268,23 +268,11 @@ export function NutritionRecommendations() {
         dailyBudgetVnd: budgetInput ? Number(budgetInput.replace(/\D/g, '')) : undefined,
       });
 
-      // Gửi thông báo cho bố (không block nếu lỗi)
-      let notified = false;
-      try {
-        const result = await nutritionApi.createMealPlanNotification(
-          user.id,
-          selectedDate,
-          activePlan,
-          target
-        );
-        notified = !!result.success;
-      } catch { /* bỏ qua lỗi notification */ }
-
+      // Backend saveMealPlan đã tự gửi notification cho bố (qua _notify_partner)
+      // và ghi nutrition_logs + nutrition_log_items để dashboard vi chất cập nhật.
       setSaveMessage({
         type: 'success',
-        text: notified
-          ? '✅ Đã lưu thực đơn và gửi thông báo cho bố!'
-          : '✅ Đã lưu thực đơn thành công!',
+        text: '✅ Đã lưu thực đơn và gửi thông báo cho bố!',
       });
       // Thông báo cho MomDashboard cập nhật mục tiêu dinh dưỡng
       window.dispatchEvent(new CustomEvent('mealPlanSaved'));

@@ -59,7 +59,8 @@ function LandingNav() {
                 alt="NestAI"
                 width={32}
                 height={32}
-                className="w-full h-full object-cover"
+                className="object-cover"
+                style={{ width: '100%', height: '100%' }}
               />
             </div>
             <span className="font-bold text-xl text-[#31302e]">NestAI</span>

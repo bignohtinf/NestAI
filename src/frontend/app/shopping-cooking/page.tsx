@@ -5,30 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SmartShopping } from '@/components/metrics/smart-shopping';
 import { IngredientScanner } from '@/components/metrics/ingredient-scanner';
-import { useApp } from '@/lib/context';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useAuthGuard } from '@/lib/hooks/use-auth-guard';
 
 export default function ShoppingCookingPage() {
-  const { user } = useApp();
-  const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-    } else if (user.role !== 'father') {
-      router.push('/');
-    }
-  }, [user, router]);
-
-  if (!mounted || !user || user.role !== 'father') {
-    return null;
-  }
+  const { ready } = useAuthGuard({ allowedRoles: ['father'] });
+  if (!ready) return null;
 
   return (
     <MainLayout>

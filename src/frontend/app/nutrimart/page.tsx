@@ -3,35 +3,23 @@
 import { MainLayout } from '@/components/layouts/main-layout';
 import { SmartShopping } from '@/components/metrics/smart-shopping';
 import { IngredientScanner } from '@/components/metrics/ingredient-scanner';
-import { useApp } from '@/lib/context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
+import { useAuthGuard } from '@/lib/hooks/use-auth-guard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 function NutrimartPageInner() {
-  const { user } = useApp();
+  const { ready, user } = useAuthGuard({ allowedRoles: ['father'] });
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<'shopping' | 'scanner'>('shopping');
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-    } else if (user.role !== 'father') {
-      router.push('/');
-    }
-  }, [user, router]);
-
-  useEffect(() => {
-    if (!mounted) return;
     const tab = searchParams.get('tab');
     setActiveTab(tab === 'scanner' ? 'scanner' : 'shopping');
-  }, [searchParams, mounted]);
+  }, [searchParams]);
 
-  if (!mounted || !user || user.role !== 'father') return null;
+  if (!ready) return null;
 
   const handleTabChange = (value: string) => {
     const tab = value as 'shopping' | 'scanner';

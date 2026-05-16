@@ -2,30 +2,11 @@
 
 import { MainLayout } from '@/components/layouts/main-layout';
 import { NutritionRecommendations } from '@/components/metrics/nutrition-recommendations';
-import { useApp } from '@/lib/context';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useAuthGuard } from '@/lib/hooks/use-auth-guard';
 
 export default function NutritionPage() {
-  const { user } = useApp();
-  const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-    } else if (user.role !== 'mother') {
-      router.push('/');
-    }
-  }, [user, router]);
-
-  if (!mounted || !user || user.role !== 'mother') {
-    return null;
-  }
+  const { ready } = useAuthGuard({ allowedRoles: ['mother'] });
+  if (!ready) return null;
 
   return (
     <MainLayout>

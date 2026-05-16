@@ -37,18 +37,18 @@ export function MealLogHistory({ targetUserId }: MealLogHistoryProps) {
     loadLogs();
   }, [targetUserId]);
 
-  if (loading) {
+  if (!targetUserId || loading) {
     return (
-      <div className="h-64 flex flex-col items-center justify-center space-y-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-muted-foreground">Đang tải nhật ký bữa ăn...</p>
+      <div className="w-full min-h-[calc(100vh-16rem)] flex flex-col items-center justify-center gap-4">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="text-muted-foreground text-sm">Đang tải nhật ký bữa ăn...</p>
       </div>
     );
   }
 
   if (logs.length === 0) {
     return (
-      <div className="text-center py-20 bg-muted/20 rounded-2xl border-2 border-dashed border-border/50">
+      <div className="w-full min-h-[calc(100vh-16rem)] flex flex-col items-center justify-center text-center bg-muted/20 rounded-2xl border-2 border-dashed border-border/50">
         <Utensils className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-foreground">Chưa có nhật ký bữa ăn</h3>
         <p className="text-sm text-muted-foreground max-w-xs mx-auto mt-2">

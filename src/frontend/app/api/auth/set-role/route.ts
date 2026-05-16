@@ -40,6 +40,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Also cache role in app_metadata so the client can read it from the JWT
+    // without a separate DB round-trip on every login.
+    // app_metadata is only writable via the service-role admin API (not by users).
+    const { error: metaError } = await supabaseService.auth.admin.updateUserById(userId, {
+      app_metadata: { role },
+    });
+    if (metaError) {
+      // Non-fatal: users table is the source of truth; app_metadata is a cache.
+      console.warn('set-role: could not update app_metadata, role still saved in DB:', metaError.message);
+    }
+
     return NextResponse.json({ message: 'Cập nhật role thành công', role }, { status: 200 });
   } catch (error) {
     console.error('set-role error:', error);

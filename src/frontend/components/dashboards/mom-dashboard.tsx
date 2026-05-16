@@ -158,22 +158,41 @@ export function MomDashboard() {
       // 1. Lấy thực đơn ngày hôm nay để hiển thị calories/macros
       const weekRes = await nutritionApi.getWeeklyMealPlans(user.id, weekStart);
       const todayPlan = (weekRes.plans as Record<string, any>)?.[today];
-      if (todayPlan?.plan_data?.nutrition_summary?.total) {
-        const t = todayPlan.plan_data.nutrition_summary.total;
-        setTodayCalories(Math.round(t.energy || 0));
+      const planTotal = todayPlan?.plan_data?.nutrition_summary?.total;
+
+      if (planTotal) {
+        setTodayCalories(Math.round(planTotal.energy || 0));
       }
 
-      // 2. Lấy vi chất từ nutrition_summary (đọc từ food_scan_logs + nutrition_logs)
+      // 2. Lấy vi chất — ưu tiên đọc thẳng từ meal plan (generate path),
+      //    fallback sang getSummary (scan path / nutrition_log_items)
       try {
-        const summary = await nutritionApi.getSummary(user.id, 1);
-        const micros: any[] = summary?.micro_nutrients ?? [];
-        const ironPct  = micros.find(m => m.name.includes('Iron') || m.name.includes('Sắt'))?.value ?? 0;
-        const calciumPct = micros.find(m => m.name.includes('Calcium') || m.name.includes('Canxi'))?.value ?? 0;
-        // Chuyển % RDA → mg thực tế (RDA iron=27mg, calcium=1000mg)
-        setMicroNutrients({
-          iron:    Math.round(ironPct    * 27   / 100 * 10) / 10,
-          calcium: Math.round(calciumPct * 1000 / 100),
-        });
+        const planIron    = typeof planTotal?.iron    === 'number' ? planTotal.iron    : null;
+        const planCalcium = typeof planTotal?.calcium === 'number' ? planTotal.calcium : null;
+
+        if (planIron !== null || planCalcium !== null) {
+          // Đọc trực tiếp từ nutrition_summary của meal plan (chính xác nhất)
+          setMicroNutrients({
+            iron:    Math.round((planIron    ?? 0) * 10) / 10,
+            calcium: Math.round(planCalcium  ?? 0),
+          });
+        } else {
+          // Fallback: getSummary tổng hợp từ food_scan_logs + nutrition_log_items
+          const summary = await nutritionApi.getSummary(user.id, 1);
+          const micros: any[] = summary?.micro_nutrients ?? [];
+          const ironPct    = micros.find(m => m.name.includes('Iron')    || m.name.includes('Sắt'))?.value   ?? 0;
+          const calciumPct = micros.find(m => m.name.includes('Calcium') || m.name.includes('Canxi'))?.value ?? 0;
+          // Chuyển % RDA → mg thực tế (RDA iron=27mg, calcium=1000mg)
+          setMicroNutrients({
+            iron:    Math.round(ironPct    * 27   / 100 * 10) / 10,
+            calcium: Math.round(calciumPct * 1000 / 100),
+          });
+
+          // Nếu không có meal plan, lấy calories từ summary (scan + manual logs)
+          if (!planTotal && summary?.summary?.avg_calories) {
+            setTodayCalories(Math.round(summary.summary.avg_calories));
+          }
+        }
       } catch {
         // Vi chất là tuỳ chọn — silent fail
       }
@@ -221,9 +240,17 @@ export function MomDashboard() {
     const handleUpdate = () => fetchTodayNutrition();
     window.addEventListener('mealPlanSaved',    handleUpdate);
     window.addEventListener('nutritionLogSaved', handleUpdate);
+
+    // Refresh khi user quay lại tab (bắt dữ liệu mới từ scan ở tab khác)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetchTodayNutrition();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
     return () => {
       window.removeEventListener('mealPlanSaved',    handleUpdate);
       window.removeEventListener('nutritionLogSaved', handleUpdate);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [isHydrated, user?.id, fetchTodayNutrition, fetchWellnessToday, fetchQuests]);
 

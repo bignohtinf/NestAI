@@ -36,15 +36,35 @@ export function NutritionDashboard({ targetUserId, gestationWeeks: gestationWeek
     }
 
     loadData();
+
+    // Refresh khi mẹ lưu scan hoặc thực đơn — cùng tab
+    const handleRefresh = () => loadData();
+    window.addEventListener('nutritionLogSaved', handleRefresh);
+    window.addEventListener('mealPlanSaved', handleRefresh);
+
+    // Auto-refresh mỗi 3 phút để bắt dữ liệu mới từ tab/thiết bị khác
+    // + refresh khi user quay lại tab (visibilitychange)
+    const pollInterval = setInterval(() => loadData(), 180_000);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') loadData();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.removeEventListener('nutritionLogSaved', handleRefresh);
+      window.removeEventListener('mealPlanSaved', handleRefresh);
+      clearInterval(pollInterval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [targetUserId]);
 
   const gestationWeeks = gestationWeeksProp ?? 24;
 
-  if (loading) {
+  if (!targetUserId || loading) {
     return (
-      <div className="h-96 flex flex-col items-center justify-center space-y-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-muted-foreground">Đang tải báo cáo dinh dưỡng...</p>
+      <div className="w-full min-h-[calc(100vh-16rem)] flex flex-col items-center justify-center gap-4">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="text-muted-foreground text-sm">Đang tải báo cáo dinh dưỡng...</p>
       </div>
     );
   }

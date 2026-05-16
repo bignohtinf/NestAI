@@ -3,9 +3,8 @@
 import { MainLayout } from '@/components/layouts/main-layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useApp } from '@/lib/context';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useAuthGuard } from '@/lib/hooks/use-auth-guard';
 import { Bell, Check, X, UserPlus, Utensils, ExternalLink, ChevronRight, CalendarDays } from 'lucide-react';
 import Link from 'next/link';
 import { nutritionApi } from '@/lib/api';
@@ -33,8 +32,7 @@ interface Notification {
 type DialogType = 'scan_food' | 'meal_plan_generated' | null;
 
 export default function NotificationsPage() {
-  const { user } = useApp();
-  const router = useRouter();
+  const { ready, user } = useAuthGuard({ blockedRoles: ['admin'] });
   const [requests, setRequests] = useState<PartnershipRequest[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,17 +44,9 @@ export default function NotificationsPage() {
   const [dialogType, setDialogType] = useState<DialogType>(null);
 
   useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-    } else if (user.role === 'admin') {
-      router.push('/');
-    }
-  }, [user, router]);
-
-  useEffect(() => {
-    if (!user?.id || user.role === 'admin') return;
+    if (!user?.id || !ready) return;
     fetchData();
-  }, [user?.id]);
+  }, [user?.id, ready]);
 
   const fetchData = async () => {
     try {
@@ -135,7 +125,7 @@ export default function NotificationsPage() {
     setTimeout(() => setSelectedNotif(null), 300);
   };
 
-  if (!user || user.role === 'admin') return null;
+  if (!ready) return null;
 
   // Phân loại thông báo
   const scanFoodNotifs       = notifications.filter((n) => n.type === 'scan_food');

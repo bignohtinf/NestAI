@@ -34,7 +34,8 @@ export function MobileBottomNav() {
   const { user } = useApp();
   const pathname = usePathname();
 
-  if (!user || user.role === 'admin') return null;
+  // Hide for admins and users who haven't selected a role yet
+  if (!user || !user.role || user.role === 'admin') return null;
 
   const navItems = user.role === 'mother' ? MOTHER_NAV : FATHER_NAV;
 

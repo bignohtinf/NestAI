@@ -3,10 +3,9 @@
 import { MainLayout } from '@/components/layouts/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useApp } from '@/lib/context';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Zap } from 'lucide-react';
+import { useAuthGuard } from '@/lib/hooks/use-auth-guard';
 
 interface Mission {
   id: string;
@@ -49,21 +48,10 @@ const missions: Mission[] = [
 ];
 
 export default function MissionsPage() {
-  const { user } = useApp();
-  const router = useRouter();
+  const { ready, user } = useAuthGuard({ allowedRoles: ['father'] });
   const [completedMissions, setCompletedMissions] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-    } else if (user.role !== 'father') {
-      router.push('/');
-    }
-  }, [user, router]);
-
-  if (!user || user.role !== 'father') {
-    return null;
-  }
+  if (!ready) return null;
 
   const totalReward = missions.reduce((sum, m) => sum + m.reward, 0);
   const completedCount = completedMissions.length;

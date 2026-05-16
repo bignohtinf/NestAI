@@ -99,7 +99,7 @@ export function Header({ onMenuClick }: HeaderProps) {
             {/* Bell icon nam sat ten */}
             <NotificationBell />
 
-            {['father', 'mother'].includes(user.role) ? (
+            {user.role && ['father', 'mother'].includes(user.role) ? (
               <UserMenu />
             ) : (
               <Button

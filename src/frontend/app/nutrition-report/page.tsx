@@ -1,33 +1,25 @@
 'use client';
 
 import { MainLayout } from '@/components/layouts/main-layout';
-import { useApp } from '@/lib/context';
 import { formatGestationAge } from '@/lib/utils';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
+import { useAuthGuard } from '@/lib/hooks/use-auth-guard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NutritionDashboard } from '@/components/metrics/nutrition-dashboard';
 import { MealLogHistory } from '@/components/metrics/meal-log-history';
 import { LayoutDashboard, ClipboardList } from 'lucide-react';
 
 function NutritionReportPageInner() {
-  const { user } = useApp();
+  const { ready, user } = useAuthGuard();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<'overview' | 'history'>('overview');
-  const [mounted, setMounted] = useState(false);
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
 
+  // Resolve targetUserId — father xem data mẹ, mother xem data mình
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Resolve targetUserId MỘT LẦN — father xem data mẹ, mother xem data mình
-  useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-      return;
-    }
+    if (!ready || !user) return;
 
     if (user.role === 'father') {
       fetch(`/api/partnerships/active?user_id=${user.id}`)
@@ -41,17 +33,14 @@ function NutritionReportPageInner() {
     } else {
       setTargetUserId(user.id);
     }
-  }, [user, router]);
+  }, [ready, user]);
 
   useEffect(() => {
-    if (!mounted) return;
     const tab = searchParams.get('tab');
     setActiveTab(tab === 'history' ? 'history' : 'overview');
-  }, [searchParams, mounted]);
+  }, [searchParams]);
 
-  if (!mounted || !user) {
-    return null;
-  }
+  if (!ready) return null;
 
   // Tuần thai lấy từ context — cùng nguồn với header, đã được tính live
   const gestationWeeks = user.gestationWeeks;
@@ -59,7 +48,7 @@ function NutritionReportPageInner() {
   const trimester = user.trimester;
 
   return (
-    <MainLayout>
+    <MainLayout fullWidth>
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>

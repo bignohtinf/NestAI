@@ -21,10 +21,40 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [previousDesktopState, setPreviousDesktopState] = useState<MenuState>('full');
+  // Tracks whether we've already auto-retried after an error, and whether
+  // to surface the error UI to the user. We delay surfacing the error so a
+  // transient first-event failure (Supabase cold-start) doesn't flash the
+  // "couldn't load session" screen before a subsequent auth event succeeds.
+  const [errorRetryCount, setErrorRetryCount] = useState(0);
+  const [showErrorUI, setShowErrorUI] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // When sessionStatus briefly hits 'error' (e.g. Supabase cold-start fails
+  // on the first INITIAL_SESSION event), auto-retry once after 2 s before
+  // surfacing the error UI. If a subsequent auth event resolves the state
+  // before the timer fires, we cancel the timer and never show the error.
+  useEffect(() => {
+    if (sessionStatus === 'error' && errorRetryCount === 0) {
+      const timer = setTimeout(() => {
+        setErrorRetryCount(1);
+        fetchUserData();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+    if (sessionStatus === 'error' && errorRetryCount > 0) {
+      // Second failure — safe to surface the error UI now.
+      setShowErrorUI(true);
+    }
+    if (sessionStatus !== 'error') {
+      // Recovered (or never errored) — reset everything.
+      setShowErrorUI(false);
+      setErrorRetryCount(0);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionStatus, errorRetryCount]);
 
   // Only redirect when we have a definitive answer:
   //  - confirmed unauthenticated (no Supabase session at all), OR
@@ -93,10 +123,20 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return '16rem';
   };
 
+  // Avoid hydration mismatch on first paint — isMobile detection happens in
+  // a useEffect and would otherwise differ between server and client render.
+  // We render a blank canvas of the same background so the page doesn't flash.
+  // This MUST come before the error check so we never render error UI during
+  // server-side / pre-hydration render (which would cause a mismatch).
+  if (!mounted) {
+    return <div className="h-screen bg-white dark:bg-gray-950" />;
+  }
+
   // Transient error (session is valid but we couldn't load the user record).
-  // Show a clear retry UI instead of silently kicking the user back to the
-  // landing page.
-  if (sessionStatus === 'error') {
+  // Only shown after an automatic silent retry has also failed (see the
+  // errorRetryCount effect above), so a brief Supabase cold-start failure
+  // doesn't produce a visible flash before the next auth event recovers.
+  if (showErrorUI) {
     return (
       <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-950">
         <div className="text-center max-w-md px-6">
@@ -111,7 +151,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </p>
           <div className="flex items-center justify-center gap-3">
             <button
-              onClick={() => fetchUserData()}
+              onClick={() => { setShowErrorUI(false); setErrorRetryCount(0); fetchUserData(); }}
               className="px-4 py-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-sm font-medium transition-colors"
             >
               Thử lại
@@ -128,13 +168,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  // Avoid hydration mismatch on first paint — isMobile detection happens in
-  // a useEffect and would otherwise differ between server and client render.
-  // We render a blank canvas of the same background so the page doesn't flash.
-  if (!mounted) {
-    return <div className="h-screen bg-white dark:bg-gray-950" />;
-  }
-
   // Confirmed not admin — return null and let the redirect effect kick in.
   if (sessionStatus === 'authenticated' && (!user || user.role !== 'admin')) {
     return null;
@@ -143,12 +176,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return null;
   }
 
-  // Show the loading overlay (instead of a full-screen loading page) whenever
-  // we're either still checking auth or still loading user data. The admin
-  // shell — sidebar + header + main area — stays visible underneath with a
-  // blurred backdrop, so the page feels like it's loading in place rather
-  // than navigating to a separate "loading screen".
-  const showAuthOverlay = sessionStatus === 'checking' || isLoading;
+  // Parallel-fetch pattern — same as mother/father pages:
+  // Phase 1 (JWT app_metadata) sets sessionStatus → 'authenticated' instantly
+  // when a cached role exists, so we show content immediately without waiting
+  // for the Phase 2 DB enrichment (isLoading) to finish.
+  // We only show the overlay while Phase 1 itself hasn't resolved yet
+  // (sessionStatus === 'checking'). Once we know the user is admin, render.
+  const showAuthOverlay = sessionStatus === 'checking';
 
   return (
     <div className="flex h-screen bg-white dark:bg-gray-950">

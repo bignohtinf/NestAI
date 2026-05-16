@@ -129,6 +129,10 @@ async def save_meal_plan(request: SaveMealPlanRequest):
             result = supabase.table("meal_plans").insert(plan_row).execute()
             plan_id = result.data[0]["id"] if result.data else None
 
+        # Write nutrition_logs + nutrition_log_items so getSummary() can aggregate
+        # vi chất (iron, calcium, vitamin_c, zinc) from the actual dishes selected.
+        _save_nutrition_log_for_plan(supabase, request)
+
         # Send notification to partner
         _notify_partner(supabase, request)
 
@@ -259,6 +263,76 @@ async def mark_all_notifications_read(user_id: str):
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────
+
+def _save_nutrition_log_for_plan(supabase, request: SaveMealPlanRequest) -> None:
+    """
+    Upsert a nutrition_logs entry + nutrition_log_items for the saved meal plan so
+    that /api/nutrition/summary can aggregate daily macro + vi chất (iron, calcium,
+    vitamin_c, zinc) from the real dish data in nutrition_database.
+
+    Called every time a meal plan is saved or updated — safe to run multiple times
+    for the same (user_id, plan_date) because it deletes stale items first.
+    """
+    from app.api.routes.nutrition import invalidate_nutrition_cache
+
+    try:
+        ns = request.nutrition_summary or {}
+        total = ns.get("total") or {}
+
+        # ── 1. Upsert nutrition_logs ─────────────────────────────────────
+        log_row = {
+            "user_id": request.user_id,
+            "log_date": request.plan_date,
+            "calories": round(float(total.get("energy") or 0)),
+            "protein": float(total.get("protein")) if total.get("protein") is not None else None,
+            "carbs":   float(total.get("carbohydrate")) if total.get("carbohydrate") is not None else None,
+            "fat":     float(total.get("fat")) if total.get("fat") is not None else None,
+            "notes":   f"Thực đơn AI {request.plan_date}",
+            "source":  "ai_recommendation",
+        }
+
+        existing_log = (
+            supabase.table("nutrition_logs")
+            .select("id")
+            .eq("user_id", request.user_id)
+            .eq("log_date", request.plan_date)
+            .eq("source", "ai_recommendation")
+            .execute()
+        )
+
+        if existing_log.data:
+            log_id = existing_log.data[0]["id"]
+            supabase.table("nutrition_logs").update(log_row).eq("id", log_id).execute()
+            # Remove stale items so we don't double-count on re-generate
+            supabase.table("nutrition_log_items").delete().eq("log_id", log_id).execute()
+        else:
+            ins = supabase.table("nutrition_logs").insert(log_row).execute()
+            log_id = ins.data[0]["id"] if ins.data else None
+
+        if not log_id:
+            logger.warning("_save_nutrition_log_for_plan: no log_id, skipping items")
+            return
+
+        # ── 2. Insert nutrition_log_items for each dish STT ──────────────
+        # plan_data shape: { breakfast: { dishes: [...], stts: [int, ...] }, ... }
+        items: list[dict] = []
+        for meal_key in ("breakfast", "lunch", "dinner"):
+            meal = request.plan_data.get(meal_key) or {}
+            stts: list[int] = meal.get("stts") or []
+            for stt in stts:
+                if isinstance(stt, int):
+                    items.append({"log_id": log_id, "dish_stt": stt, "servings": 1.0})
+
+        if items:
+            supabase.table("nutrition_log_items").insert(items).execute()
+
+        # ── 3. Invalidate in-memory summary cache ────────────────────────
+        invalidate_nutrition_cache(request.user_id)
+
+    except Exception as exc:
+        # Non-fatal — meal plan is already saved; don't surface this to the user.
+        logger.warning(f"_save_nutrition_log_for_plan failed (non-fatal): {exc}")
+
 
 def _notify_partner(supabase, request: SaveMealPlanRequest):
     """Send notification to partner (father) when meal plan is saved."""
