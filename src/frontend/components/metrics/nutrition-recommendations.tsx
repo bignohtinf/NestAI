@@ -306,7 +306,7 @@ export function NutritionRecommendations() {
     if (target === 'mother') {
       const motherAge = calculateAge(user?.dob);
       const ageStr = motherAge ? ` • ${motherAge} tuổi` : '';
-      
+
       if (gestationWeeks != null) {
         const label = gestationWeeks < 13
           ? 'Phụ nữ có thai 3 tháng đầu'
@@ -386,10 +386,10 @@ export function NutritionRecommendations() {
                 <Badge variant="warning" className="text-xs">⚠ Chưa xác định</Badge>
               )}
               {target === 'mother' && gestationWeeks == null && (
-                <Badge variant="warning" className="text-[10px]">Chưa có tuần thai</Badge>
+                <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-200 bg-amber-50">Chưa có tuần thai — vui lòng cập nhật hồ sơ y tế</Badge>
               )}
-              {target === 'baby' && !babyAge && user?.babyStatus === 'born' && (
-                <Badge variant="warning" className="text-[10px]">Chưa có thông tin bé</Badge>
+              {target === 'baby' && !babyAge && (
+                <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-200 bg-amber-50">Chưa có thông tin bé</Badge>
               )}
             </div>
 
@@ -408,6 +408,13 @@ export function NutritionRecommendations() {
                 </div>
 
                 <div className="flex flex-col gap-2">
+                  {/* Disable khi: tab Bé mà chưa có thông tin bé */}
+                  {target === 'baby' && !babyAge ? (
+                    <div className="w-full p-3 rounded-lg bg-amber-50 border border-amber-200 text-center">
+                      <p className="text-xs text-amber-700 font-medium">👶 Chưa có thông tin bé</p>
+                      <p className="text-[11px] text-amber-600 mt-1">Vui lòng cập nhật thông tin bé trong mục &quot;Hành trình bé&quot; trước khi tạo thực đơn.</p>
+                    </div>
+                  ) : (
                   <Button onClick={hasSavedPlan ? handleReset : handleGenerate}
                     disabled={isGenerating || isPastDate} className="w-full gap-2">
                     {isGenerating ? (
@@ -418,6 +425,7 @@ export function NutritionRecommendations() {
                       <><Utensils className="h-4 w-4" /> Tạo thực đơn</>
                     )}
                   </Button>
+                  )}
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button variant="secondary" className="w-full gap-2 border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10">
