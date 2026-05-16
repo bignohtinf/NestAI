@@ -38,7 +38,7 @@ export function DocViewerDialog({ open, onOpenChange, title, fileUrl }: DocViewe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl w-[90vw] max-h-[90vh] p-0 gap-0 flex flex-col">
+      <DialogContent className="sm:max-w-6xl w-[90vw] max-h-[90vh] p-0 gap-0 flex flex-col">
         <DialogHeader className="px-6 py-4 border-b shrink-0">
           <DialogTitle className="text-base leading-snug pr-8">{title}</DialogTitle>
         </DialogHeader>
