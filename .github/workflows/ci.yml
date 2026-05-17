@@ -98,32 +98,18 @@ jobs:
           docker push ${{ env.GAR_REGISTRY }}/backend:${{ github.sha }}
           docker push ${{ env.GAR_REGISTRY }}/backend:latest
 
-      # Remove any plain-text env vars that conflict with secret references.
-      # Cloud Run rejects switching a variable's type (env var → secret) in-place,
-      # so we clear them first. The command is idempotent — safe if already absent.
-      - name: Clear conflicting plain env vars from Cloud Run
-        run: |
-          gcloud run services update nestai-backend \
-            --region ${{ env.GCP_REGION }} \
-            --remove-env-vars SUPABASE_URL,SUPABASE_ANON_KEY,SUPABASE_SERVICE_KEY,SECRET_KEY,OPENAI_API_KEY,OPENAI_MODEL_SCAN_FOOD,GOOGLEMAP_API_KEY \
-            --quiet || true
-
+      # Use raw gcloud so we can combine --set-env-vars + --set-secrets in one
+      # atomic call. --set-env-vars (SET, not UPDATE) replaces ALL plain env vars
+      # with only ENVIRONMENT=production, which implicitly removes any conflicting
+      # plain-text copies of SUPABASE_URL etc. before setting them as secrets.
       - name: Deploy backend to Cloud Run
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: nestai-backend
-          region: ${{ env.GCP_REGION }}
-          image: ${{ env.GAR_REGISTRY }}/backend:${{ github.sha }}
-          env_vars: |
-            ENVIRONMENT=production
-          secrets: |
-            SUPABASE_URL=SUPABASE_URL:latest
-            SUPABASE_ANON_KEY=SUPABASE_ANON_KEY:latest
-            SUPABASE_SERVICE_KEY=SUPABASE_SERVICE_KEY:latest
-            SECRET_KEY=SECRET_KEY:latest
-            OPENAI_API_KEY=OPENAI_API_KEY:latest
-            OPENAI_MODEL_SCAN_FOOD=OPENAI_MODEL_SCAN_FOOD:latest
-            GOOGLEMAP_API_KEY=GOOGLEMAP_API_KEY:latest
+        run: |
+          gcloud run deploy nestai-backend \
+            --image ${{ env.GAR_REGISTRY }}/backend:${{ github.sha }} \
+            --region ${{ env.GCP_REGION }} \
+            --set-env-vars "ENVIRONMENT=production" \
+            --set-secrets "SUPABASE_URL=SUPABASE_URL:latest,SUPABASE_ANON_KEY=SUPABASE_ANON_KEY:latest,SUPABASE_SERVICE_KEY=SUPABASE_SERVICE_KEY:latest,SECRET_KEY=SECRET_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest,OPENAI_MODEL_SCAN_FOOD=OPENAI_MODEL_SCAN_FOOD:latest,GOOGLEMAP_API_KEY=GOOGLEMAP_API_KEY:latest" \
+            --quiet
 
   deploy-bot:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -163,12 +149,9 @@ jobs:
           docker push ${{ env.GAR_REGISTRY }}/bot-pregnant:latest
 
       - name: Deploy bot to Cloud Run
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: nestai-bot-pregnant
-          region: ${{ env.GCP_REGION }}
-          image: ${{ env.GAR_REGISTRY }}/bot-pregnant:${{ github.sha }}
-          secrets: |
-            QDRANT_URL=QDRANT_URL:latest
-            QDRANT_API_KEY=QDRANT_API_KEY:latest
-            OPENAI_API_KEY=OPENAI_API_KEY:latest
+        run: |
+          gcloud run deploy nestai-bot-pregnant \
+            --image ${{ env.GAR_REGISTRY }}/bot-pregnant:${{ github.sha }} \
+            --region ${{ env.GCP_REGION }} \
+            --set-secrets "QDRANT_URL=QDRANT_URL:latest,QDRANT_API_KEY=QDRANT_API_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest" \
+            --quiet
