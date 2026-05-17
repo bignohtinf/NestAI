@@ -98,17 +98,13 @@ jobs:
           docker push ${{ env.GAR_REGISTRY }}/backend:${{ github.sha }}
           docker push ${{ env.GAR_REGISTRY }}/backend:latest
 
-      # Use raw gcloud so we can combine --set-env-vars + --set-secrets in one
-      # atomic call. --set-env-vars (SET, not UPDATE) replaces ALL plain env vars
-      # with only ENVIRONMENT=production, which implicitly removes any conflicting
-      # plain-text copies of SUPABASE_URL etc. before setting them as secrets.
+      # Only deploy the new image — env vars/secrets are managed manually on Cloud Run
+      # and inherited automatically by every new revision.
       - name: Deploy backend to Cloud Run
         run: |
           gcloud run deploy nestai-backend \
             --image ${{ env.GAR_REGISTRY }}/backend:${{ github.sha }} \
             --region ${{ env.GCP_REGION }} \
-            --set-env-vars "ENVIRONMENT=production" \
-            --set-secrets "SUPABASE_URL=SUPABASE_URL:latest,SUPABASE_ANON_KEY=SUPABASE_ANON_KEY:latest,SUPABASE_SERVICE_KEY=SUPABASE_SERVICE_KEY:latest,SECRET_KEY=SECRET_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest,OPENAI_MODEL_SCAN_FOOD=OPENAI_MODEL_SCAN_FOOD:latest,GOOGLEMAP_API_KEY=GOOGLEMAP_API_KEY:latest" \
             --quiet
 
   deploy-bot:
@@ -153,5 +149,4 @@ jobs:
           gcloud run deploy nestai-bot-pregnant \
             --image ${{ env.GAR_REGISTRY }}/bot-pregnant:${{ github.sha }} \
             --region ${{ env.GCP_REGION }} \
-            --set-secrets "QDRANT_URL=QDRANT_URL:latest,QDRANT_API_KEY=QDRANT_API_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest" \
             --quiet
