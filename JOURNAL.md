@@ -104,3 +104,63 @@ Ghi lại hành trình xây dựng sản phẩm mỗi tuần — những gì đ�
 - Bắt đầu implement backend: auth, user profiles, nutrition API
 - Setup Supabase và kết nối với FastAPI
 - Xây dựng scaffold chatbot Nori (API endpoint + prompt cơ bản)
+
+---
+
+### Tuần 4 — 27/04/2026
+
+**Thành viên:** Chu Thị Ngọc Huyền, Chu Thành Thông, Chu Minh Quân
+
+#### Đã làm
+- Thay đổi chiến lược nhận diện ảnh món ăn (Smart Scan): thay vì tự fine-tune model vision, chuyển sang sử dụng LLM Vision kết hợp với cơ sở dữ liệu dinh dưỡng để nhận diện và tính calo.
+- Xây dựng workflow tích hợp LLM phân tích ảnh món ăn và map với bộ data dinh dưỡng chuẩn.
+- Cải thiện trải nghiệm UI/UX cho tính năng Smart Scan.
+
+#### Khó nhất tuần này
+- Xử lý bài toán hallucination của LLM khi nhận diện món ăn Việt Nam.
+- Mapping chính xác kết quả nhận diện từ LLM với bộ dữ liệu dinh dưỡng một cách tự động.
+
+#### AI tool đã dùng
+| Tool | Dùng để làm gì | Kết quả |
+|---|---|---|
+| Claude / Gemini | Prompt engineering cho việc nhận diện món ăn từ ảnh và tính toán calo | Tăng độ chính xác nhận diện, giảm chi phí và thời gian so với việc tự fine-tune model |
+
+#### Học được
+- Việc gọi LLM Vision (zero-shot/few-shot) kết hợp RAG/database hiệu quả và triển khai nhanh hơn rất nhiều so với tự thu thập data và fine-tune một model nhận diện ảnh từ đầu.
+- Prompt optimization đóng vai trò quyết định trong việc trích xuất JSON data chuẩn xác từ LLM.
+
+#### Nếu làm lại, sẽ làm khác
+- Nên chuẩn bị sẵn bộ test dataset (ảnh các món ăn phổ biến của mẹ bầu) để benchmark prompt LLM chuẩn hơn ngay từ đầu.
+
+#### Kế hoạch tuần tới
+- Hoàn thiện tính năng Smart Scan và dashboard theo dõi dinh dưỡng.
+- Chuẩn bị dữ liệu và kịch bản demo (AIDA framework).
+
+---
+
+### Tuần 5 — 04/05/2026
+
+**Thành viên:** Chu Thị Ngọc Huyền, Chu Thành Thông, Chu Minh Quân
+
+#### Đã làm
+- Tối ưu Dashboard hiển thị chỉ số dinh dưỡng (vi chất, calo, v.v.).
+- Hoàn thiện tài liệu kiến trúc, security (RAG, prompt injection), và AI governance (Playbook, Risk Register).
+- Lên kịch bản Demo (Demo Plan AIDA) thuyết phục người dùng và nhà đầu tư.
+
+#### Khó nhất tuần này
+- Đảm bảo tính nhất quán của dữ liệu calo và vi chất trả về từ LLM để render lên chart/dashboard không bị lỗi.
+- Đánh giá và viết test case bảo mật cho hệ thống (Prompt injection).
+
+#### AI tool đã dùng
+| Tool | Dùng để làm gì | Kết quả |
+|---|---|---|
+| Claude Code | Generate test cases bảo mật, viết tài liệu AI governance và kịch bản demo | Đẩy nhanh quá trình hoàn thiện documentation chuẩn chỉnh và chuyên nghiệp |
+
+#### Học được
+- Governance và Security cho AI App (nhất là RAG và prompt injection) cần được quan tâm ngay từ giai đoạn chuẩn bị production.
+- Trình bày Demo theo AIDA framework giúp làm nổi bật "wow factor" của Smart Scan.
+
+#### Kế hoạch tuần tới
+- Freeze code, dry-run demo.
+- Chuẩn bị slide và thuyết trình.
+
