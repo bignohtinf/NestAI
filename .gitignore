@@ -131,3 +131,5 @@ deploy-backend.ps1
 deploy-bot.ps1
 .vercel
 .env*.local
+
+evaluate.md

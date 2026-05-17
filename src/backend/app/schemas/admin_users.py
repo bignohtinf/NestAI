@@ -1,6 +1,8 @@
+from datetime import date, datetime
+from typing import Dict, List, Optional
+
 from pydantic import BaseModel
-from typing import List, Optional, Dict
-from datetime import datetime, date
+
 
 class UserSummary(BaseModel):
     id: str

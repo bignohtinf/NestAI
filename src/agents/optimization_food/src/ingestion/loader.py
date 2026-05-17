@@ -1,7 +1,7 @@
 import csv
 import json
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 # ---------------------------------------------------------------------------
 # Path Constants
@@ -29,7 +29,7 @@ def load_nutrition_data() -> List[Dict[str, Any]]:
             try:
                 stt = int(row["stt"])
                 dish_types[stt] = row.get("dish_type", "món mặn")
-            except:
+            except (ValueError, KeyError):
                 continue
 
     data = []
@@ -45,7 +45,7 @@ def load_nutrition_data() -> List[Dict[str, Any]]:
                 if k == "stt":
                     try:
                         clean_row[k] = int(v)
-                    except:
+                    except (ValueError, TypeError):
                         continue
                 elif v and isinstance(v, str) and v.strip() and v != "-":
                     try:

@@ -4,8 +4,9 @@ Hybrid: ưu tiên cửa hàng liên kết (DB) + bổ sung từ Google Places AP
 """
 import math
 import os
+from typing import Any, Dict, List, Optional
+
 import httpx
-from typing import Optional, List, Dict, Any
 
 
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:

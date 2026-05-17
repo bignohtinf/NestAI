@@ -5,15 +5,15 @@ Start: cd src/agents/bot-pregnant && USE_QDRANT=1 ... .venv/bin/python service.p
 """
 from __future__ import annotations
 
-import sys
-import time
 import asyncio
 import json
 import logging
-from pathlib import Path
-from typing import Optional, List, Dict, Any
-from datetime import datetime, timezone
+import sys
+import time
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 
 # --- Suppress noisy /health logs ---
@@ -29,6 +29,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -343,10 +344,7 @@ async def stream(req: StreamRequest):
         try:
             # Check for emergency keywords
             if any(kw in req.question.lower() for kw in DANGER_KEYWORDS):
-                emergency_response = (
-                    "🚨 Đây có thể là dấu hiệu khẩn cấp trong thai kỳ. "
-                    "Mẹ cần đến cơ sở y tế/sản khoa gần nhất ngay lập tức hoặc gọi cấp cứu."
-                )
+                pass
             # Basic Prompt Injection Protection
             injection_keywords = ["ignore previous instructions", "quên đi các quy tắc", "hệ thống prompt", "developer mode", "vào chế độ"]
             if any(kw in req.question.lower() for kw in injection_keywords):

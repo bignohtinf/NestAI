@@ -1,10 +1,12 @@
 import os
+
 from langchain_chroma import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
+from langchain_huggingface import HuggingFaceEmbeddings
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as rest
 from qdrant_client.http.exceptions import UnexpectedResponse
+
 
 class NoriRetriever:
     def __init__(self, db_path="./data/vectordb"):

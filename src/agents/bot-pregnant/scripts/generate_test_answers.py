@@ -59,7 +59,7 @@ def generate_test_answers(gold_data: list[dict], db_path: str, output_path: Path
             docs = retriever.retrieve(question)
             
             if not docs:
-                print(f"  ⚠ No documents retrieved")
+                print("  ⚠ No documents retrieved")
                 test_answers.append({
                     "question": question,
                     "answer": ""

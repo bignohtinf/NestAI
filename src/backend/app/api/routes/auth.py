@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from app.core.supabase_client import get_supabase
-from app.schemas.user import UserCreate, UserResponse, TokenResponse
-from app.core.security import hash_password, verify_password, create_access_token
 from datetime import timedelta
+
+from fastapi import APIRouter, Depends, HTTPException
+
+from app.core.security import create_access_token
+from app.core.supabase_client import get_supabase
+from app.schemas.user import TokenResponse, UserCreate, UserResponse
 
 router = APIRouter()
 

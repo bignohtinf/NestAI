@@ -6,22 +6,22 @@ Covers:
   - AdminAnalyticsService with mocked Supabase
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
-from datetime import datetime, timedelta
-
 import sys
+from datetime import datetime, timedelta
 from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
-from app.services.admin_analytics_service import (
-    _extract_topics,
-    TOPIC_KEYWORDS,
-    TOP_N,
-    AdminAnalyticsService,
-)
 from app.schemas.admin_analytics import AnalyticsPeriod, TopicStat
-
+from app.services.admin_analytics_service import (
+    TOP_N,
+    TOPIC_KEYWORDS,
+    AdminAnalyticsService,
+    _extract_topics,
+)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # _extract_topics

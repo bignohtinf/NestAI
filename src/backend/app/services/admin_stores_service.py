@@ -1,15 +1,16 @@
-from typing import Optional, List, Dict
+from typing import List, Optional
+
 from app.schemas.admin_stores import (
     StoreCreate,
-    StoreUpdate,
-    StoreListResponse,
     StoreFoodMappingCreate,
     StoreFoodMappingListResponse,
-    StoreLocationsResponse,
-    StoreSummary,
     StoreFoodMappingSummary,
-    StoreLocation
+    StoreListResponse,
+    StoreLocation,
+    StoreLocationsResponse,
+    StoreUpdate,
 )
+
 
 class AdminStoresService:
     def __init__(self, supabase):

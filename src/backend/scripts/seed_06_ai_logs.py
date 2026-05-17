@@ -368,7 +368,7 @@ def make_chat_histories() -> list[dict]:
         "Yoga cho bà bầu tuần 12",
     ]
 
-    for i, (user_key, title) in enumerate(zip(chat_users, titles)):
+    for i, (user_key, title) in enumerate(zip(chat_users, titles, strict=False)):
         histories.append({
             "user_id": USERS[user_key],
             "title": title,

@@ -1,5 +1,6 @@
 from app.core.supabase_client import get_supabase
 
+
 class PartnershipService:
     @staticmethod
     async def create_partnership_request(mother_id: str, partner_email: str):

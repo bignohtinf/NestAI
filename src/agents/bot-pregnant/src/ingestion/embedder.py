@@ -1,12 +1,16 @@
-import os
 import json
-import uuid
+import os
 import time
+import uuid
 from pathlib import Path
+
 import frontmatter
-from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_text_splitters import (
+    MarkdownHeaderTextSplitter,
+    RecursiveCharacterTextSplitter,
+)
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as rest
 from tqdm import tqdm
@@ -156,7 +160,7 @@ class NoriIngestion:
 
         points = []
         for doc, vector in tqdm(
-            zip(documents, vectors),
+            zip(documents, vectors, strict=False),
             total=len(documents),
             desc="Building points",
             unit="point",

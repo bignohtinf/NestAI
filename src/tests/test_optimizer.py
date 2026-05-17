@@ -9,17 +9,17 @@ Covers:
 """
 
 import pytest
+
 from src.engine.optimizer import (
-    parse_range,
-    map_rec_to_nutrition_key,
+    MEAL_RATIOS,
+    PRIMARY_NUTRIENT_KEYS,
+    UNIT_GRAMS,
     _resolve_meal_budgets,
     _solve_meal,
+    map_rec_to_nutrition_key,
+    parse_range,
     recommend_full_day_meals,
-    MEAL_RATIOS,
-    UNIT_GRAMS,
-    PRIMARY_NUTRIENT_KEYS,
 )
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # parse_range

@@ -6,8 +6,7 @@ using pre-generated vector embeddings and pgvector queries.
 """
 
 import logging
-from typing import List, Optional, Dict, Any
-import numpy as np
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +111,7 @@ class VectorSearchService:
             ).execute()
             
             if not result.data:
-                logger.debug(f"No similar dishes found for embedding")
+                logger.debug("No similar dishes found for embedding")
                 return []
             
             # Process results and calculate match scores

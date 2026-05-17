@@ -1,1 +1,19 @@
-from . import auth, users, partnerships, nutrition, health, missions, admin, baby, tasks, food_recommendations, bot_pregnant, chat_history, wellness, blog, medical_profile, stores, notifications_api
+from . import (
+    admin,
+    auth,
+    baby,
+    blog,
+    bot_pregnant,
+    chat_history,
+    food_recommendations,
+    health,
+    medical_profile,
+    missions,
+    notifications_api,
+    nutrition,
+    partnerships,
+    stores,
+    tasks,
+    users,
+    wellness,
+)

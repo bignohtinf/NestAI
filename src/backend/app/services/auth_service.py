@@ -1,5 +1,6 @@
 from app.core.supabase_client import get_supabase
 
+
 class AuthService:
     @staticmethod
     async def get_user_by_email(email: str):

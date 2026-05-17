@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from app.core.supabase_client import get_supabase
-from pydantic import BaseModel
-from typing import Optional, List
 from datetime import date, datetime, timedelta
-import json
+from typing import List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+
+from app.core.supabase_client import get_supabase
 
 router = APIRouter()
 
@@ -362,7 +363,7 @@ async def request_consultation(user_id: str, message: str, supabase = Depends(ge
             "data": {"email": user["email"], "full_name": user["full_name"]}
         }
 
-        result = supabase.table("notifications").insert(notification).execute()
+        supabase.table("notifications").insert(notification).execute()
 
         return {"status": "submitted", "message": "Your consultation request has been sent"}
 

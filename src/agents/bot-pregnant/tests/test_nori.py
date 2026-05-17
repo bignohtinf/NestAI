@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
 from sentence_transformers import SentenceTransformer, util
-
 
 BASE_DIR = Path(__file__).resolve().parent
 GOLD_PATH = BASE_DIR / "gold_answer.json"

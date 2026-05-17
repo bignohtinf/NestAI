@@ -1,14 +1,15 @@
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 from uuid import UUID
+
 from app.schemas.blog import (
-    BlogCategory, 
-    BlogComment, 
-    BlogPostSummary, 
-    BlogPostDetail,
-    BlogReactionCount,
+    BlogCategory,
+    BlogComment,
     BlogCommentCreate,
-    BlogCategoryCreate
+    BlogPostDetail,
+    BlogPostSummary,
+    BlogReactionCount,
 )
+
 
 class BlogService:
     def __init__(self, supabase):

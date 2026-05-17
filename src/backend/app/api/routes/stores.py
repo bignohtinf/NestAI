@@ -4,8 +4,10 @@ Public Store endpoints — cho user (không cần admin).
 - Lấy danh sách cửa hàng gần vị trí
 - Xem chi tiết cửa hàng + món có sẵn
 """
-from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from app.core.supabase_client import get_supabase
 from app.services.public_stores_service import PublicStoresService
 

@@ -1,13 +1,15 @@
-from typing import Optional, List
+from typing import Optional
+
 from app.schemas.admin_users import (
-    UserListResponse, 
-    UserDetailResponse, 
     MedicalProfileListResponse,
-    UserSummary,
+    MedicalProfileSummary,
     UserDetail,
+    UserDetailResponse,
+    UserListResponse,
     UserStats,
-    MedicalProfileSummary
+    UserSummary,
 )
+
 
 class AdminUsersService:
     def __init__(self, supabase):
@@ -39,7 +41,7 @@ class AdminUsersService:
         
         try:
             res = query.order(db_sort_by, desc=(sort_order == "desc")).range(offset, offset + limit - 1).execute()
-        except Exception as e:
+        except Exception:
             return UserListResponse(users=[], total=0, limit=limit, offset=offset)
 
         users = []
@@ -147,7 +149,7 @@ class AdminUsersService:
 
             res = query.order("updated_at", desc=True).range(offset, offset + limit - 1).execute()
 
-        except Exception as e:
+        except Exception:
             import traceback
             traceback.print_exc()
             return MedicalProfileListResponse(profiles=[], total=0, limit=limit, offset=offset)

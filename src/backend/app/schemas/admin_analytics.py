@@ -1,7 +1,9 @@
-from pydantic import BaseModel
-from typing import List, Dict, Optional
 from datetime import date
 from enum import Enum
+from typing import Dict, List
+
+from pydantic import BaseModel
+
 
 class AnalyticsPeriod(str, Enum):
     week = "week"

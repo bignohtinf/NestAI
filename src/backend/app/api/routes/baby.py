@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
-from app.core.supabase_client import get_supabase
-from pydantic import BaseModel
-from typing import Optional
-from datetime import date, datetime
 import logging
+from datetime import date, datetime
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+
+from app.core.supabase_client import get_supabase
 
 logger = logging.getLogger(__name__)
 

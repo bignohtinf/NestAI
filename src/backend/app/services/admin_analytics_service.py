@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
 from typing import Optional
+
 from app.schemas.admin_analytics import (
     AnalyticsPeriod,
-    UserAnalyticsResponse,
     ChatAnalyticsResponse,
     HealthAnalyticsResponse,
     TopicStat,
+    UserAnalyticsResponse,
 )
 
 # ── Taxonomy chủ đề — keywords tiếng Việt theo domain app ─────────────────────

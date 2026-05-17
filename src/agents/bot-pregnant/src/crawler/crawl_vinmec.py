@@ -192,10 +192,10 @@ def search_articles(keyword: str, max_results=30, start_from=0) -> List[Dict]:
             print(f"  📊 Tìm thấy {len(articles)} bài viết trên trang {page}")
 
             if not articles:
-                print(f"  ⚠️ Không tìm thấy bài viết nào, dừng tìm kiếm")
+                print("  ⚠️ Không tìm thấy bài viết nào, dừng tìm kiếm")
                 break
 
-            for i, art in enumerate(articles):
+            for _i, art in enumerate(articles):
                 # Lấy text từ thẻ a
                 title = art.get_text(strip=True)
                 link = art.get("href")
@@ -256,7 +256,7 @@ def search_articles(keyword: str, max_results=30, start_from=0) -> List[Dict]:
                 # Thử click bình thường trước
                 try:
                     next_button.click()
-                except:
+                except Exception:
                     # Nếu click bình thường không được, dùng JavaScript click
                     driver.execute_script("arguments[0].click();", next_button)
                 

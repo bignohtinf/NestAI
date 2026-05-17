@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
-from app.core.supabase_client import get_supabase
-from pydantic import BaseModel
-from typing import Optional
 from datetime import date
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+
+from app.core.supabase_client import get_supabase
 
 router = APIRouter()
 

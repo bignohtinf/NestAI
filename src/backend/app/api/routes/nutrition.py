@@ -1,14 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException
-from app.core.supabase_client import get_supabase
-from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
-import httpx
+import asyncio
 import json
 import logging
 import os
 import re
-import asyncio
 import time
+from typing import Any, Dict, List, Optional
+
+import httpx
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+
+from app.core.supabase_client import get_supabase
 
 logger = logging.getLogger(__name__)
 
@@ -541,7 +543,8 @@ async def scan_food_notify(request: ScanFoodNotifyRequest, supabase = Depends(ge
     Nếu user là mẹ (có partnership) → gửi thêm notification cho bố.
     Hỗ trợ cả mother_id (backward compat) lẫn user_id (generic).
     """
-    from datetime import date as _date, datetime as _dt
+    from datetime import date as _date
+    from datetime import datetime as _dt
 
     meal_data = request.meal_data
     # Resolve user: ưu tiên user_id, fallback sang mother_id (backward compat)
@@ -640,8 +643,8 @@ async def get_nutrition_summary(user_id: str, days: int = 7, supabase = Depends(
     - macro_ratios: tỉ lệ protein/carbs/fat (dùng cho pie chart)
     - micro_nutrients: vi chất thiết yếu (iron, calcium, vitamin_c, zinc) tính từ DB thật
     """
-    from datetime import datetime, timedelta
     from collections import defaultdict
+    from datetime import datetime, timedelta
 
     cutoff = (datetime.utcnow() - timedelta(days=days)).isoformat()
 

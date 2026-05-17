@@ -49,7 +49,7 @@ def generate_eda_report():
         try:
             max_energy_dish_row = dishes_df[dishes_df['stt'] == int(float(max_energy_stt))]
             max_energy_dish = max_energy_dish_row['dish_name_vietnamese'].values[0] if not max_energy_dish_row.empty else "Unknown"
-        except:
+        except (ValueError, TypeError, IndexError, KeyError):
             max_energy_dish = "N/A"
     else:
         max_energy = 0

@@ -96,7 +96,7 @@ def main():
     print("=" * 65)
     print(f"  Input      : {INPUT_DIR}")
     print(f"  Output     : {OUTPUT_DIR}")
-    print(f"  Crop       : bỏ 1/6 mỗi bên, giữ 4/6 giữa (tự detect size)")
+    print("  Crop       : bỏ 1/6 mỗi bên, giữ 4/6 giữa (tự detect size)")
     print(f"  Thời gian  : lấy {KEEP_DURATION}s cuối (từ t={start_sec}s)")
     print("=" * 65)
 

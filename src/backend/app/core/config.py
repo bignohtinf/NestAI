@@ -1,7 +1,7 @@
-from pydantic_settings import BaseSettings
 from typing import List
-import json
-from pathlib import Path
+
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     # Supabase

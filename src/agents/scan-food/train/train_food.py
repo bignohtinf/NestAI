@@ -1,4 +1,5 @@
 import os
+
 from ultralytics import YOLO
 
 # 1. Cấu hình đường dẫn

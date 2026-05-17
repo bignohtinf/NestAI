@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Any
 import json
 import re
+from typing import Any
 
 from langchain_core.documents import Document
 from langchain_openai import ChatOpenAI

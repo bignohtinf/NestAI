@@ -7,7 +7,8 @@ and aggregates nutrition values across all dishes.
 """
 
 import logging
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from app.services.embedding_service import EmbeddingService
 from app.services.vector_search_service import VectorSearchService
 

@@ -88,7 +88,6 @@ def make_nutrition_logs(dish_stts: list[int]) -> tuple[list[dict], list[dict]]:
     }
 
     logs = []
-    log_items = []
 
     for key in all_users:
         profile = nutrition_profile[key]

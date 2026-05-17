@@ -1,11 +1,15 @@
 import logging
+from datetime import date, timedelta
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query, Body
-from typing import List, Optional, Dict, Any
-from app.services.food_recommendation_service import get_full_day_recommendations, list_profiles
-from app.core.supabase_client import get_supabase
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from datetime import date, datetime, timedelta
+
+from app.core.supabase_client import get_supabase
+from app.services.food_recommendation_service import (
+    get_full_day_recommendations,
+    list_profiles,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

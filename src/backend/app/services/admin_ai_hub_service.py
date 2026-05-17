@@ -1,22 +1,24 @@
-from typing import Optional, List, Dict, Any
 from datetime import date, timedelta
+from typing import Any, Dict, List, Optional
+
 from app.schemas.admin_ai_hub import (
-    AlgorithmConfigSummary,
     AlgorithmConfigDetail,
+    AlgorithmConfigSummary,
     AlgorithmConfigUpdate,
-    RAGDocumentCreate,
-    RAGDocumentUpdate,
-    RAGDocumentSummary,
-    RAGDocumentListResponse,
-    MonitoringResponse,
-    ModelPerformance,
-    ChatLogSummary,
     ChatLogListResponse,
-    ScanLogSummary,
-    ScanLogListResponse,
+    ChatLogSummary,
+    ModelPerformance,
+    MonitoringResponse,
+    RAGDocumentCreate,
+    RAGDocumentListResponse,
+    RAGDocumentSummary,
+    RAGDocumentUpdate,
+    RecommendationLogListResponse,
     RecommendationLogSummary,
-    RecommendationLogListResponse
+    ScanLogListResponse,
+    ScanLogSummary,
 )
+
 
 class AdminAIHubService:
     def __init__(self, supabase):
@@ -113,7 +115,7 @@ class AdminAIHubService:
             usage_data = []
         
         total_tokens = sum(u["total_tokens"] for u in usage_data)
-        total_cost = float(sum(u["total_cost_usd"] for u in usage_data))
+        float(sum(u["total_cost_usd"] for u in usage_data))
         
         # Daily trend
         trend: Dict[str, int] = {}

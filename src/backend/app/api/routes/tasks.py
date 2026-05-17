@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
-from app.core.supabase_client import get_supabase
-from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+
+from app.core.supabase_client import get_supabase
 
 router = APIRouter()
 
@@ -146,7 +148,7 @@ async def get_today_pending_tasks(user_id: str, supabase = Depends(get_supabase)
     """Get pending tasks for today"""
     try:
         from datetime import date
-        today = date.today().isoformat()
+        date.today().isoformat()
         
         # Get partnership
         partnership_result = supabase.table("partnerships").select("id").or_(f"mother_id.eq.{user_id},father_id.eq.{user_id}").eq("status", "accepted").execute()

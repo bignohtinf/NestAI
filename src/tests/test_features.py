@@ -7,11 +7,12 @@ Covers:
 """
 
 import math
-import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
-
 import sys
 from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 
@@ -99,10 +100,10 @@ class TestPublicStoresService:
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "agents" / "optimization_food"))
 from src.ingestion.loader import (
+    get_dish_details,
+    get_user_profiles,
     load_nutrition_data,
     load_recommendations,
-    get_user_profiles,
-    get_dish_details,
 )
 
 

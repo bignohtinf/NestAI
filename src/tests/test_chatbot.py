@@ -9,29 +9,29 @@ Covers:
   - _HealthFilter: log filtering
 """
 
+import sys
 import time
-import pytest
+from pathlib import Path
 from unittest.mock import MagicMock
 
-import sys
-from pathlib import Path
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "agents" / "bot-pregnant"))
 
 from service import (
-    _cache_get,
-    _cache_set,
-    _cache,
     _CACHE_TTL,
     DANGER_KEYWORDS,
+    ChatMessage,
+    QueryRequest,
+    UserProfile,
+    _cache,
+    _cache_get,
+    _cache_set,
+    _HealthFilter,
     convert_chat_history,
     format_system_prompt,
     process_query,
-    ChatMessage,
-    UserProfile,
-    QueryRequest,
-    _HealthFilter,
 )
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Cache functions

@@ -4,18 +4,20 @@ Receives user input, calls tools as needed, and returns results.
 Supports multiple providers like Anthropic, OpenAI, Google, etc.
 """
 
-import logging
 import json
+import logging
+
 import litellm
+
 from .config import (
-    ANTHROPIC_API_KEY, 
-    OPENAI_API_KEY, 
-    GOOGLE_API_KEY, 
+    ANTHROPIC_API_KEY,
+    DEFAULT_MODEL,
+    GOOGLE_API_KEY,
+    LOG_LEVEL,
     MISTRAL_API_KEY,
-    DEFAULT_MODEL, 
-    LOG_LEVEL
+    OPENAI_API_KEY,
 )
-from .tools import get_tool_schemas, execute_tool
+from .tools import execute_tool, get_tool_schemas
 
 # Setup logging
 logging.basicConfig(level=LOG_LEVEL, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -25,6 +27,7 @@ logger = logging.getLogger(__name__)
 litellm.drop_params = True  # Drop unsupported params for different models
 # Set API keys in environment for litellm if they are not already there
 import os
+
 if ANTHROPIC_API_KEY: os.environ["ANTHROPIC_API_KEY"] = ANTHROPIC_API_KEY
 if OPENAI_API_KEY: os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 if GOOGLE_API_KEY: os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY

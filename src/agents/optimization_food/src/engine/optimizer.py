@@ -11,9 +11,10 @@ allowing fine-grained portions like 150g, 250g, 350g.
 Example: IntVar = 5, UNIT_GRAMS = 50 → 250g → nutrition = value_per_100g × 2.5
 """
 
-import re
 import logging
-from typing import List, Dict, Any, Optional, Tuple
+import re
+from typing import Any, Dict, List, Optional, Tuple
+
 from ortools.sat.python import cp_model
 
 logger = logging.getLogger(__name__)

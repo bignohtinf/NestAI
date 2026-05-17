@@ -1,9 +1,29 @@
 import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
+
+from app.api.routes import (
+    admin,
+    auth,
+    baby,
+    blog,
+    bot_pregnant,
+    chat_history,
+    food_recommendations,
+    health,
+    medical_profile,
+    missions,
+    notifications_api,
+    nutrition,
+    partnerships,
+    stores,
+    tasks,
+    users,
+    wellness,
+)
 from app.core.config import settings
-from app.api.routes import auth, users, partnerships, nutrition, health, missions, admin, baby, tasks, food_recommendations, bot_pregnant, chat_history, wellness, blog, medical_profile, stores, notifications_api
 
 
 # --- Suppress noisy /health logs ---

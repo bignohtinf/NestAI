@@ -2,10 +2,10 @@
 Food Recommendation Service — fetches data from Supabase and runs CP-SAT optimizer.
 """
 
-import sys
 import logging
+import sys
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 from app.core.supabase_client import get_supabase
 

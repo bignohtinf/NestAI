@@ -1,11 +1,12 @@
 import logging
-
-from fastapi import APIRouter, Depends, HTTPException, Body
-from app.core.supabase_client import get_supabase
-from app.api.routes.nutrition import invalidate_nutrition_cache
-from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
 from datetime import datetime
+from typing import Any, Dict
+
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
+
+from app.api.routes.nutrition import invalidate_nutrition_cache
+from app.core.supabase_client import get_supabase
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +78,7 @@ async def create_scan_food_notification(request: ScanFoodNotificationRequest, su
         # 1. Lưu nhật ký dinh dưỡng cho mẹ (luôn chạy dù có partner hay không)
         raw_source = meal_data.get("source", "smart_scan")
         log_source = raw_source if raw_source in VALID_LOG_SOURCES else "smart_scan"
-        meal_context = meal_data.get("meal_context")
+        meal_data.get("meal_context")
 
         try:
             from datetime import date as _date

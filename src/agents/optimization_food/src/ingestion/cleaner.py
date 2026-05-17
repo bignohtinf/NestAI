@@ -3,10 +3,10 @@ cleaner.py
 Processes raw nutrition data and profiles into refined formats for the optimization engine.
 """
 
-import pandas as pd
-import json
 import logging
 from pathlib import Path
+
+import pandas as pd
 
 # ---------------------------------------------------------------------------
 # Path Constants

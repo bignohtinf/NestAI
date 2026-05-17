@@ -8,11 +8,12 @@ from __future__ import annotations
 
 import logging
 import os
+from typing import Optional
+
 import httpx
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 BOT_SERVICE_URL = os.getenv("BOT_SERVICE_URL", "http://localhost:8001")
@@ -76,7 +77,7 @@ async def generate_title(request: TitleRequest):
             )
             resp.raise_for_status()
             return resp.json()
-        except Exception as e:
+        except Exception:
             # Fallback title if RAG service fails
             return {"title": "Cuộc trò chuyện mới", "is_greeting": False}
 

@@ -1,33 +1,55 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from app.core.supabase_client import get_supabase
-from pydantic import BaseModel
-from typing import Optional, List, Literal, Dict, Any
-from datetime import datetime, timedelta
+from typing import Any, Dict, List, Literal, Optional
 from uuid import UUID
 
-from app.schemas.admin_analytics import AnalyticsPeriod, UserAnalyticsResponse, ChatAnalyticsResponse, HealthAnalyticsResponse
-from app.schemas.admin_users import UserListResponse, UserDetailResponse, MedicalProfileListResponse
-from app.schemas.admin_stores import StoreCreate, StoreUpdate, StoreListResponse, StoreFoodMappingCreate, StoreFoodMappingListResponse, StoreLocationsResponse
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+
+from app.core.supabase_client import get_supabase
 from app.schemas.admin_ai_hub import (
-    AlgorithmConfigSummary, 
-    AlgorithmConfigDetail, 
-    AlgorithmConfigUpdate, 
-    RAGDocumentCreate, 
-    RAGDocumentUpdate, 
-    RAGDocumentListResponse, 
-    MonitoringResponse,
+    AlgorithmConfigDetail,
+    AlgorithmConfigSummary,
+    AlgorithmConfigUpdate,
     ChatLogListResponse,
+    MonitoringResponse,
+    RAGDocumentCreate,
+    RAGDocumentListResponse,
+    RAGDocumentUpdate,
+    RecommendationLogListResponse,
     ScanLogListResponse,
-    RecommendationLogListResponse
 )
-from app.schemas.admin_system import CMSItemCreate, CMSItemUpdate, CMSItemListResponse, SystemSettingsResponse, AuditLogListResponse
-from app.services.admin_analytics_service import AdminAnalyticsService
-from app.services.admin_users_service import AdminUsersService
-from app.services.admin_stores_service import AdminStoresService
+from app.schemas.admin_analytics import (
+    AnalyticsPeriod,
+    ChatAnalyticsResponse,
+    HealthAnalyticsResponse,
+    UserAnalyticsResponse,
+)
+from app.schemas.admin_stores import (
+    StoreCreate,
+    StoreFoodMappingCreate,
+    StoreFoodMappingListResponse,
+    StoreListResponse,
+    StoreLocationsResponse,
+    StoreUpdate,
+)
+from app.schemas.admin_system import (
+    AuditLogListResponse,
+    CMSItemCreate,
+    CMSItemListResponse,
+    CMSItemUpdate,
+    SystemSettingsResponse,
+)
+from app.schemas.admin_users import (
+    MedicalProfileListResponse,
+    UserDetailResponse,
+    UserListResponse,
+)
+from app.schemas.blog import BlogCategory, BlogCategoryCreate
 from app.services.admin_ai_hub_service import AdminAIHubService
+from app.services.admin_analytics_service import AdminAnalyticsService
+from app.services.admin_stores_service import AdminStoresService
 from app.services.admin_system_service import AdminSystemService
+from app.services.admin_users_service import AdminUsersService
 from app.services.blog_service import BlogService
-from app.schemas.blog import BlogCategoryCreate, BlogCategory
 
 router = APIRouter()
 
@@ -241,7 +263,7 @@ async def get_user_detail(user_id: str, supabase = Depends(get_supabase)):
 
 @router.get("/users/{user_id}/medical-profile")
 async def get_user_medical_profile(user_id: str, supabase = Depends(get_supabase)):
-    service = AdminUsersService(supabase)
+    AdminUsersService(supabase)
     res = supabase.table("medical_profiles").select("*").eq("user_id", user_id).execute()
     if not res.data:
         raise HTTPException(status_code=404, detail="Medical profile not found for this user")
@@ -489,7 +511,7 @@ async def admin_get_blog_categories(supabase = Depends(get_supabase)):
 
 @router.post("/blog/categories")
 async def admin_create_blog_category(category: BlogCategoryCreate, supabase = Depends(get_supabase)):
-    service = BlogService(supabase)
+    BlogService(supabase)
     res = supabase.table("blog_categories").insert(category.model_dump()).execute()
     if not res.data:
         raise HTTPException(status_code=400, detail="Could not create category")
@@ -497,7 +519,7 @@ async def admin_create_blog_category(category: BlogCategoryCreate, supabase = De
 
 @router.put("/blog/categories/{category_id}")
 async def admin_update_blog_category(category_id: str, category: BlogCategoryCreate, supabase = Depends(get_supabase)):
-    service = BlogService(supabase)
+    BlogService(supabase)
     res = supabase.table("blog_categories").update(category.model_dump()).eq("id", category_id).execute()
     if not res.data:
         raise HTTPException(status_code=404, detail="Category not found")

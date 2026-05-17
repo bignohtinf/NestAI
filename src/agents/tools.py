@@ -3,8 +3,9 @@ Tool definitions for the agent.
 Add new tools by creating a function and registering it in the TOOLS dict.
 """
 
-import httpx
 import json
+
+import httpx
 
 
 def search_web(query: str) -> str:
