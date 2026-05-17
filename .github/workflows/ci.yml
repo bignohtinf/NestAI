@@ -98,6 +98,16 @@ jobs:
           docker push ${{ env.GAR_REGISTRY }}/backend:${{ github.sha }}
           docker push ${{ env.GAR_REGISTRY }}/backend:latest
 
+      # Remove any plain-text env vars that conflict with secret references.
+      # Cloud Run rejects switching a variable's type (env var → secret) in-place,
+      # so we clear them first. The command is idempotent — safe if already absent.
+      - name: Clear conflicting plain env vars from Cloud Run
+        run: |
+          gcloud run services update nestai-backend \
+            --region ${{ env.GCP_REGION }} \
+            --remove-env-vars SUPABASE_URL,SUPABASE_ANON_KEY,SUPABASE_SERVICE_KEY,SECRET_KEY,OPENAI_API_KEY,OPENAI_MODEL_SCAN_FOOD,GOOGLEMAP_API_KEY \
+            --quiet || true
+
       - name: Deploy backend to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
